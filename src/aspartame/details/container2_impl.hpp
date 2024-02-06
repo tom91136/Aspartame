@@ -1,0 +1,122 @@
+#pragma once
+
+#include <algorithm>
+#include <string>
+
+#include "base.hpp"
+
+namespace aspartame::details::container2 {
+
+template <typename In, typename Function, template <typename...> typename Out> //
+constexpr auto map(const In &in, Function f) {
+  using T = decltype(details::ap(f, *std::begin(in)));
+  if constexpr (details::assert_non_void<T>()) {}
+  static_assert(is_pair<T>, "return type for mapping a map-like container must be a tuple");
+  using K = typename In::key_type;
+  using V = typename In::mapped_type;
+  Out<K, V> ys;
+  std::transform(in.begin(), in.end(), std::inserter(ys, ys.begin()), [&](auto x) { return details::ap(f, x); });
+  return ys;
+}
+
+template <typename In, typename Function, template <typename...> typename Out> //
+constexpr auto collect(const In &in, Function f) {
+  using T = decltype(details::ap(f, *std::begin(in)));
+  static_assert(is_optional<T>, "collect function should return an optional");
+  static_assert(is_pair<typename T::value_type>, "return type for mapping a map-like container must be a tuple");
+  using K = typename T::value_type::first_type;
+  using V = typename T::value_type::second_type;
+  Out<K, V> ys;
+  for (auto x : in)
+    if (auto y = details::ap(f, x); y) ys.emplace(y->first, y->second);
+  return ys;
+}
+
+template <typename In, typename Predicate, template <typename...> typename Out> //
+constexpr auto filter(const In &in, Predicate p) {
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *std::begin(in)))>()) {}
+  using K = typename In::key_type;
+  using V = typename In::mapped_type;
+  Out<K, V> ys;
+  std::copy_if(in.begin(), in.end(), std::inserter(ys, ys.begin()), [&](auto x) { return details::ap(p, x); });
+  return ys;
+}
+
+template <typename In, typename Function, template <typename...> typename Out> //
+constexpr auto bind(const In &in, Function f) {
+  static_assert(is_map_like<decltype(details::ap(f, *std::begin(in)))>, "bind function should return a map-like type");
+  using R = decltype(details::ap(f, *std::begin(in)));
+  using K =  typename R::key_type;
+  using V =  typename R::mapped_type;
+  Out<K, V> ys;
+  for (auto x : in) {
+    auto zs = details::ap(f, x);
+    ys.insert(zs.begin(), zs.end());
+  }
+  return ys;
+}
+
+template <typename In, template <typename...> typename Out> //
+constexpr auto flatten(const In &in) {
+  static_assert(is_map_like<typename In::mapped_type>, "not a nested type that is map-like");
+  using R = typename In::mapped_type;
+  using K =  typename R::key_type;
+  using V = typename R::mapped_type;
+  Out<K, V> ys;
+  for (auto [_, v] : in)
+    ys.insert(v.begin(), v.end());
+  return ys;
+}
+
+template <typename In, typename Function> //
+constexpr auto reduce(const In &in, Function f) {
+  using K =  typename In::key_type;
+  using V = typename In::mapped_type;
+  using T = std::pair<K, V>;
+  static_assert(std::is_invocable_v<Function, T, T>, "function must be invocable with two value types of the container");
+  static_assert(std::is_convertible_v<std::invoke_result_t<Function, T, T>, T>,
+                "function must return something that is convertable to value type");
+  if (auto size = in.size(); size == 0) return std::optional<T>{};
+  else if (size == 1) return std::optional<T>{*in.begin()};
+  else {
+    auto it = in.begin();
+    if (it == in.end()) return std::optional<T>{};
+    T r = *it;
+    ++it;
+    for (; it != in.end(); ++it)
+      r = details::ap(f, std::forward_as_tuple(r, *it));
+    return std::optional<T>{r};
+  }
+}
+
+template <typename In, typename GroupFunction, typename MapFunction, template <typename...> typename Out> //
+constexpr auto group_map(const In &in, GroupFunction &&group, MapFunction &&map) {
+  using K = decltype(details::ap(group, *std::begin(in)));
+  using V = decltype(details::ap(map, *std::begin(in)));
+  if constexpr (details::assert_non_void<K>()) {}
+  if constexpr (details::assert_non_void<V>()) {}
+  std::unordered_map<K, Out<V>> ys;
+  for (  auto  x : in) {
+    auto k = details::ap(group, x);
+    if (auto it = ys.find(k); it != ys.end()) it->second.insert(it->second.end(), details::ap(map, x));
+    else ys.emplace(k, Out<V>{details::ap(map, x)});
+  }
+  return ys;
+}
+
+template <typename In, typename GroupFunction, template <typename...> typename Out> //
+constexpr auto group_by(const In &in, GroupFunction &&group) {
+  using K = decltype(details::ap(group, *std::begin(in)));
+  if constexpr (details::assert_non_void<K>()) {}
+  using V = typename In::value_type;
+  using W = std::pair<std::remove_const_t<typename V::first_type>, typename V::second_type>;
+  std::unordered_map<K, Out<W>> ys;
+  for (  auto x : in) {
+    auto k = details::ap(group, x);
+    if (auto it = ys.find(k); it != ys.end()) it->second.insert(it->second.end(), x);
+    else ys.emplace(k, Out<W>{x});
+  }
+  return ys;
+}
+
+} // namespace aspartame::details::container2
