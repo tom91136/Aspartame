@@ -1,5 +1,6 @@
 #include "aspartame/vector.hpp"
 
+#define OP_ ^
 #define TPE_GROUP "test_vector"
 #define TPE_NAME "std::vector"
 #define TPE_CTOR_IN(T) std::vector<T>

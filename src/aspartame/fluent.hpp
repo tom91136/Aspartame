@@ -40,6 +40,9 @@ namespace aspartame {
 #ifndef ASPARTAME_STRING
   #define ASPARTAME_STRING(T, op, ...) ASPARTAME_NOOP(T)
 #endif
+#ifndef ASPARTAME_ITERABLE
+  #define ASPARTAME_ITERABLE(T, op, ...) ASPARTAME_NOOP(T)
+#endif
 
 #define ASPARTAME_MK_FUNCTOR_0(name)                                                                                                       \
   (const auto &o) {                                                                                                                        \
@@ -54,6 +57,7 @@ namespace aspartame {
         else ASPARTAME_UNORDERED_SET(O, name, o) /*NOLINT(*-branch-clone)*/                                                                \
         else ASPARTAME_UNORDERED_MAP(O, name, o) /*NOLINT(*-branch-clone)*/                                                                \
         else ASPARTAME_STRING(O, name, o)        /*NOLINT(*-branch-clone)*/                                                                \
+        else ASPARTAME_ITERABLE(O, name, o)      /*NOLINT(*-branch-clone)*/                                                                \
         else details::unsupported<decltype(o)>();                                                                                          \
   }
 
@@ -70,6 +74,7 @@ namespace aspartame {
         else ASPARTAME_UNORDERED_SET(O, name, o, __VA_ARGS__) /*NOLINT(*-branch-clone)*/                                                   \
         else ASPARTAME_UNORDERED_MAP(O, name, o, __VA_ARGS__) /*NOLINT(*-branch-clone)*/                                                   \
         else ASPARTAME_STRING(O, name, o, __VA_ARGS__)        /*NOLINT(*-branch-clone)*/                                                   \
+        else ASPARTAME_ITERABLE(O, name, o, __VA_ARGS__)                   /*NOLINT(*-branch-clone)*/                                                   \
         else details::unsupported<decltype(o)>();                                                                                          \
   }
 
@@ -497,7 +502,7 @@ template <typename T> //
 }
 // std::string -> std::string
 [[nodiscard]] constexpr auto indent(int n) { //
-  return [&, n] ASPARTAME_MK_FUNCTOR_N(indent, n);
+  return [&, n ] ASPARTAME_MK_FUNCTOR_N(indent, n);
 }
 // std::string -> std::string
 [[nodiscard]] constexpr auto to_upper() { //

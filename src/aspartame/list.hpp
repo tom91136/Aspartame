@@ -18,7 +18,7 @@ template <typename T> constexpr bool is_list_impl<std::list<T>> = true;
 } // namespace details
 
 template <typename T> constexpr bool is_list = details::is_list_impl<std::decay_t<T>>;
-template <typename T, typename Op> auto operator|(const std::list<T> &l, const Op &r) { return r(l); }
+template <typename T, typename Op> auto operator^(const std::list<T> &l, const Op &r) { return r(l); }
 } // namespace aspartame
 
 #define ASPARTAME_PREFIX(name) list_##name

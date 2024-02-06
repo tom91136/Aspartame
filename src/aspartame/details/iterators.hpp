@@ -1,15 +1,13 @@
-#include <algorithm>
+#pragma once
 
 #include "base.hpp"
 #include "container1_impl.hpp"
 
-#ifndef ASPARTAME_PREFIX
-  #error "ASPARTAME_PREFIX unimplemented"
-#endif
-
-#ifndef ASPARTAME_OUT_TYPE
-  #error "ASPARTAME_OUT_TYPE unimplemented"
-#endif
+#include "iterators/append_prepend.hpp"
+#include "iterators/bind.hpp"
+#include "iterators/concat.hpp"
+#include "iterators/filter.hpp"
+#include "iterators/map.hpp"
 
 namespace aspartame {
 
@@ -21,47 +19,54 @@ template <typename In, typename Function> //
 
 template <typename In, typename T> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(append)(const In &in, const T &t) {
-  return details::container::append<In, T, In>(in, t);
+  return view(details::append_prepend_iterator<typename In::const_iterator>( //
+      in.begin(), in.end(), details::append_prepend_iterator_mode::append, t));
 }
 
 template <typename In, typename Container> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(concat)(const In &in, const Container &other) {
-  return details::container::concat<In, Container, In>(in, other);
+[[nodiscard]] constexpr auto ASPARTAME_PREFIX(concat)(const In &in, Container &&other) {
+  return view(details::concat_iterator<typename In::const_iterator,                     //
+                                       typename std::decay_t<Container>::const_iterator //
+                                       >(in.begin(), in.end(), other.begin(), other.end()));
 }
 
 template <typename In, typename Function> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(map)(const In &in, Function &&function) {
-  return details::container::map<In, Function, ASPARTAME_OUT_TYPE>(in, function);
+  auto applied = [&](auto x) { return details::ap(function, x); };
+  return view(details::map_iterator<typename In::const_iterator, decltype(applied)>(in.begin(), in.end(), applied));
 }
 
 template <typename In, typename Function> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(collect)(const In &in, Function &&function) {
-  return details::container::collect<In, Function, ASPARTAME_OUT_TYPE>(in, function);
+  details::unsupported<In>();
 }
 
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(filter)(const In &in, Predicate &&predicate) {
-  return details::container::filter<In, Predicate, ASPARTAME_OUT_TYPE>(in, predicate);
+  auto applied = [&](auto x) { return details::ap(predicate, x); };
+  return view(details::filter_iterator<typename In::const_iterator, decltype(applied)>(in.begin(), in.end(), applied));
 }
 
 template <typename In, typename Function> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(bind)(const In &in, Function &&function) {
-  return details::container::bind<In, Function, ASPARTAME_OUT_TYPE>(in, function);
+  auto applied = [&](auto x) { return details::ap(function, x); };
+  return view(details::bind_iterator<typename In::const_iterator, decltype(applied)>(in.begin(), in.end(), applied));
 }
 
 template <typename In> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(flatten)(const In &in) {
-  return details::container::flatten<In, ASPARTAME_OUT_TYPE>(in);
+  auto identity = [](auto x) { return x; };
+  return view(details::bind_iterator<typename In::const_iterator, decltype(identity)>(in.begin(), in.end(), identity));
 }
 
 template <typename In, typename Function> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(distinct_by)(const In &in, Function &&function) {
-  return details::container::distinct_by<In, Function, In>(in, function);
+  details::unsupported<In>();
 }
 
 template <typename In> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(distinct)(const In &in) {
-  return details::container::distinct<In, In, ASPARTAME_SET_LIKE>(in);
+  details::unsupported<In>();
 }
 
 template <typename In, typename Predicate> //
@@ -86,7 +91,7 @@ template <typename In, typename Function> //
 
 template <typename In, typename Function> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(tap_each)(const In &in, Function &&function) {
-  return details::container::tap_each<In, Function>(in, function);
+  return details::container::tap_each(in, function);
 }
 
 template <typename In, typename Function> //
@@ -96,7 +101,7 @@ template <typename In, typename Function> //
 
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(partition)(const In &in, Predicate &&predicate) {
-  return details::container::partition<In, Predicate, In>(in, predicate);
+  details::unsupported<In>();
 }
 
 template <typename In, typename GroupFunction, typename MapFunction, typename ReduceFunction> //
@@ -107,12 +112,12 @@ template <typename In, typename GroupFunction, typename MapFunction, typename Re
 
 template <typename In, typename GroupFunction, typename MapFunction> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(group_map)(const In &in, GroupFunction &&group, MapFunction &&map) {
-  return details::container::group_map<In, GroupFunction, MapFunction, ASPARTAME_OUT_TYPE>(in, group, map);
+  return details::container::group_map<In, GroupFunction, MapFunction, std::vector>(in, group, map);
 }
 
 template <typename In, typename Function> //
 [[nodiscard]] constexpr auto ASPARTAME_PREFIX(group_by)(const In &in, Function &&function) {
-  return details::container::group_by<In, Function, ASPARTAME_OUT_TYPE>(in, function);
+  return details::container::group_by<In, Function, std::vector>(in, function);
 }
 
 template <typename In> //

@@ -1,5 +1,6 @@
 #include "aspartame/map.hpp"
 
+#define OP_ ^
 #define TPE_GROUP "test_map"
 #define TPE_NAME "std::map"
 #define TPE_CTOR_IN(K, V) std::map<K, V>

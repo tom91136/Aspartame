@@ -1,5 +1,6 @@
 #include "aspartame/unordered_map.hpp"
 
+#define OP_ ^
 #define TPE_GROUP "test_unordered_map"
 #define TPE_NAME "std::unordered_map"
 #define TPE_CTOR_IN(K, V) std::unordered_map<K, V>

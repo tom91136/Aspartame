@@ -18,7 +18,7 @@
 
 namespace aspartame {
 
-template <typename In, typename Op> auto operator|(const std::optional<In> &l, const Op &r) { return r(l); }
+template <typename In, typename Op> auto operator^(const std::optional<In> &l, const Op &r) { return r(l); }
 
 // ---
 #define ASPARTAME_PREFIX(name) optional_##name

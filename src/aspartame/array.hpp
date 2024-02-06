@@ -18,7 +18,7 @@ template <typename> constexpr bool is_array_impl = false;
 template <typename T, size_t N> constexpr bool is_array_impl<std::array<T, N>> = true;
 } // namespace details
 template <typename T> constexpr bool is_array = details::is_array_impl<std::decay_t<T>>;
-template <typename T, size_t N, typename Op> auto operator|(const std::array<T, N> &l, const Op &r) { return r(l); }
+template <typename T, size_t N, typename Op> auto operator^(const std::array<T, N> &l, const Op &r) { return r(l); }
 } // namespace aspartame
 
 #define ASPARTAME_PREFIX(name) array_##name

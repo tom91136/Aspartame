@@ -9,12 +9,12 @@
 #include "catch2/catch_test_macros.hpp"
 
 #ifndef DISABLE_AND_THEN
-TEST_CASE("and_then", "[" TPE_NAME "][" TPE_GROUP "]") {
+TEST_CASE(TPE_NAME "_and_then", "[" TPE_NAME "][" TPE_GROUP "]") {
   using IntP = std::pair<TPE_CTOR_IN(int), TPE_CTOR_IN(int)>;
   using StringP = std::pair<TPE_CTOR_IN(string), TPE_CTOR_IN(string)>;
   using FooP = std::pair<TPE_CTOR_IN(Foo), TPE_CTOR_IN(Foo)>;
 
-  auto op = [](auto xs) { return xs | and_then([](auto x) { return std::pair{x, x}; }); };
+  auto op = [](auto xs) { return xs OP_ and_then([](auto x) { return std::pair{x, x}; }); };
 
   #ifdef TPE_MANY_INIT
   RUN_CHECK(int, IntP, "", {4, 2, 3, 1, 5}, {{4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}}, op);
@@ -32,10 +32,10 @@ TEST_CASE("and_then", "[" TPE_NAME "][" TPE_GROUP "]") {
 #endif
 
 #ifndef DISABLE_TAP
-TEST_CASE("tap", "[" TPE_NAME "][" TPE_GROUP "]") {
+TEST_CASE(TPE_NAME "_tap", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto op = [](auto xs) {
     decltype(xs) ys;
-    xs | tap([&](auto x) { ys = x; });
+    xs OP_ tap([&](auto x) { ys = x; });
     return ys;
   };
 

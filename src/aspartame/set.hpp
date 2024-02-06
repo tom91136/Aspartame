@@ -17,7 +17,7 @@ template <typename> constexpr bool is_set_impl = false;
 template <typename T> constexpr bool is_set_impl<std::set<T>> = true;
 } // namespace details
 template <typename T> constexpr bool is_set = details::is_set_impl<std::decay_t<T>>;
-template <typename T, typename Op> auto operator|(const std::set<T> &l, const Op &r) { return r(l); }
+template <typename T, typename Op> auto operator^(const std::set<T> &l, const Op &r) { return r(l); }
 } // namespace aspartame
 
 #define ASPARTAME_PREFIX(name) set_##name

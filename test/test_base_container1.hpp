@@ -15,7 +15,6 @@ using namespace aspartame;
   #define __FILE_NAME__ __FILE__
 #endif
 
-
 #define RUN_CHECK(T, U, _name, ...)                                                                                                        \
   runTest<T, U>(std::string(TPE_NAME "<" #T "> => " #U " [") + _name + "]", __FILE_NAME__ ":" QUOTE(__LINE__), __VA_ARGS__)
 #define RUN_CHECK_ID(T, _name, ...) RUN_CHECK(T, TPE_CTOR_OUT(T), _name, __VA_ARGS__)
@@ -27,12 +26,14 @@ template <typename T> constexpr bool is_unordered_set_private<std::unordered_set
 template <typename> constexpr bool is_vector_private = false;
 template <typename T> constexpr bool is_vector_private<std::vector<T>> = true;
 
+#ifndef TPE_RUN_TEST
+
 template <typename Element, typename Expected, typename F>
-void runTest(const std::string &typeName, //
-             const std::string &location, //
+void runTest(const std::string &typeName,       //
+             const std::string &location,       //
              std::initializer_list<Element> in, //
-             Expected expected,                  //
-             F f,                         //
+             Expected expected,                 //
+             F f,                               //
              bool invert = false) {
 
   if (TPE_INIT_SKIP(in)) return;
@@ -49,7 +50,7 @@ void runTest(const std::string &typeName, //
     INFO((invert ? "!expected = " : "expected =  ") << expected_stream.str());
     INFO("actual =    " << actual_stream.str());
 
-#ifdef TPE_UNORDERED
+  #ifdef TPE_UNORDERED
     if constexpr (is_unordered_set_private<Expected> || is_vector_private<Expected> || std::is_same_v<Expected, std::string>) {
       std::vector<typename Expected::value_type> expected_sorted{expected.begin(), expected.end()};
       std::vector<typename Expected::value_type> actual_sorted{actual.begin(), actual.end()};
@@ -62,11 +63,13 @@ void runTest(const std::string &typeName, //
       if (invert) CHECK_FALSE(actual == expected);
       else CHECK(actual == expected);
     }
-#else
+  #else
     if (invert) CHECK_FALSE(actual == expected);
     else CHECK(actual == expected);
-#endif
+  #endif
 
     CHECK((v == copy));
   }
 }
+
+#endif

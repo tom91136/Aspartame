@@ -21,12 +21,12 @@ constexpr bool is_basic_string_impl<std::basic_string<CharT, Traits, Allocator>>
 } // namespace details
 template <typename T> inline constexpr bool is_basic_string = details::is_basic_string_impl<std::decay_t<T>>;
 
-template <typename Op> [[nodiscard]] auto operator|(const std::string &l, const Op &r) { return r(l); }
-template <typename Op> [[nodiscard]] auto operator|(const std::wstring &l, const Op &r) { return r(l); }
-template <typename Op> [[nodiscard]] auto operator|(const std::u16string &l, const Op &r) { return r(l); }
-template <typename Op> [[nodiscard]] auto operator|(const std::u32string &l, const Op &r) { return r(l); }
+template <typename Op> [[nodiscard]] auto operator^(const std::string &l, const Op &r) { return r(l); }
+template <typename Op> [[nodiscard]] auto operator^(const std::wstring &l, const Op &r) { return r(l); }
+template <typename Op> [[nodiscard]] auto operator^(const std::u16string &l, const Op &r) { return r(l); }
+template <typename Op> [[nodiscard]] auto operator^(const std::u32string &l, const Op &r) { return r(l); }
 #if __cplusplus >= 202002L
-template <typename Op> auto operator|(const std::u8string &l, const Op &r) { return r(l); }
+template <typename Op> auto operator^(const std::u8string &l, const Op &r) { return r(l); }
 #endif
 
 } // namespace aspartame

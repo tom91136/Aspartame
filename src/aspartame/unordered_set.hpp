@@ -17,7 +17,7 @@ template <typename> constexpr bool is_unordered_set_impl = false;
 template <typename T> constexpr bool is_unordered_set_impl<std::unordered_set<T>> = true;
 } // namespace details
 template <typename T> constexpr bool is_unordered_set = details::is_unordered_set_impl<std::decay_t<T>>;
-template <typename T, typename Op> auto operator|(const std::unordered_set<T> &l, const Op &r) { return r(l); }
+template <typename T, typename Op> auto operator^(const std::unordered_set<T> &l, const Op &r) { return r(l); }
 } // namespace aspartame
 
 #define ASPARTAME_PREFIX(name) unordered_set_##name

@@ -20,7 +20,7 @@ template <typename> constexpr bool is_map_impl = false;
 template <typename K, typename V> constexpr bool is_map_impl<std::map<K, V>> = true;
 } // namespace details
 template <typename T> constexpr bool is_map = details::is_map_impl<std::decay_t<T>>;
-template <typename K, typename V, typename Op> auto operator|(const std::map<K, V> &l, const Op &r) { return r(l); }
+template <typename K, typename V, typename Op> auto operator^(const std::map<K, V> &l, const Op &r) { return r(l); }
 } // namespace aspartame
 
 #define ASPARTAME_PREFIX(name) map_##name

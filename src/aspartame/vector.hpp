@@ -11,7 +11,7 @@
   if constexpr (is_vector<T>) { return vector_##op(__VA_ARGS__); }
 
 namespace aspartame {
-template <typename T, typename Op> auto operator|(const std::vector<T> &l, const Op &r) { return r(l); }
+template <typename T, typename Op> auto operator^(const std::vector<T> &l, const Op &r) { return r(l); }
 } // namespace aspartame
 
 #define ASPARTAME_PREFIX(name) vector_##name

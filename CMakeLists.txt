@@ -28,6 +28,7 @@ set(LINK_FLAGS
 
 
 add_executable(tests
+        test/test_view.cpp
         test/test_vector.cpp
         test/test_optional.cpp
         test/test_array.cpp

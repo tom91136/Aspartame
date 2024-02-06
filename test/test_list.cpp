@@ -1,5 +1,6 @@
 #include "aspartame/list.hpp"
 
+#define OP_ ^
 #define TPE_GROUP "test_list"
 #define TPE_NAME "std::list"
 #define TPE_CTOR_IN(T) std::list<T>

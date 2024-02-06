@@ -1,5 +1,6 @@
 #include "aspartame/deque.hpp"
 
+#define OP_ ^
 #define TPE_GROUP "test_deque"
 #define TPE_NAME "std::deque"
 #define TPE_CTOR_IN(T) std::deque<T>

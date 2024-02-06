@@ -1,5 +1,6 @@
 #include "aspartame/unordered_set.hpp"
 
+#define OP_ ^
 #define TPE_GROUP "test_unordered_set"
 #define TPE_NAME "std::unordered_set"
 #define TPE_CTOR_IN(T) std::unordered_set<T>

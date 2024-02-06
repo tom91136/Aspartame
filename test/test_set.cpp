@@ -1,5 +1,6 @@
 #include "aspartame/set.hpp"
 
+#define OP_ ^
 #define TPE_GROUP "test_set"
 #define TPE_NAME "std::set"
 #define TPE_CTOR_IN(T) std::set<T>
