@@ -18,7 +18,7 @@ public:
   constexpr filter_iterator(InputIterator begin_, InputIterator end, Predicate predicate)
       : it(std::move(begin_)), end(std::move(end)), p(predicate) {
     if constexpr (details::assert_predicate<decltype((*p)(*it))>()) {}
-    while (it != end && !(*p)(*it))
+    while (it != this->end && !(*p)(*it))
       ++it;
   }
   constexpr filter_iterator &operator++() {

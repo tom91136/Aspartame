@@ -20,8 +20,8 @@ private:
 
 public:
   append_prepend_iterator() = default;
-  append_prepend_iterator(InputIterator begin, InputIterator end_, T value)
-      : it(std::move(begin)), end(std::move(end_)), value(std::move(value)), use_value(it == end) {
+  append_prepend_iterator(InputIterator begin, InputIterator end, T value)
+      : it(std::move(begin)), end(std::move(end)), value(std::move(value)), use_value(it == this->end) {
     if constexpr (Mode == append_prepend_iterator_mode::prepend) { use_value = true; }
   }
 

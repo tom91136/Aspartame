@@ -16,7 +16,7 @@ public:
   constexpr slice_iterator() = default;
   constexpr slice_iterator(InputIterator begin, InputIterator end, size_t from_inclusive, size_t to_exclusive)
       : it(std::move(begin)), end(std::move(end)), idx(0), to_exclusive(to_exclusive) {
-    while (it != end && idx < from_inclusive) {
+    while (it != this->end && idx < from_inclusive) {
       ++it;
       idx++;
     }

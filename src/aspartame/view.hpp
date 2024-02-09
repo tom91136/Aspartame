@@ -23,21 +23,22 @@ consider adding a new line between this include and others to prevent reording b
 
 namespace aspartame {
 
+template <typename T> using owning = std::unique_ptr<T>;
 class non_owning {};
 
-
-template <typename Iterator, typename Container = non_owning > class view {
+template <typename Iterator, typename Container = non_owning> class view {
 public:
-  std::unique_ptr<Container> underlying;
+  Container underlying;
   Iterator begin_, end_;
+  using iterator_category = typename Iterator::iterator_category;
   using value_type = typename Iterator::value_type;
   using const_iterator = Iterator;
   constexpr view() = default;
 
   explicit view(Iterator begin, Iterator end = {}) : underlying(), begin_(std::move(begin)), end_(std::move(end)) {
     static_assert(std::is_default_constructible_v<view>);
-    //    static_assert(std::is_copy_constructible_v<view>);
-    //    static_assert(std::is_copy_assignable_v<view>);
+    static_assert(std::is_copy_constructible_v<view>);
+    static_assert(std::is_copy_assignable_v<view>);
     static_assert(std::is_move_constructible_v<view>);
     static_assert(std::is_move_assignable_v<view>);
     static_assert(std::is_destructible_v<view>);
@@ -48,7 +49,7 @@ public:
       : underlying(std::move(prev.underlying)), begin_(std::move(begin)), end_(std::move(end)) {}
 
   template <typename C>
-  explicit view(C c) : underlying(std::make_unique<C>(c)), begin_(std::move(underlying->begin())), end_(std::move(underlying->end())) {}
+  explicit view(C c) : underlying(std::move(c)), begin_(std::move(underlying->begin())), end_(std::move(underlying->end())) {}
 
   [[nodiscard]] constexpr Iterator begin() const { return begin_; }
   [[nodiscard]] constexpr Iterator end() const { return end_; }
@@ -59,7 +60,6 @@ public:
   template <typename Op> auto operator|(const Op &r) { return r(*this); }
 };
 
-
 template <typename Iterator> //
 view(Iterator, Iterator) -> view<Iterator, non_owning>;
 
@@ -67,7 +67,7 @@ template <typename C> //
 view(C) -> view<typename C::const_iterator, C>;
 
 template <typename Iterator, typename Storage, typename Ignore> //
-view(view<Ignore, Storage>, Iterator, Iterator) -> view<Ignore, Ignore>;
+view(view<Ignore, Storage>, Iterator, Iterator) -> view<Ignore, Storage>;
 
 namespace details {
 template <typename> constexpr bool is_view_impl = false;
@@ -80,7 +80,7 @@ template <typename Iterable, //
           typename = std::enable_if_t<is_iterable<Iterable> && !is_view<Iterable>>>
 auto operator|(Iterable &&l, const Op &r) {
   if constexpr (!std::is_rvalue_reference_v<Iterable &&>) return r(view(l.begin(), l.end()));
-  else return r(view(std::forward<Iterable &&>(l)));
+  else return r(view<typename Iterable::const_iterator, owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))));
 }
 
 // == container
@@ -355,7 +355,7 @@ template <typename C, typename Storage, typename Accumulator, typename Function>
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto sliding(view<C, Storage> &in, size_t size, size_t step) {
-  return view(in, details::sliding_iterator<C, view >(in.begin(), in.end(), size, step));
+  return view(in, details::sliding_iterator<C, view>(in.begin(), in.end(), size, step));
 }
 
 } // namespace aspartame

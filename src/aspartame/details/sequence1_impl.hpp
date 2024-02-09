@@ -24,7 +24,23 @@ template <typename In, typename T = typename In::value_type> //
 
 template <typename In, typename T = typename In::value_type> //
 [[nodiscard]] constexpr std::optional<T> last_maybe(const In &in) {
-  return !in.empty() ? std::optional<T>{*(std::prev(in.end()))} : std::nullopt;
+  if constexpr (std::is_same_v<std::bidirectional_iterator_tag, typename In::const_iterator::iterator_category> ||
+                std::is_same_v<std::random_access_iterator_tag, typename In::const_iterator::iterator_category>
+#if __cplusplus >= 202002L
+                || std::is_same_v<std::contiguous_iterator_tag, typename In::const_iterator::iterator_category>
+#endif
+  ) {
+    return !in.empty() ? std::optional<T>{*(std::prev(in.end()))} : std::nullopt;
+
+  } else {
+    auto it = in.begin();
+    if (it == in.end()) return std::nullopt;
+    const std::decay_t<decltype(*it)> *last = &*it;
+    ++it;
+    for (; it != in.end(); ++it)
+      last = &*it;
+    return std::optional<T>{*last};
+  }
 }
 
 template <typename In, typename Out> //
@@ -74,7 +90,7 @@ template <typename In, typename T> //
   static_assert(std::is_convertible_v<std::decay_t<T>, typename In::value_type>, "type does not match vector's value type");
   size_t i = 0;
 
-  for (auto it = in.begin(), end = in.end(); it != end; ++it){
+  for (auto it = in.begin(), end = in.end(); it != end; ++it) {
     auto x = *it;
     if (x == t) return static_cast<std::make_signed_t<size_t>>(i);
     i++;
@@ -86,7 +102,7 @@ template <typename In, typename Container> //
 [[nodiscard]] constexpr std::make_signed_t<size_t> index_of_slice(const In &in, const Container &other) {
   static_assert(std::is_convertible_v<std::decay_t<typename Container::value_type>, typename In::value_type>,
                 "type does not match vector's value type");
-  if(other.empty()) return 0;
+  if (other.empty()) return 0;
   if (in.size() < other.size()) { return -1; }
   for (size_t i = 0; i <= in.size() - other.size(); ++i) {
     if (std::equal(std::next(in.begin(), i), std::next(in.begin(), i + other.size()), other.begin())) {
@@ -100,7 +116,7 @@ template <typename In, typename Predicate> //
 [[nodiscard]] constexpr std::make_signed_t<size_t> index_where(const In &in, Predicate &&p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   size_t i = 0;
-  for (auto it = in.begin(), end = in.end(); it != end; ++it){
+  for (auto it = in.begin(), end = in.end(); it != end; ++it) {
     auto x = *it;
     if (details::ap(p, x)) return static_cast<std::make_signed_t<size_t>>(i);
     i++;

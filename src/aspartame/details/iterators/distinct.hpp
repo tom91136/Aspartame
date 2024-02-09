@@ -37,7 +37,7 @@ public:
       : it(std::move(begin)), end(std::move(end)), f(function), seen(0, Hash<V, Function>(f), Equal<Function>(f)) {
     static_assert(is_hashable<V>, "distinct type must be hashable");
     static_assert(is_comparable<V>, "distinct type must be comparable");
-    while (it != end && !seen.emplace(*it).second)
+    while (it != this->end && !seen.emplace(*it).second)
       ++it;
   }
   constexpr distinct_iterator &operator++() {

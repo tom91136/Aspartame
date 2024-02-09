@@ -21,6 +21,10 @@ public:
     }
     return *this;
   }
+  constexpr ca_optional &operator=(T&& t)  noexcept {
+    storage.operator=(std::forward<T&&>(t));
+    return *this;
+  }
   constexpr T &operator*() & noexcept { return storage.operator*(); }
   constexpr const T &operator*() const & noexcept { return storage.operator*(); }
   constexpr const T *operator->() const noexcept { return storage.operator->(); }

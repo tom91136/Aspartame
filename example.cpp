@@ -61,13 +61,15 @@ int main() {
   for(auto [k,v] : mm
                          | map([](auto x, auto y) {  return std::pair{x+x, y+1}; })
                          | bind([](auto x ) {  return std::vector{x,x }; })
-                         | distinct_by([](auto x, auto y){ return std::pair{x,x};})
+                         | distinct_by([](auto x, auto y){ return x;})
 
        ){
     std::cout << "kv=" << k << " = " << v << "\n";
 
   }
 
+
+  auto lll = std::vector{1} | last_maybe();
 
   for (auto x : std::vector  {std::string("a"), std::string("b"), std::string("a")} | distinct_by([](auto x) { return x.size() ; })) {
     std::cout << "d=" << x << "\n";
