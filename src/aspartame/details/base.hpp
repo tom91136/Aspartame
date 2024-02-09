@@ -51,6 +51,13 @@ template <typename T> constexpr bool is_hashable = details::is_hashable_impl<std
 template <typename T> constexpr bool is_comparable = details::is_comparable_impl<std::decay_t<T>>;
 
 namespace details {
+
+template <typename T>
+struct unsupported1{};
+
+template <typename K, typename V>
+struct unsupported2{};
+
 template <typename F, typename Args> constexpr auto ap(F f, Args &&t) {
   using U = std::decay_t<Args>;
   if constexpr (is_tuple<Args> || is_pair<Args>) {
@@ -90,6 +97,10 @@ template <typename T> constexpr bool has_reverse<T, std::void_t<decltype(std::de
 template <typename T, typename = void> constexpr bool has_push_back = false;
 template <typename T>
 constexpr bool has_push_back<T, std::void_t<decltype(std::declval<T>().push_back(std::declval<typename T::value_type>()))>> = true;
+
+template <typename T, typename = void> constexpr bool has_size = false;
+template <typename T>
+constexpr bool has_size<T, std::void_t<decltype(std::declval<T>().size())>> = true;
 
 template <typename T, typename = void> constexpr bool has_associative_insert = false;
 template <typename T>

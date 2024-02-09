@@ -1,57 +1,57 @@
 #include "../base.hpp"
 
-#ifndef ASPARTAME_PREFIX
-  #error "ASPARTAME_PREFIX unimplemented"
+#ifndef ASPARTAME_IN_TYPE1
+  #error "ASPARTAME_IN_TYPE1 unimplemented"
 #endif
 
 namespace aspartame {
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(trim_leading)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {};
+template <typename C> //
+[[nodiscard]] constexpr auto trim_leading(const ASPARTAME_IN_TYPE1(C) &in) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {};
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(trim_trailing)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto trim_trailing(const ASPARTAME_IN_TYPE1(C) &in) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {}
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(trim)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto trim(const ASPARTAME_IN_TYPE1(C) &in) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {}
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(is_blank)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto is_blank(const ASPARTAME_IN_TYPE1(C) &in) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {}
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(indent)(const In &in, int n) {
-  if constexpr (details::unsupported<In>(in, n)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto indent(const ASPARTAME_IN_TYPE1(C) &in, int n) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, n)) {}
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(to_upper)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto to_upper(const ASPARTAME_IN_TYPE1(C) &in) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {}
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(to_lower)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto to_lower(const ASPARTAME_IN_TYPE1(C) &in) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {}
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(replace_all)(const In &in, const In &needle, const In &with) {
-  if constexpr (details::unsupported<In>(in, needle, with)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto replace_all(const ASPARTAME_IN_TYPE1(C) &in, const ASPARTAME_IN_TYPE1(C) &needle, const ASPARTAME_IN_TYPE1(C) &with) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, needle, with)) {}
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(contains_ignore_case)(const In &in, const In &that) {
-  if constexpr (details::unsupported<In>(in, that)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto contains_ignore_case(const ASPARTAME_IN_TYPE1(C) &in, const ASPARTAME_IN_TYPE1(C) &that) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, that)) {}
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(equals_ignore_case)(const In &in, const In &that) {
-  if constexpr (details::unsupported<In>(in, that)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto equals_ignore_case(const ASPARTAME_IN_TYPE1(C) &in, const ASPARTAME_IN_TYPE1(C) &that) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, that)) {}
 }
-template <typename In, typename Delimiter> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(split)(const In &in, const Delimiter &delimiter) {
-  if constexpr (details::unsupported<In>(in, delimiter)) {}
+template <typename C, typename Delimiter> //
+[[nodiscard]] constexpr auto split(const ASPARTAME_IN_TYPE1(C) &in, const Delimiter &delimiter) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, delimiter)) {}
 }
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(lines)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename C> //
+[[nodiscard]] constexpr auto lines(const ASPARTAME_IN_TYPE1(C) &in) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {}
 }
 
 } // namespace aspartame

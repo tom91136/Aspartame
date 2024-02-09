@@ -31,35 +31,34 @@ template <typename Op> auto operator^(const std::u8string &l, const Op &r) { ret
 
 } // namespace aspartame
 
-#define ASPARTAME_PREFIX(name) string_##name
 #define ASPARTAME_OUT_TYPE std::basic_string
 
 namespace aspartame {
 
 // container
 
-template <typename In, typename Function> //
-[[nodiscard]] auto ASPARTAME_PREFIX(mk_string)(const In &in, const std::string_view &sep, const std::string_view &prefix,
+template <typename C, typename Function> //
+[[nodiscard]] auto mk_string(const std::basic_string<C> &in, const std::string_view &sep, const std::string_view &prefix,
                                                const std::string_view &suffix, Function &&f) {
   return details::container::mk_string(in, sep, prefix, suffix, f);
 }
 
-template <typename In, typename T> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(append)(const In &in, T &&t) {
-  return details::container::append<In, T, In>(in, std::forward<T &&>(t));
+template <typename C, typename T> //
+[[nodiscard]] /*constexpr*/ auto append(const std::basic_string<C> &in, T &&t) {
+  return details::container::append<std::basic_string<C>, T, std::basic_string<C>>(in, std::forward<T &&>(t));
 }
 
-template <typename In, typename Container> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(concat)(const In &in, Container &&other) {
+template <typename C, typename Container> //
+[[nodiscard]] /*constexpr*/ auto concat(const std::basic_string<C> &in, Container &&other) {
   return in + other;
 }
 
-template <typename In, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(map)(const In &in, Function &&function) {
+template <typename C, typename Function> //
+[[nodiscard]] /*constexpr*/ auto map(const std::basic_string<C> &in, Function &&function) {
   using T = decltype(details::ap(function, *std::begin(in)));
   static_assert(std::is_trivial_v<T>, "return type must be trivial for a string container");
-  if constexpr (std::is_convertible_v<typename In::value_type, T>) {
-    In ys(in.size(), {});
+  if constexpr (std::is_convertible_v<C, T>) {
+    std::basic_string<C> ys(in.size(), {});
     std::transform(in.begin(), in.end(), ys.begin(), [&](auto x) { return details::ap(function, x); });
     return ys;
   } else {
@@ -69,255 +68,255 @@ template <typename In, typename Function> //
   }
 }
 
-template <typename In, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(collect)(const In &in, Function &&function) {
-  return details::container::collect<In, Function, ASPARTAME_OUT_TYPE>(in, function);
+template <typename C, typename Function> //
+[[nodiscard]] /*constexpr*/ auto collect(const std::basic_string<C> &in, Function &&function) {
+  return details::container::collect<std::basic_string<C>, Function, ASPARTAME_OUT_TYPE>(in, function);
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(filter)(const In &in, Predicate &&predicate) {
-  return details::container::filter<In, Predicate, ASPARTAME_OUT_TYPE>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto filter(const std::basic_string<C> &in, Predicate &&predicate) {
+  return details::container::filter<std::basic_string<C>, Predicate, ASPARTAME_OUT_TYPE>(in, predicate);
 }
 
-template <typename In, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(bind)(const In &in, Function &&function) {
+template <typename C, typename Function> //
+[[nodiscard]] /*constexpr*/ auto bind(const std::basic_string<C> &in, Function &&function) {
   using T = decltype(details::ap(function, *std::begin(in)));
-  static_assert(std::is_convertible_v<T, In>, "bind function should return an string type");
-  In ys;
+  static_assert(std::is_convertible_v<T, std::basic_string<C>>, "bind function should return an string type");
+  std::basic_string<C> ys;
   for (auto x : in)
     ys += details::ap(function, x);
   return ys;
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(flatten)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto flatten(const std::basic_string<C> &in) {
+  if constexpr (details::unsupported<std::basic_string<C>>(in)) {}
 }
 
-template <typename In, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(distinct_by)(const In &in, Function &&function) {
-  return details::container::distinct_by<In, Function, In>(in, function);
+template <typename C, typename Function> //
+[[nodiscard]] /*constexpr*/ auto distinct_by(const std::basic_string<C> &in, Function &&function) {
+  return details::container::distinct_by<std::basic_string<C>, Function, std::basic_string<C>>(in, function);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(distinct)(const In &in) {
-  return details::container::distinct<In, In, false>(in);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto distinct(const std::basic_string<C> &in) {
+  return details::container::distinct<std::basic_string<C>, std::basic_string<C>, false>(in);
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(count)(const In &in, Predicate &&predicate) {
-  return details::container::count<In, Predicate>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto count(const std::basic_string<C> &in, Predicate &&predicate) {
+  return details::container::count<std::basic_string<C>, Predicate>(in, predicate);
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(exists)(const In &in, Predicate &&predicate) {
-  return details::container::exists<In, Predicate>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto exists(const std::basic_string<C> &in, Predicate &&predicate) {
+  return details::container::exists<std::basic_string<C>, Predicate>(in, predicate);
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(forall)(const In &in, Predicate &&predicate) {
-  return details::container::forall<In, Predicate>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto forall(const std::basic_string<C> &in, Predicate &&predicate) {
+  return details::container::forall<std::basic_string<C>, Predicate>(in, predicate);
 }
 
-template <typename In, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(reduce)(const In &in, Function &&function) {
-  return details::container::reduce<In, Function>(in, function);
+template <typename C, typename Function> //
+[[nodiscard]] /*constexpr*/ auto reduce(const std::basic_string<C> &in, Function &&function) {
+  return details::container::reduce<std::basic_string<C>, Function>(in, function);
 }
 
-template <typename In, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(tap_each)(const In &in, Function &&function) {
-  return details::container::tap_each<In, Function>(in, function);
+template <typename C, typename Function> //
+[[nodiscard]] /*constexpr*/ auto tap_each(const std::basic_string<C> &in, Function &&function) {
+  return details::container::tap_each<std::basic_string<C>, Function>(in, function);
 }
 
-template <typename In, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(for_each)(const In &in, Function &&function) {
-  details::container::for_each<In, Function>(in, function);
+template <typename C, typename Function> //
+[[nodiscard]] /*constexpr*/ auto for_each(const std::basic_string<C> &in, Function &&function) {
+  details::container::for_each<std::basic_string<C>, Function>(in, function);
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(partition)(const In &in, Predicate &&predicate) {
-  return details::container::partition<In, Predicate, In>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto partition(const std::basic_string<C> &in, Predicate &&predicate) {
+  return details::container::partition<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
 }
 
-template <typename In, typename GroupFunction, typename MapFunction, typename ReduceFunction> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(group_map_reduce)(const In &in, GroupFunction &&group, MapFunction &&map,
+template <typename C, typename GroupFunction, typename MapFunction, typename ReduceFunction> //
+[[nodiscard]] /*constexpr*/ auto group_map_reduce(const std::basic_string<C> &in, GroupFunction &&group, MapFunction &&map,
                                                                     ReduceFunction &&reduce) {
-  return details::container::group_map_reduce<In, GroupFunction, MapFunction, ReduceFunction>(in, group, map, reduce);
+  return details::container::group_map_reduce<std::basic_string<C>, GroupFunction, MapFunction, ReduceFunction>(in, group, map, reduce);
 }
 
-template <typename In, typename GroupFunction, typename MapFunction> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(group_map)(const In &in, GroupFunction &&group, MapFunction &&map) {
-  return details::container::group_map<In, GroupFunction, MapFunction, std::vector>(in, group, map);
+template <typename C, typename GroupFunction, typename MapFunction> //
+[[nodiscard]] /*constexpr*/ auto group_map(const std::basic_string<C> &in, GroupFunction &&group, MapFunction &&map) {
+  return details::container::group_map<std::basic_string<C>, GroupFunction, MapFunction, std::vector>(in, group, map);
 }
 
-template <typename In, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(group_by)(const In &in, Function &&function) {
-  return details::container::group_by<In, Function, std::vector>(in, function);
+template <typename C, typename Function> //
+[[nodiscard]] /*constexpr*/ auto group_by(const std::basic_string<C> &in, Function &&function) {
+  return details::container::group_by<std::basic_string<C>, Function, std::vector>(in, function);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(to_vector)(const In &in) {
-  if constexpr (is_vector<In>) return in;
-  else return std::vector<typename In::value_type>{in.begin(), in.end()};
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto to_vector(const std::basic_string<C> &in) {
+  if constexpr (is_vector<std::basic_string<C>>) return in;
+  else return std::vector<C>{in.begin(), in.end()};
 }
 
 // sequence
 
-template <typename In, typename T> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(prepend)(const In &in, const T &t) {
-  return details::sequence::prepend<In, T, In>(in, t);
+template <typename C, typename T> //
+[[nodiscard]] /*constexpr*/ auto prepend(const std::basic_string<C> &in, const T &t) {
+  return details::sequence::prepend<std::basic_string<C>, T, std::basic_string<C>>(in, t);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(head_maybe)(const In &in) {
-  return details::sequence::head_maybe<In>(in);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto head_maybe(const std::basic_string<C> &in) {
+  return details::sequence::head_maybe<std::basic_string<C>>(in);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(last_maybe)(const In &in) {
-  return details::sequence::last_maybe<In>(in);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto last_maybe(const std::basic_string<C> &in) {
+  return details::sequence::last_maybe<std::basic_string<C>>(in);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(init)(const In &in) {
-  return details::sequence::init<In, In>(in);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto init(const std::basic_string<C> &in) {
+  return details::sequence::init<std::basic_string<C>, std::basic_string<C>>(in);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(tail)(const In &in) {
-  return details::sequence::tail<In, In>(in);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto tail(const std::basic_string<C> &in) {
+  return details::sequence::tail<std::basic_string<C>, std::basic_string<C>>(in);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(at_maybe)(const In &in, size_t idx) {
-  return details::sequence::at_maybe<In>(in, idx);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto at_maybe(const std::basic_string<C> &in, size_t idx) {
+  return details::sequence::at_maybe<std::basic_string<C>>(in, idx);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(slice)(const In &in, size_t from_inclusive, size_t to_exclusive) {
-  return details::sequence::slice<In, In>(in, from_inclusive, to_exclusive);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto slice(const std::basic_string<C> &in, size_t from_inclusive, size_t to_exclusive) {
+  return details::sequence::slice<std::basic_string<C>, std::basic_string<C>>(in, from_inclusive, to_exclusive);
 }
 
-template <typename In, typename Container> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(index_of_slice)(const In &in, const Container &other) {
-  static_assert(std::is_convertible_v<Container, In>, "other string type must be convertible to LHS string type");
-  return details::sequence::index_of_slice<In, In>(in, other);
+template <typename C, typename Container> //
+[[nodiscard]] /*constexpr*/ auto index_of_slice(const std::basic_string<C> &in, const Container &other) {
+  static_assert(std::is_convertible_v<Container, std::basic_string<C>>, "other string type must be convertible to LHS string type");
+  return details::sequence::index_of_slice<std::basic_string<C>, std::basic_string<C>>(in, other);
 }
 
-template <typename In, typename Container> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(contains_slice)(const In &in, const Container &other) {
-  static_assert(std::is_convertible_v<Container, In>, "other string type must be convertible to LHS string type");
-  return details::sequence::index_of_slice<In, In>(in, other) != -1;
+template <typename C, typename Container> //
+[[nodiscard]] /*constexpr*/ auto contains_slice(const std::basic_string<C> &in, const Container &other) {
+  static_assert(std::is_convertible_v<Container, std::basic_string<C>>, "other string type must be convertible to LHS string type");
+  return details::sequence::index_of_slice<std::basic_string<C>, std::basic_string<C>>(in, other) != -1;
 }
 
-template <typename In, typename T> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(index_of)(const In &in, const T &t) {
-  return details::sequence::index_of<In>(in, t);
+template <typename C, typename T> //
+[[nodiscard]] /*constexpr*/ auto index_of(const std::basic_string<C> &in, const T &t) {
+  return details::sequence::index_of<std::basic_string<C>>(in, t);
 }
 
-template <typename In, typename T> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(contains)(const In &in, const T &t) {
-  return details::sequence::index_of<In>(in, t) != -1;
+template <typename C, typename T> //
+[[nodiscard]] /*constexpr*/ auto contains(const std::basic_string<C> &in, const T &t) {
+  return details::sequence::index_of<std::basic_string<C>>(in, t) != -1;
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(index_where)(const In &in, Predicate &&predicate) {
-  return details::sequence::index_where<In, Predicate>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto index_where(const std::basic_string<C> &in, Predicate &&predicate) {
+  return details::sequence::index_where<std::basic_string<C>, Predicate>(in, predicate);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(zip_with_index)(const In &in) {
-  return details::sequence::zip_with_index<In, std::vector>(in);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto zip_with_index(const std::basic_string<C> &in) {
+  return details::sequence::zip_with_index<std::basic_string<C>, std::vector>(in);
 }
 
-template <typename In, typename Container> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(zip)(const In &in, const Container &other) {
-  static_assert(std::is_convertible_v<Container, In>, "other string type must be convertible to LHS string type");
-  return details::sequence::zip<In, In, std::vector>(in, static_cast<In>(other));
+template <typename C, typename Container> //
+[[nodiscard]] /*constexpr*/ auto zip(const std::basic_string<C> &in, const Container &other) {
+  static_assert(std::is_convertible_v<Container, std::basic_string<C>>, "other string type must be convertible to LHS string type");
+  return details::sequence::zip<std::basic_string<C>, std::basic_string<C>, std::vector>(in, static_cast<std::basic_string<C>>(other));
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(transpose)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto transpose(const std::basic_string<C> &in) {
+  if constexpr (details::unsupported<std::basic_string<C>>(in)) {}
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(reverse)(const In &in) {
-  return details::sequence::reverse<In, In>(in);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto reverse(const std::basic_string<C> &in) {
+  return details::sequence::reverse<std::basic_string<C>, std::basic_string<C>>(in);
 }
 
-template <typename In, typename URBG> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(shuffle)(const In &in, URBG &&urbg) {
-  return details::sequence::shuffle<In, URBG, In>(in, std::forward<URBG &&>(urbg));
+template <typename C, typename URBG> //
+[[nodiscard]] /*constexpr*/ auto shuffle(const std::basic_string<C> &in, URBG &&urbg) {
+  return details::sequence::shuffle<std::basic_string<C>, URBG, std::basic_string<C>>(in, std::forward<URBG &&>(urbg));
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(sort)(const In &in) {
-  return details::sequence::sort<In, In>(in);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto sort(const std::basic_string<C> &in) {
+  return details::sequence::sort<std::basic_string<C>, std::basic_string<C>>(in);
 }
 
-template <typename In, typename Compare> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(sort)(const In &in, Compare &&compare) {
-  return details::sequence::sort<In, Compare, In>(in, compare);
+template <typename C, typename Compare> //
+[[nodiscard]] /*constexpr*/ auto sort(const std::basic_string<C> &in, Compare &&compare) {
+  return details::sequence::sort<std::basic_string<C>, Compare, std::basic_string<C>>(in, compare);
 }
 
-template <typename In, typename Select> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(sort_by)(const In &in, Select &&select) {
-  return details::sequence::sort_by<In, Select, In>(in, select);
+template <typename C, typename Select> //
+[[nodiscard]] /*constexpr*/ auto sort_by(const std::basic_string<C> &in, Select &&select) {
+  return details::sequence::sort_by<std::basic_string<C>, Select, std::basic_string<C>>(in, select);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(split_at)(const In &in, size_t idx) {
-  return details::sequence::split_at<In, In>(in, idx);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto split_at(const std::basic_string<C> &in, size_t idx) {
+  return details::sequence::split_at<std::basic_string<C>, std::basic_string<C>>(in, idx);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(take_right)(const In &in, size_t n) {
-  return details::sequence::take_right<In, In>(in, n);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto take_right(const std::basic_string<C> &in, size_t n) {
+  return details::sequence::take_right<std::basic_string<C>, std::basic_string<C>>(in, n);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(drop_right)(const In &in, size_t n) {
-  return details::sequence::drop_right<In, In>(in, n);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto drop_right(const std::basic_string<C> &in, size_t n) {
+  return details::sequence::drop_right<std::basic_string<C>, std::basic_string<C>>(in, n);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(take)(const In &in, size_t n) {
-  return details::sequence::take<In, In>(in, n);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto take(const std::basic_string<C> &in, size_t n) {
+  return details::sequence::take<std::basic_string<C>, std::basic_string<C>>(in, n);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(drop)(const In &in, size_t n) {
-  return details::sequence::drop<In, In>(in, n);
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto drop(const std::basic_string<C> &in, size_t n) {
+  return details::sequence::drop<std::basic_string<C>, std::basic_string<C>>(in, n);
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(take_while)(const In &in, Predicate &&predicate) {
-  return details::sequence::take_while<In, Predicate, In>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto take_while(const std::basic_string<C> &in, Predicate &&predicate) {
+  return details::sequence::take_while<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(drop_while)(const In &in, Predicate &&predicate) {
-  return details::sequence::drop_while<In, Predicate, In>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto drop_while(const std::basic_string<C> &in, Predicate &&predicate) {
+  return details::sequence::drop_while<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
 }
 
-template <typename In, typename Accumulator, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(fold_left)(const In &in, Accumulator &&init, Function &&function) {
-  return details::sequence::fold_left<In, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
+template <typename C, typename Accumulator, typename Function> //
+[[nodiscard]] /*constexpr*/ auto fold_left(const std::basic_string<C> &in, Accumulator &&init, Function &&function) {
+  return details::sequence::fold_left<std::basic_string<C>, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
 }
 
-template <typename In, typename Accumulator, typename Function> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(fold_right)(const In &in, Accumulator &&init, Function &&function) {
-  return details::sequence::fold_right<In, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
+template <typename C, typename Accumulator, typename Function> //
+[[nodiscard]] /*constexpr*/ auto fold_right(const std::basic_string<C> &in, Accumulator &&init, Function &&function) {
+  return details::sequence::fold_right<std::basic_string<C>, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(sliding)(const In &in, size_t size, size_t step) {
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto sliding(const std::basic_string<C> &in, size_t size, size_t step) {
   if (size == 0 || step == 0)
     throw std::range_error("cannot apply windowing with zero size or step, size=" + std::to_string(size) = " step=" + std::to_string(step));
-  if (in.empty()) return std::vector<In>{};
-  if (in.length() <= size) return std::vector<In>{in};
-  std::vector<In> ys;
+  if (in.empty()) return std::vector<std::basic_string<C>>{};
+  if (in.length() <= size) return std::vector<std::basic_string<C>>{in};
+  std::vector<std::basic_string<C>> ys;
   size_t i = 0;
   for (; i + size <= in.length(); i += step)
     ys.push_back(in.substr(i, size));
@@ -325,35 +324,35 @@ template <typename In> //
   return ys;
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(trim_leading)(const In &in) {
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto trim_leading(const std::basic_string<C> &in) {
   auto first_not_space = std::find_if_not(in.begin(), in.end(), isspace);
-  return In(first_not_space, in.end());
+  return std::basic_string<C>(first_not_space, in.end());
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(trim_trailing)(const In &in) {
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto trim_trailing(const std::basic_string<C> &in) {
   auto last_not_space = std::find_if_not(in.rbegin(), in.rend(), isspace).base();
-  return In(in.begin(), last_not_space);
+  return std::basic_string<C>(in.begin(), last_not_space);
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(trim)(const In &in) {
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto trim(const std::basic_string<C> &in) {
   auto first_not_space = std::find_if_not(in.begin(), in.end(), isspace);
   auto last_not_space = std::find_if_not(in.rbegin(), in.rend(), isspace).base();
-  return (first_not_space <= last_not_space) ? In(first_not_space, last_not_space) : In();
+  return (first_not_space <= last_not_space) ? std::basic_string<C>(first_not_space, last_not_space) : std::basic_string<C>();
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ bool ASPARTAME_PREFIX(is_blank)(const In &in) {
+template <typename C> //
+[[nodiscard]] /*constexpr*/ bool is_blank(const std::basic_string<C> &in) {
   return std::all_of(in.begin(), in.end(), [](auto c) { return std::isspace(c); });
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(indent)(const In &in, int n) {
-  In out;
-  In line;
-  In prefix(n > 0 ? n : 0, ' ');
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto indent(const std::basic_string<C> &in, int n) {
+  std::basic_string<C> out;
+  std::basic_string<C> line;
+  std::basic_string<C> prefix(n > 0 ? n : 0, ' ');
   for (auto c : in) {
     if (c == '\n' || c == in.back()) {
       if (n < 0) {
@@ -367,28 +366,28 @@ template <typename In> //
   return out;
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(to_upper)(const In &in) {
-  In out(in.length(), char());
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto to_upper(const std::basic_string<C> &in) {
+  std::basic_string<C> out(in.length(), char());
   std::transform(in.begin(), in.end(), out.begin(), [](auto x) { return std::toupper(x); });
   return out;
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(to_lower)(const In &in) {
-  In out(in.length(), char());
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto to_lower(const std::basic_string<C> &in) {
+  std::basic_string<C> out(in.length(), char());
   std::transform(in.begin(), in.end(), out.begin(), [](auto x) { return std::tolower(x); });
   return out;
 }
 
-template <typename In, typename Needle, typename With> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(replace_all)(const In &in, const Needle &needle, const With &with) {
-  auto needle_ = static_cast<In>(needle);
-  auto with_ = static_cast<In>(with);
+template <typename C, typename Needle, typename With> //
+[[nodiscard]] /*constexpr*/ auto replace_all(const std::basic_string<C> &in, const Needle &needle, const With &with) {
+  auto needle_ = static_cast<std::basic_string<C>>(needle);
+  auto with_ = static_cast<std::basic_string<C>>(with);
   if (needle_.empty()) return in;
-  In out;
+  std::basic_string<C> out;
   size_t start_pos = 0, pos;
-  while ((pos = in.find(needle_, start_pos)) != In::npos) {
+  while ((pos = in.find(needle_, start_pos)) != std::basic_string<C>::npos) {
     out.append(in, start_pos, pos - start_pos);
     out += with_;
     start_pos = pos + needle_.length();
@@ -397,17 +396,17 @@ template <typename In, typename Needle, typename With> //
   return out;
 }
 
-template <typename In, typename String> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(contains_ignore_case)(const In &in, const String &that) {
-  In in_lower = in, that_lower = static_cast<In>(that);
+template <typename C, typename String> //
+[[nodiscard]] /*constexpr*/ auto contains_ignore_case(const std::basic_string<C> &in, const String &that) {
+  std::basic_string<C> in_lower = in, that_lower = static_cast<std::basic_string<C>>(that);
   std::transform(in_lower.begin(), in_lower.end(), in_lower.begin(), [](auto x) { return std::tolower(x); });
   std::transform(that_lower.begin(), that_lower.end(), that_lower.begin(), [](auto x) { return std::tolower(x); });
-  return in_lower.find(that_lower) != In::npos;
+  return in_lower.find(that_lower) != std::basic_string<C>::npos;
 }
 
-template <typename In, typename String> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(equals_ignore_case)(const In &in, const String &that) {
-  auto that_ = static_cast<In>(that);
+template <typename C, typename String> //
+[[nodiscard]] /*constexpr*/ auto equals_ignore_case(const std::basic_string<C> &in, const String &that) {
+  auto that_ = static_cast<std::basic_string<C>>(that);
   if (in.size() != that_.size()) return false;
   for (size_t i = 0; i < in.size(); ++i) {
     if (tolower(in[i]) != tolower(that_[i])) return false;
@@ -415,18 +414,18 @@ template <typename In, typename String> //
   return true;
 }
 
-template <typename In, typename Delimiter> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(split)(const In &in, const Delimiter &delimiter) {
-  std::vector<In> ys;
+template <typename C, typename Delimiter> //
+[[nodiscard]] /*constexpr*/ auto split(const std::basic_string<C> &in, const Delimiter &delimiter) {
+  std::vector<std::basic_string<C>> ys;
   size_t start = 0, end;
-  if constexpr (std::is_convertible_v<Delimiter, In>) {
-    auto delimiter_ = static_cast<In>(delimiter);
-    while ((end = in.find(delimiter_, start)) != In::npos) {
+  if constexpr (std::is_convertible_v<Delimiter, std::basic_string<C>>) {
+    auto delimiter_ = static_cast<std::basic_string<C>>(delimiter);
+    while ((end = in.find(delimiter_, start)) != std::basic_string<C>::npos) {
       ys.push_back(in.substr(start, end - start));
       start = end + delimiter_.size();
     }
-  } else if constexpr (std::is_same_v<Delimiter, typename In::value_type>) {
-    while ((end = in.find(delimiter, start)) != In::npos) {
+  } else if constexpr (std::is_same_v<Delimiter, C>) {
+    while ((end = in.find(delimiter, start)) != std::basic_string<C>::npos) {
       ys.push_back(in.substr(start, end - start));
       start = end + 1;
     }
@@ -435,17 +434,23 @@ template <typename In, typename Delimiter> //
   return ys;
 }
 
-template <typename In> //
-[[nodiscard]] /*constexpr*/ auto ASPARTAME_PREFIX(lines)(const In &in) {
-  auto xs = string_split(in,  static_cast<typename In::value_type>('\n'));
+template <typename C> //
+[[nodiscard]] /*constexpr*/ auto lines(const std::basic_string<C> &in) {
+  auto xs = split(in,  static_cast<C>('\n'));
   if(!xs.empty() && xs.back().empty()) xs.erase(xs.end()-1);
   return xs;
 }
 
 } // namespace aspartame
+#undef ASPARTAME_OUT_TYPE
+
+
+#define ASPARTAME_IN_TYPE2(K, V) std::basic_string<std::pair<K, V>>
+#define ASPARTAME_IN_TYPE1(C) std::basic_string<C>
 
 #include "details/nop/map_template.hpp"
 #include "details/nop/optional_template.hpp"
 
-#undef ASPARTAME_PREFIX
-#undef ASPARTAME_OUT_TYPE
+#undef ASPARTAME_IN_TYPE2
+#undef ASPARTAME_IN_TYPE1
+

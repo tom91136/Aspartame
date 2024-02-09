@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "../test_base_container1.hpp"
-#include "aspartame/fluent.hpp"
 #include "catch2/catch_test_macros.hpp"
 
 #ifndef DISABLE_AND_THEN

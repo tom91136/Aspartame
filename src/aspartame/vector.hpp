@@ -1,20 +1,19 @@
 #pragma once
 
-#include "details/base.hpp"
 #include <vector>
+#include "details/base.hpp"
 
 #ifdef ASPARTAME_FINALISED
-  #error "This header must be included before aspartame/fluent.hpp"
+  #error "This header must be included before aspartame/fluent.hpp; \
+consider adding a new line between this include and others to prevent reording by formatters."
 #endif
-
-#define ASPARTAME_VECTOR(T, op, ...)                                                                                                       \
-  if constexpr (is_vector<T>) { return vector_##op(__VA_ARGS__); }
 
 namespace aspartame {
 template <typename T, typename Op> auto operator^(const std::vector<T> &l, const Op &r) { return r(l); }
 } // namespace aspartame
 
-#define ASPARTAME_PREFIX(name) vector_##name
+#define ASPARTAME_IN_TYPE2(K, V) std::vector<std::pair<K, V>>
+#define ASPARTAME_IN_TYPE1(C) std::vector<C>
 #define ASPARTAME_OUT_TYPE std::vector
 #define ASPARTAME_SET_LIKE false
 
@@ -25,6 +24,7 @@ template <typename T, typename Op> auto operator^(const std::vector<T> &l, const
 #include "details/nop/optional_template.hpp"
 #include "details/nop/string_template.hpp"
 
-#undef ASPARTAME_PREFIX
-#undef ASPARTAME_OUT_TYPE
 #undef ASPARTAME_SET_LIKE
+#undef ASPARTAME_OUT_TYPE
+#undef ASPARTAME_IN_TYPE1
+#undef ASPARTAME_IN_TYPE2

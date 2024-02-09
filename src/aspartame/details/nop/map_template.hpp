@@ -1,38 +1,38 @@
 #include "../base.hpp"
 
-#ifndef ASPARTAME_PREFIX
-  #error "ASPARTAME_PREFIX unimplemented"
+#ifndef ASPARTAME_IN_TYPE2
+  #error "ASPARTAME_IN_TYPE2 unimplemented"
 #endif
 
 namespace aspartame {
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(keys)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename K, typename V> //
+[[nodiscard]] constexpr auto keys(const ASPARTAME_IN_TYPE2(K, V) & in) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE2(K, V)>(in)) {}
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(values)(const In &in) {
-  if constexpr (details::unsupported<In>(in)) {}
+template <typename K, typename V> //
+[[nodiscard]] constexpr auto values(const ASPARTAME_IN_TYPE2(K, V) & in) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE2(K, V)>(in)) {}
 }
 
-template <typename In, typename Function> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(map_keys)(const In &in, Function &&function) {
-  if constexpr (details::unsupported<In>(in, function)) {}
+template <typename K, typename V, typename Function> //
+[[nodiscard]] constexpr auto map_keys(const ASPARTAME_IN_TYPE2(K, V) & in, Function &&function) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE2(K, V)>(in, function)) {}
 }
-template <typename In, typename Function> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(map_values)(const In &in, Function &&function) {
-  if constexpr (details::unsupported<In>(in, function)) {}
-}
-
-template <typename In, typename Key> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(get)(const In &in, const Key &key) {
-  if constexpr (details::unsupported<In>(in, key)) {}
+template <typename K, typename V, typename Function> //
+[[nodiscard]] constexpr auto map_values(const ASPARTAME_IN_TYPE2(K, V) & in, Function &&function) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE2(K, V)>(in, function)) {}
 }
 
-template <typename In, typename K, typename V> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(get_or_default)(const In &in, const K &key, const V &value) {
-  if constexpr (details::unsupported<In>(in, key, value)) {}
+template <typename K, typename V> //
+[[nodiscard]] constexpr auto get(const ASPARTAME_IN_TYPE2(K, V) & in, const K &key) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE2(K, V)>(in, key)) {}
+}
+
+template <typename K, typename V> //
+[[nodiscard]] constexpr auto get_or_default(const ASPARTAME_IN_TYPE2(K, V) & in, const K &key, const V &value) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE2(K, V)>(in, key, value)) {}
 }
 
 } // namespace aspartame

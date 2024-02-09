@@ -1,8 +1,6 @@
-#include "aspartame/string.hpp"
+#include "test_base_includes.hpp"
+
 #include <random>
-
-#include "aspartame/fluent.hpp"
-
 #include "catch2/catch_test_macros.hpp"
 
 #define OP_ ^
@@ -347,9 +345,9 @@ TEST_CASE(TPE_NAME "_index_of_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("" ^ index_of_slice("abc")) == -1);
   CHECK(("a" ^ index_of_slice("a")) == 0);
-  CHECK(("abcde" ^ index_of_slice("")) == -1);
+  CHECK(("abcde" ^ index_of_slice("")) == 0);
 
-  CHECK(("abcde"_w ^ index_of_slice(""_w)) == -1);
+  CHECK(("abcde"_w ^ index_of_slice(""_w)) == 0);
   CHECK(("abcde"_w ^ index_of_slice("ab"_w)) == 0);
 }
 #endif
@@ -363,9 +361,9 @@ TEST_CASE(TPE_NAME "_contains_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("" ^ contains_slice("abc")) == false);
   CHECK(("a" ^ contains_slice("a")) == true);
-  CHECK(("abcde" ^ contains_slice("")) == false);
+  CHECK(("abcde" ^ contains_slice("")) == true);
 
-  CHECK(("abcde"_w ^ contains_slice(""_w)) == false);
+  CHECK(("abcde"_w ^ contains_slice(""_w)) == true);
   CHECK(("abcde"_w ^ contains_slice("ab"_w)) == true);
 }
 #endif

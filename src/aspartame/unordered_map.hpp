@@ -7,11 +7,9 @@
 #include "details/map_impl.hpp"
 
 #ifdef ASPARTAME_FINALISED
-  #error "This header must be included before aspartame/fluent.hpp"
+  #error "This header must be included before aspartame/fluent.hpp; \
+consider adding a new line between this include and others to prevent reording by formatters."
 #endif
-
-#define ASPARTAME_UNORDERED_MAP(T, op, ...)                                                                                                \
-  if constexpr (is_unordered_map<T>) { return unordered_map_##op(__VA_ARGS__); }
 
 namespace aspartame {
 namespace details {
@@ -22,7 +20,8 @@ template <typename T> constexpr bool is_unordered_map = details::is_unordered_ma
 template <typename K, typename V, typename Op> auto operator^(const std::unordered_map<K, V> &l, const Op &r) { return r(l); }
 } // namespace aspartame
 
-#define ASPARTAME_PREFIX(name) unordered_map_##name
+#define ASPARTAME_IN_TYPE2(K, V) std::unordered_map<K, V>
+#define ASPARTAME_IN_TYPE1(C) std::unordered_map<C, C>
 #define ASPARTAME_OUT_TYPE std::unordered_map
 #define ASPARTAME_OUT_TYPE_C1 std::unordered_set
 #define ASPARTAME_SET_LIKE true
@@ -34,6 +33,8 @@ template <typename K, typename V, typename Op> auto operator^(const std::unorder
 #include "details/nop/sequence_template.hpp"
 #include "details/nop/string_template.hpp"
 
-#undef ASPARTAME_PREFIX
+#undef ASPARTAME_IN_TYPE2
+#undef ASPARTAME_IN_TYPE1
+#undef ASPARTAME_OUT_TYPE_C1
 #undef ASPARTAME_OUT_TYPE
 #undef ASPARTAME_SET_LIKE

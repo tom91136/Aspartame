@@ -3,8 +3,8 @@
 #include "base.hpp"
 #include "sequence1_impl.hpp"
 
-#ifndef ASPARTAME_PREFIX
-  #error "ASPARTAME_PREFIX unimplemented"
+#ifndef ASPARTAME_IN_TYPE1
+  #error "ASPARTAME_IN_TYPE1 unimplemented"
 #endif
 
 #ifndef ASPARTAME_OUT_TYPE
@@ -13,154 +13,154 @@
 
 namespace aspartame {
 
-template <typename In, typename T> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(prepend)(const In &in, const T &t) {
-  return details::sequence::prepend<In, T, In>(in, t);
+template <typename C, typename T> //
+[[nodiscard]] constexpr auto prepend(const ASPARTAME_IN_TYPE1(C) &in, const T &t) {
+  return details::sequence::prepend<ASPARTAME_IN_TYPE1(C), T, ASPARTAME_IN_TYPE1(C)>(in, t);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(head_maybe)(const In &in) {
-  return details::sequence::head_maybe<In>(in);
+template <typename C> //
+[[nodiscard]] constexpr auto head_maybe(const ASPARTAME_IN_TYPE1(C) &in) {
+  return details::sequence::head_maybe<ASPARTAME_IN_TYPE1(C)>(in);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(last_maybe)(const In &in) {
-  return details::sequence::last_maybe<In>(in);
+template <typename C> //
+[[nodiscard]] constexpr auto last_maybe(const ASPARTAME_IN_TYPE1(C) &in) {
+  return details::sequence::last_maybe<ASPARTAME_IN_TYPE1(C)>(in);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(init)(const In &in) {
-  return details::sequence::init<In, In>(in);
+template <typename C> //
+[[nodiscard]] constexpr auto init(const ASPARTAME_IN_TYPE1(C) &in) {
+  return details::sequence::init<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(tail)(const In &in) {
-  return details::sequence::tail<In, In>(in);
+template <typename C> //
+[[nodiscard]] constexpr auto tail(const ASPARTAME_IN_TYPE1(C) &in) {
+  return details::sequence::tail<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(at_maybe)(const In &in, size_t idx) {
-  return details::sequence::at_maybe<In>(in, idx);
+template <typename C> //
+[[nodiscard]] constexpr auto at_maybe(const ASPARTAME_IN_TYPE1(C) &in, size_t idx) {
+  return details::sequence::at_maybe<ASPARTAME_IN_TYPE1(C)>(in, idx);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(slice)(const In &in, size_t from_inclusive, size_t to_exclusive) {
-  return details::sequence::slice<In, In>(in, from_inclusive, to_exclusive);
+template <typename C> //
+[[nodiscard]] constexpr auto slice(const ASPARTAME_IN_TYPE1(C) &in, size_t from_inclusive, size_t to_exclusive) {
+  return details::sequence::slice<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in, from_inclusive, to_exclusive);
 }
 
-template <typename In, typename Container> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(index_of_slice)(const In &in, const Container &other) {
-  return details::sequence::index_of_slice<In, Container>(in, other);
+template <typename C, typename Container> //
+[[nodiscard]] constexpr auto index_of_slice(const ASPARTAME_IN_TYPE1(C) &in, const Container &other) {
+  return details::sequence::index_of_slice<ASPARTAME_IN_TYPE1(C), Container>(in, other);
 }
 
-template <typename In, typename Container> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(contains_slice)(const In &in, const Container &other) {
-  return details::sequence::index_of_slice<In, Container>(in, other) != -1;
+template <typename C, typename Container> //
+[[nodiscard]] constexpr auto contains_slice(const ASPARTAME_IN_TYPE1(C) &in, const Container &other) {
+  return details::sequence::index_of_slice<ASPARTAME_IN_TYPE1(C), Container>(in, other) != -1;
 }
 
-template <typename In, typename T> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(index_of)(const In &in, const T &t) {
-  return details::sequence::index_of<In>(in, t);
+template <typename C, typename T> //
+[[nodiscard]] constexpr auto index_of(const ASPARTAME_IN_TYPE1(C) &in, const T &t) {
+  return details::sequence::index_of<ASPARTAME_IN_TYPE1(C)>(in, t);
 }
 
-template <typename In, typename T> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(contains)(const In &in, const T &t) {
-  return details::sequence::index_of<In>(in, t) != -1;
+template <typename C, typename T> //
+[[nodiscard]] constexpr auto contains(const ASPARTAME_IN_TYPE1(C) &in, const T &t) {
+  return details::sequence::index_of<ASPARTAME_IN_TYPE1(C)>(in, t) != -1;
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(index_where)(const In &in, Predicate &&predicate) {
-  return details::sequence::index_where<In, Predicate>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] constexpr auto index_where(const ASPARTAME_IN_TYPE1(C) &in, Predicate &&predicate) {
+  return details::sequence::index_where<ASPARTAME_IN_TYPE1(C), Predicate>(in, predicate);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(zip_with_index)(const In &in) {
-  return details::sequence::zip_with_index<In, ASPARTAME_OUT_TYPE>(in);
+template <typename C> //
+[[nodiscard]] constexpr auto zip_with_index(const ASPARTAME_IN_TYPE1(C) &in) {
+  return details::sequence::zip_with_index<ASPARTAME_IN_TYPE1(C), ASPARTAME_OUT_TYPE>(in);
 }
 
-template <typename In, typename Container> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(zip)(const In &in, const Container &other) {
-  return details::sequence::zip<In, Container, ASPARTAME_OUT_TYPE>(in, other);
+template <typename C, typename Container> //
+[[nodiscard]] constexpr auto zip(const ASPARTAME_IN_TYPE1(C) &in, const Container &other) {
+  return details::sequence::zip<ASPARTAME_IN_TYPE1(C), Container, ASPARTAME_OUT_TYPE>(in, other);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(transpose)(const In &in) {
-  return details::sequence::transpose<In, ASPARTAME_OUT_TYPE>(in);
+template <typename C> //
+[[nodiscard]] constexpr auto transpose(const ASPARTAME_IN_TYPE1(C) &in) {
+  return details::sequence::transpose<ASPARTAME_IN_TYPE1(C), ASPARTAME_OUT_TYPE>(in);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(reverse)(const In &in) {
-  return details::sequence::reverse<In, In>(in);
+template <typename C> //
+[[nodiscard]] constexpr auto reverse(const ASPARTAME_IN_TYPE1(C) &in) {
+  return details::sequence::reverse<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in);
 }
 
-template <typename In, typename URBG> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(shuffle)(const In &in, URBG &&urbg) {
-  return details::sequence::shuffle<In, URBG, In>(in, std::forward<URBG &&>(urbg));
+template <typename C, typename URBG> //
+[[nodiscard]] constexpr auto shuffle(const ASPARTAME_IN_TYPE1(C) &in, URBG &&urbg) {
+  return details::sequence::shuffle<ASPARTAME_IN_TYPE1(C), URBG, ASPARTAME_IN_TYPE1(C)>(in, std::forward<URBG &&>(urbg));
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(sort)(const In &in) {
-  return details::sequence::sort<In, In>(in);
+template <typename C> //
+[[nodiscard]] constexpr auto sort(const ASPARTAME_IN_TYPE1(C) &in) {
+  return details::sequence::sort<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in);
 }
 
-template <typename In, typename Compare> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(sort)(const In &in, Compare &&compare) {
-  return details::sequence::sort<In, Compare, In>(in, compare);
+template <typename C, typename Compare> //
+[[nodiscard]] constexpr auto sort(const ASPARTAME_IN_TYPE1(C) &in, Compare &&compare) {
+  return details::sequence::sort<ASPARTAME_IN_TYPE1(C), Compare, ASPARTAME_IN_TYPE1(C)>(in, compare);
 }
 
-template <typename In, typename Select> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(sort_by)(const In &in, Select &&select) {
-  return details::sequence::sort_by<In, Select, In>(in, select);
+template <typename C, typename Select> //
+[[nodiscard]] constexpr auto sort_by(const ASPARTAME_IN_TYPE1(C) &in, Select &&select) {
+  return details::sequence::sort_by<ASPARTAME_IN_TYPE1(C), Select, ASPARTAME_IN_TYPE1(C)>(in, select);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(split_at)(const In &in, size_t idx) {
-  return details::sequence::split_at<In, In>(in, idx);
+template <typename C> //
+[[nodiscard]] constexpr auto split_at(const ASPARTAME_IN_TYPE1(C) &in, size_t idx) {
+  return details::sequence::split_at<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in, idx);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(take_right)(const In &in, size_t n) {
-  return details::sequence::take_right<In, In>(in, n);
+template <typename C> //
+[[nodiscard]] constexpr auto take_right(const ASPARTAME_IN_TYPE1(C) &in, size_t n) {
+  return details::sequence::take_right<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in, n);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(drop_right)(const In &in, size_t n) {
-  return details::sequence::drop_right<In, In>(in, n);
+template <typename C> //
+[[nodiscard]] constexpr auto drop_right(const ASPARTAME_IN_TYPE1(C) &in, size_t n) {
+  return details::sequence::drop_right<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in, n);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(take)(const In &in, size_t n) {
-  return details::sequence::take<In, In>(in, n);
+template <typename C> //
+[[nodiscard]] constexpr auto take(const ASPARTAME_IN_TYPE1(C) &in, size_t n) {
+  return details::sequence::take<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in, n);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(drop)(const In &in, size_t n) {
-  return details::sequence::drop<In, In>(in, n);
+template <typename C> //
+[[nodiscard]] constexpr auto drop(const ASPARTAME_IN_TYPE1(C) &in, size_t n) {
+  return details::sequence::drop<ASPARTAME_IN_TYPE1(C), ASPARTAME_IN_TYPE1(C)>(in, n);
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(take_while)(const In &in, Predicate &&predicate) {
-  return details::sequence::take_while<In, Predicate, In>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] constexpr auto take_while(const ASPARTAME_IN_TYPE1(C) &in, Predicate &&predicate) {
+  return details::sequence::take_while<ASPARTAME_IN_TYPE1(C), Predicate, ASPARTAME_IN_TYPE1(C)>(in, predicate);
 }
 
-template <typename In, typename Predicate> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(drop_while)(const In &in, Predicate &&predicate) {
-  return details::sequence::drop_while<In, Predicate, In>(in, predicate);
+template <typename C, typename Predicate> //
+[[nodiscard]] constexpr auto drop_while(const ASPARTAME_IN_TYPE1(C) &in, Predicate &&predicate) {
+  return details::sequence::drop_while<ASPARTAME_IN_TYPE1(C), Predicate, ASPARTAME_IN_TYPE1(C)>(in, predicate);
 }
 
-template <typename In, typename Accumulator, typename Function> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(fold_left)(const In &in, Accumulator &&init, Function &&function) {
-  return details::sequence::fold_left<In, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
+template <typename C, typename Accumulator, typename Function> //
+[[nodiscard]] constexpr auto fold_left(const ASPARTAME_IN_TYPE1(C) &in, Accumulator &&init, Function &&function) {
+  return details::sequence::fold_left<ASPARTAME_IN_TYPE1(C), Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
 }
 
-template <typename In, typename Accumulator, typename Function> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(fold_right)(const In &in, Accumulator &&init, Function &&function) {
-  return details::sequence::fold_right<In, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
+template <typename C, typename Accumulator, typename Function> //
+[[nodiscard]] constexpr auto fold_right(const ASPARTAME_IN_TYPE1(C) &in, Accumulator &&init, Function &&function) {
+  return details::sequence::fold_right<ASPARTAME_IN_TYPE1(C), Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
 }
 
-template <typename In> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(sliding)(const In &in, size_t size, size_t step) {
-  return details::sequence::sliding<In, ASPARTAME_OUT_TYPE>(in, size, step);
+template <typename C> //
+[[nodiscard]] constexpr auto sliding(const ASPARTAME_IN_TYPE1(C) &in, size_t size, size_t step) {
+  return details::sequence::sliding<ASPARTAME_IN_TYPE1(C), ASPARTAME_OUT_TYPE>(in, size, step);
 }
 
 } // namespace aspartame

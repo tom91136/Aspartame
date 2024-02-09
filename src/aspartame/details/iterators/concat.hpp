@@ -6,38 +6,35 @@ namespace aspartame::details {
 
 template <typename Iter1, //
           typename Iter2, //
-          typename T = std::add_const_t<typename Iter1::value_type>>
-class concat_iterator : public fwd_iterator<concat_iterator<Iter1, Iter2>, T> {
-  static_assert(std::is_same_v<      //
-                    std::remove_const_t<T>, //
-                    std::remove_const_t<typename std::iterator_traits<Iter2>::value_type>>,
+          typename T = typename Iter1::value_type>
+class concat_iterator : public fwd_iterator<concat_iterator<Iter1, Iter2, T>, T> {
+  static_assert(std::is_same_v<T, typename std::iterator_traits<Iter2>::value_type>, //
                 "Iterators must be of the same value type");
-  Iter1 iter1_begin_, iter1_end_;
-  Iter2 iter2_begin_, iter2_end_;
-  bool is_first_iter;
+  Iter1 it1, end1;
+  Iter2 it2, end2;
+  bool first_iter = false;
 
 public:
   constexpr concat_iterator() = default;
-  constexpr concat_iterator(Iter1 iter1_begin, Iter1 iter1_end, Iter2 iter2_begin, Iter2 iter2_end)
-      : iter1_begin_(iter1_begin), iter1_end_(iter1_end), //
-        iter2_begin_(iter2_begin), iter2_end_(iter2_end), is_first_iter(true) {}
+  constexpr concat_iterator(Iter1 begin1, Iter1 end1, Iter2 begin2, Iter2 end2)
+      : it1(std::move(begin1)), end1(std::move(end1)), //
+        it2(std::move(begin2)), end2(std::move(end2)), //
+        first_iter(this->it1 != this->end1) {}
 
   constexpr concat_iterator &operator++() {
-    if (is_first_iter) {
-      if (++iter1_begin_ == iter1_end_) { is_first_iter = false; }
-    } else {
-      ++iter2_begin_;
-    }
+    if (first_iter) {
+      if (++it1 == end1) { first_iter = false; }
+    } else ++it2;
+
     return *this;
   }
 
-  [[nodiscard]] constexpr T &operator*() const { return is_first_iter ? *iter1_begin_ : *iter2_begin_; }
-  [[nodiscard]] constexpr bool operator==(const concat_iterator &other) const {
-    // Equal if both are at the end or if the current positions are the same
-    bool atEnd1 = iter1_begin_ == iter1_end_ && other.iter1_begin_ == other.iter1_end_;
-    bool atEnd2 = iter2_begin_ == iter2_end_ && other.iter2_begin_ == other.iter2_end_;
-    bool samePos = (iter1_begin_ == other.iter1_begin_ && iter2_begin_ == other.iter2_begin_);
-    return (atEnd1 && atEnd2) || samePos;
+  [[nodiscard]] constexpr const T &operator*() { return first_iter ? *it1 : *it2; }
+  [[nodiscard]] constexpr bool operator==(const concat_iterator &that) const {
+    bool at_end1 = it1 == end1 && that.it1 == that.end1;
+    bool at_end2 = it2 == end2 && that.it2 == that.end2;
+    bool same_pos = (it1 == that.it1 && it2 == that.it2);
+    return (at_end1 && at_end2) || same_pos;
   }
 };
 

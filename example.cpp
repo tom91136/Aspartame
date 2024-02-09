@@ -27,63 +27,105 @@ int main() {
 
   std::vector xs{1, 2, 3};
 
+  static_assert(std::is_same_v<decltype(xs.begin().operator*()),int&>);
+
   static_assert(is_iterable<decltype(xs)>, "a");
 
-  for (auto x : xs | append(10) | append(30) | concat(xs) | map([](auto x) { return x * 2; }) | filter([](auto x) { return x > 6; })) {
+  auto vvv = xs | append(1) | concat(xs) | to_vector();
+  for (auto &x : vvv) {
+    std::cout << "v=" << x << "\n";
+
+  }
+
+
+//  static_assert(std::is_same_v<decltype(vvv), decltype(xs)>,"aa" );
+//
+//
+
+//  std::vector  {1, 2, 3};
+  auto u =  std::vector  {1, 2, 3} | filter([](auto x) { return x > 2; });
+  for (auto x : u) {
     std::cout << "x=" << x << "\n";
   }
 
-  std::cout << " = " << (xs | append(10) | append(30) | concat(xs) | map([](auto x) { return x * 2; }) | filter([](auto x) { return x > 6; }) | mk_string(",", "[", "]")) << std::endl;
+  auto [l, r] =  std::vector  {1, 2, 3}  | map([](auto x) { return x * 2; })| partition([](auto x) { return x > 2; });
+  for (auto x : l) {
+    std::cout << "l=" << x << "\n";
+  }
+  for (auto x : r) {
+    std::cout << "r=" << x << "\n";
+  }
 
-  std::optional<std::optional<int>> n = a ^ map([](auto x) { return std::optional{1}; });
 
-  a ^ filter([](auto x) { return true; })              //
-      ^ map([](auto x) { return x; })                  //
-      ^ map([](auto x) { return x * 2; })              //
-      ^ bind([](auto x) { return std::optional{x}; })  //
-      ^ map([](auto x) { return std::optional{"a"}; }) //
-      ^ flatten()                                      //
-      ^ zip_with_index()                               //
-      ^ tap_each([](auto x, auto i) { std::cout << x << "\n"; }) ^ map([](auto x, auto i) {
-          return std::tuple{x, i, "a"};
-        }) ^
-      for_each([](auto x, auto i, auto s) {});
+  auto mm = std::unordered_map<int, int>{{2, 1}, {3, 2}};
+  for(auto [k,v] : mm
+                         | map([](auto x, auto y) {  return std::pair{x+x, y+1}; })
+                         | bind([](auto x ) {  return std::vector{x,x }; })
+                         | distinct_by([](auto x, auto y){ return std::pair{x,x};})
 
-  std::cout << "r = " << (std::vector{10, 20, 30} ^ reduce([](auto l, auto r) { return l + r; }) ^ get_or_else(42)) << "\n";
-  std::cout << "flr = " << (std::vector{10, 20, 30} ^ fold_left(std::string(), [](auto l, auto r) { return l + std::to_string(r); }))
-            << "\n";
+       ){
+    std::cout << "kv=" << k << " = " << v << "\n";
 
-  range::inclusive{0, 10}.tabulate<std::vector>([](auto i) { return i; }) ^ for_each([](auto x) {});
+  }
 
-  std::vector{1, 2} ^ group_by([](auto x) { return std::to_string(x); });
-  std::vector{1, 2} ^ group_map([](auto x) { return std::to_string(x); }, [](auto x) { return std::pair(x, x); });
-  std::vector{1, 2} ^
-      group_map_reduce([](auto x) { return std::to_string(x); }, [](auto x) { return std::pair(x, x); }, [](auto x, auto y) { return x; });
 
-  std::unordered_map<int, int>{{1, 2}, {3, 4}} ^ map([](auto x, auto y) {
-    return std::pair{x, y * 2};
-  }) ^ map([](auto x) { return x; }) ^
-      filter([](auto x, auto y) { return x + y > 5; }) ^
-      bind([](auto x) {
-        return std::unordered_map<std::string, decltype(x)>{{std::to_string(x.first + x.second), x}};
-      })
-      // ^ last_optional()                      //
-      // ^ to_vector()
-      ^ for_each([](auto i, auto x) { std::cout << ": " << i << " " << x.first << "," << x.second << "\n"; });
-  std::cout << "----\n";
+  for (auto x : std::vector  {std::string("a"), std::string("b"), std::string("a")} | distinct_by([](auto x) { return x.size() ; })) {
+    std::cout << "d=" << x << "\n";
+  }
 
-  std::list{1, 2} ^ map([](auto x) { return x * 2; })         //
-                                                              //      ^ bind([](auto x) {
-                                                              //          return std::vector{x, x};
-                                                              //        })                                   //
-                                                              //      ^ filter([](auto x) { return x > 2; })                  //
-      ^ zip_with_index()                                      //
-      ^ map([](auto x) { return x; })                         //
-                                                              // ^ last_optional()                      //
-                                                              // ^ to_vector()
-      ^ reverse() ^ sort_by([](auto i, auto x) { return i; }) //
-      ^ for_each([](size_t i, int x) { std::cout << ": " << i << " " << x << "\n"; });
-  std::cout << "----\n";
+
+//
+//  std::cout << " = " << (xs | append(10) | append(30) | concat(xs) | map([](auto x) { return x * 2; }) | filter([](auto x) { return x > 6; }) | mk_string(",", "[", "]")) << std::endl;
+//
+//  std::optional<std::optional<int>> n = a ^ map([](auto x) { return std::optional{1}; });
+//
+//  a ^ filter([](auto x) { return true; })              //
+//      ^ map([](auto x) { return x; })                  //
+//      ^ map([](auto x) { return x * 2; })              //
+//      ^ bind([](auto x) { return std::optional{x}; })  //
+//      ^ map([](auto x) { return std::optional{"a"}; }) //
+//      ^ flatten()                                      //
+//      ^ zip_with_index()                               //
+//      ^ tap_each([](auto x, auto i) { std::cout << x << "\n"; }) ^ map([](auto x, auto i) {
+//          return std::tuple{x, i, "a"};
+//        }) ^
+//      for_each([](auto x, auto i, auto s) {});
+//
+//  std::cout << "r = " << (std::vector{10, 20, 30} ^ reduce([](auto l, auto r) { return l + r; }) ^ get_or_else(42)) << "\n";
+//  std::cout << "flr = " << (std::vector{10, 20, 30} ^ fold_left(std::string(), [](auto l, auto r) { return l + std::to_string(r); }))
+//            << "\n";
+//
+//  range::inclusive{0, 10}.tabulate<std::vector>([](auto i) { return i; }) ^ for_each([](auto x) {});
+//
+//  std::vector{1, 2} ^ group_by([](auto x) { return std::to_string(x); });
+//  std::vector{1, 2} ^ group_map([](auto x) { return std::to_string(x); }, [](auto x) { return std::pair(x, x); });
+//  std::vector{1, 2} ^
+//      group_map_reduce([](auto x) { return std::to_string(x); }, [](auto x) { return std::pair(x, x); }, [](auto x, auto y) { return x; });
+//
+//  std::unordered_map<int, int>{{1, 2}, {3, 4}} ^ map([](auto x, auto y) {
+//    return std::pair{x, y * 2};
+//  }) ^ map([](auto x) { return x; }) ^
+//      filter([](auto x, auto y) { return x + y > 5; }) ^
+//      bind([](auto x) {
+//        return std::unordered_map<std::string, decltype(x)>{{std::to_string(x.first + x.second), x}};
+//      })
+//      // ^ last_optional()                      //
+//      // ^ to_vector()
+//      ^ for_each([](auto i, auto x) { std::cout << ": " << i << " " << x.first << "," << x.second << "\n"; });
+//  std::cout << "----\n";
+//
+//  std::list{1, 2} ^ map([](auto x) { return x * 2; })         //
+//                                                              //      ^ bind([](auto x) {
+//                                                              //          return std::vector{x, x};
+//                                                              //        })                                   //
+//                                                              //      ^ filter([](auto x) { return x > 2; })                  //
+//      ^ zip_with_index()                                      //
+//      ^ map([](auto x) { return x; })                         //
+//                                                              // ^ last_optional()                      //
+//                                                              // ^ to_vector()
+//      ^ reverse() ^ sort_by([](auto i, auto x) { return i; }) //
+//      ^ for_each([](size_t i, int x) { std::cout << ": " << i << " " << x << "\n"; });
+//  std::cout << "----\n";
 
   return 0;
 }

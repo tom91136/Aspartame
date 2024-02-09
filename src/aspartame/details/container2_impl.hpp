@@ -9,7 +9,7 @@ namespace aspartame::details::container2 {
 
 template <typename In, typename Function, template <typename...> typename Out> //
 constexpr auto map(const In &in, Function f) {
-  using T = decltype(details::ap(f, *std::begin(in)));
+  using T = decltype(details::ap(f, *in.begin()));
   if constexpr (details::assert_non_void<T>()) {}
   static_assert(is_pair<T>, "return type for mapping a map-like container must be a tuple");
   using K = typename In::key_type;
@@ -21,7 +21,7 @@ constexpr auto map(const In &in, Function f) {
 
 template <typename In, typename Function, template <typename...> typename Out> //
 constexpr auto collect(const In &in, Function f) {
-  using T = decltype(details::ap(f, *std::begin(in)));
+  using T = decltype(details::ap(f, *in.begin()));
   static_assert(is_optional<T>, "collect function should return an optional");
   static_assert(is_pair<typename T::value_type>, "return type for mapping a map-like container must be a tuple");
   using K = typename T::value_type::first_type;
@@ -34,7 +34,7 @@ constexpr auto collect(const In &in, Function f) {
 
 template <typename In, typename Predicate, template <typename...> typename Out> //
 constexpr auto filter(const In &in, Predicate p) {
-  if constexpr (details::assert_predicate<decltype(details::ap(p, *std::begin(in)))>()) {}
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   using K = typename In::key_type;
   using V = typename In::mapped_type;
   Out<K, V> ys;
@@ -44,8 +44,8 @@ constexpr auto filter(const In &in, Predicate p) {
 
 template <typename In, typename Function, template <typename...> typename Out> //
 constexpr auto bind(const In &in, Function f) {
-  static_assert(is_map_like<decltype(details::ap(f, *std::begin(in)))>, "bind function should return a map-like type");
-  using R = decltype(details::ap(f, *std::begin(in)));
+  static_assert(is_map_like<decltype(details::ap(f, *in.begin()))>, "bind function should return a map-like type");
+  using R = decltype(details::ap(f, *in.begin()));
   using K =  typename R::key_type;
   using V =  typename R::mapped_type;
   Out<K, V> ys;
@@ -91,8 +91,8 @@ constexpr auto reduce(const In &in, Function f) {
 
 template <typename In, typename GroupFunction, typename MapFunction, template <typename...> typename Out> //
 constexpr auto group_map(const In &in, GroupFunction &&group, MapFunction &&map) {
-  using K = decltype(details::ap(group, *std::begin(in)));
-  using V = decltype(details::ap(map, *std::begin(in)));
+  using K = decltype(details::ap(group, *in.begin()));
+  using V = decltype(details::ap(map, *in.begin()));
   if constexpr (details::assert_non_void<K>()) {}
   if constexpr (details::assert_non_void<V>()) {}
   std::unordered_map<K, Out<V>> ys;
@@ -106,7 +106,7 @@ constexpr auto group_map(const In &in, GroupFunction &&group, MapFunction &&map)
 
 template <typename In, typename GroupFunction, template <typename...> typename Out> //
 constexpr auto group_by(const In &in, GroupFunction &&group) {
-  using K = decltype(details::ap(group, *std::begin(in)));
+  using K = decltype(details::ap(group, *in.begin()));
   if constexpr (details::assert_non_void<K>()) {}
   using V = typename In::value_type;
   using W = std::pair<std::remove_const_t<typename V::first_type>, typename V::second_type>;

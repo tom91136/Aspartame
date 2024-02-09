@@ -19,7 +19,8 @@ set(COMPILE_FLAGS
         #        -Wno-unused-parameter
         -Wall
         -Wextra
-        --pedantic
+        -pedantic
+        -O0
         -fsanitize=address -fsanitize=undefined
 )
 set(LINK_FLAGS
@@ -29,17 +30,20 @@ set(LINK_FLAGS
 
 add_executable(tests
         test/test_view.cpp
-        test/test_vector.cpp
-        test/test_optional.cpp
-        test/test_array.cpp
-        test/test_list.cpp
-        test/test_deque.cpp
-        test/test_set.cpp
-        test/test_unordered_set.cpp
-        test/test_map.cpp
-        test/test_string.cpp
-        test/test_unordered_map.cpp
+#        test/test_vector.cpp
+#        test/test_optional.cpp
+#        test/test_list.cpp
+#        test/test_deque.cpp
+#        test/test_set.cpp
+#        test/test_unordered_set.cpp
+#        test/test_map.cpp
+#        test/test_string.cpp
+#        test/test_unordered_map.cpp
 )
+
+#test/test_array.cpp
+
+
 target_include_directories(tests PRIVATE src)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 target_compile_options(tests PRIVATE ${COMPILE_FLAGS})

@@ -40,7 +40,7 @@ template <typename In, template <typename...> typename Out> //
 
 template <typename In, typename Function, template <typename...> typename Out> //
 [[nodiscard]] constexpr auto map_keys(const In &in, Function &&function) {
-  using K = decltype(details::ap(function, std::begin(in)->first));
+  using K = decltype(details::ap(function, in.begin()->first));
   if constexpr (details::assert_non_void<K>()) {}
   Out<K, typename In::mapped_type> ys;
   for (auto [k, v] : in)
@@ -50,7 +50,7 @@ template <typename In, typename Function, template <typename...> typename Out> /
 
 template <typename In, typename Function, template <typename...> typename Out> //
 [[nodiscard]] constexpr auto map_values(const In &in, Function &&function) {
-  using V = decltype(details::ap(function, std::begin(in)->second));
+  using V = decltype(details::ap(function, in.begin()->second));
   if constexpr (details::assert_non_void<V>()) {}
   Out<typename In::key_type, V> ys;
   for (auto [k, v] : in)

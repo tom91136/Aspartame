@@ -21,11 +21,9 @@ template <typename T> constexpr bool is_array = details::is_array_impl<std::deca
 template <typename T, size_t N, typename Op> auto operator^(const std::array<T, N> &l, const Op &r) { return r(l); }
 } // namespace aspartame
 
-#define ASPARTAME_PREFIX(name) array_##name
 #define ASPARTAME_OUT_TYPE In
 #define ASPARTAME_SET_LIKE false
 
 // #include "details/star1/container_template.hpp"
-#undef ASPARTAME_PREFIX
 #undef ASPARTAME_OUT_TYPE
 #undef ASPARTAME_SET_LIKE

@@ -19,12 +19,12 @@ template <typename In, typename T, typename Out> //
 
 template <typename In, typename T = typename In::value_type> //
 [[nodiscard]] constexpr std::optional<T> head_maybe(const In &in) {
-  return !std::empty(in) ? std::optional<T>{*in.begin()} : std::nullopt;
+  return !in.empty() ? std::optional<T>{*in.begin()} : std::nullopt;
 }
 
 template <typename In, typename T = typename In::value_type> //
 [[nodiscard]] constexpr std::optional<T> last_maybe(const In &in) {
-  return !std::empty(in) ? std::optional<T>{*(std::prev(in.end()))} : std::nullopt;
+  return !in.empty() ? std::optional<T>{*(std::prev(in.end()))} : std::nullopt;
 }
 
 template <typename In, typename Out> //
@@ -39,15 +39,21 @@ template <typename In, typename Out> //
 
 template <typename In, typename T = typename In::value_type> //
 [[nodiscard]] constexpr std::optional<T> at_maybe(const In &in, size_t idx) {
-  if (idx >= in.size()) return std::nullopt;
-  auto it = in.begin();
-  std::advance(it, idx);
-  return *it;
+  if constexpr (has_size<In>) {
+    if (idx >= in.size()) return std::nullopt;
+    auto it = in.begin();
+    std::advance(it, idx);
+    return *it;
+  } else {
+    size_t i = 0;
+    auto it = in.begin();
+    for (; it != in.end() && i < idx; ++it, ++i) {}
+    return (it == in.end() || i != idx) ? std::nullopt : std::optional{*it};
+  }
 }
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out slice(const In &in, size_t from_inclusive, size_t to_exclusive) {
-  using T = typename In::value_type;
   Out ys;
   if constexpr (has_reserve<Out>) ys.reserve(to_exclusive > from_inclusive ? to_exclusive - from_inclusive : 0);
   if (from_inclusive >= in.size() || from_inclusive > to_exclusive) return ys;
@@ -80,7 +86,8 @@ template <typename In, typename Container> //
 [[nodiscard]] constexpr std::make_signed_t<size_t> index_of_slice(const In &in, const Container &other) {
   static_assert(std::is_convertible_v<std::decay_t<typename Container::value_type>, typename In::value_type>,
                 "type does not match vector's value type");
-  if (other.empty() || in.size() < other.size()) { return -1; }
+  if(other.empty()) return 0;
+  if (in.size() < other.size()) { return -1; }
   for (size_t i = 0; i <= in.size() - other.size(); ++i) {
     if (std::equal(std::next(in.begin(), i), std::next(in.begin(), i + other.size()), other.begin())) {
       return static_cast<std::make_signed_t<size_t>>(i);
@@ -91,7 +98,7 @@ template <typename In, typename Container> //
 
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr std::make_signed_t<size_t> index_where(const In &in, Predicate &&p) {
-  if constexpr (details::assert_predicate<decltype(details::ap(p, *std::begin(in)))>()) {}
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   size_t i = 0;
   for (auto it = in.begin(), end = in.end(); it != end; ++it){
     auto x = *it;
@@ -287,7 +294,7 @@ template <typename In, typename Out> //
 
 template <typename In, typename Predicate, typename Out> //
 [[nodiscard]] constexpr Out take_while(const In &in, Predicate &&p) {
-  if constexpr (details::assert_predicate<decltype(details::ap(p, *std::begin(in)))>()) {}
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   Out ys;
   for (const auto &x : in) {
     if (!details::ap(p, x)) break;
@@ -298,7 +305,7 @@ template <typename In, typename Predicate, typename Out> //
 
 template <typename In, typename Predicate, typename Out> //
 [[nodiscard]] constexpr Out drop_while(const In &in, Predicate &&p) {
-  if constexpr (details::assert_predicate<decltype(details::ap(p, *std::begin(in)))>()) {}
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   Out ys;
   auto it = in.begin();
   while (it != in.end() && details::ap(p, *it))
@@ -310,7 +317,7 @@ template <typename In, typename Predicate, typename Out> //
 
 template <typename In, typename Accumulator, typename Function>
 [[nodiscard]] constexpr auto fold_left(const In &in, Accumulator &&init, Function &&function) {
-  static_assert(std::is_invocable_v<Function, Accumulator, decltype(*std::begin(in))>,
+  static_assert(std::is_invocable_v<Function, Accumulator, decltype(*in.begin())>,
                 "function must be invocable with with accumulator and container's value type (in this exact order)");
   for (const auto &element : in)
     init = details::ap(function, std::forward_as_tuple(init, element));

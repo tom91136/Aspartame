@@ -1,24 +1,24 @@
 #include "../base.hpp"
 
-#ifndef ASPARTAME_PREFIX
-  #error "ASPARTAME_PREFIX unimplemented"
+#ifndef ASPARTAME_IN_TYPE1
+  #error "ASPARTAME_IN_TYPE1 unimplemented"
 #endif
 
 namespace aspartame {
 
-template <typename In, typename Action, typename EmptyAction> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(fold)(const In &in, Action &&action, EmptyAction &&empty) {
-  if constexpr (details::unsupported<In>(in, action, empty)) {}
+template <typename C, typename Action, typename EmptyAction> //
+[[nodiscard]] constexpr auto fold(const ASPARTAME_IN_TYPE1(C) & in, Action &&action, EmptyAction &&empty) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, action, empty)) {}
 }
 
-template <typename In, typename T> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(get_or_else)(const In &in, T &&t) {
-  if constexpr (details::unsupported<In>(in, t)) {}
+template <typename C, typename T> //
+[[nodiscard]] constexpr auto get_or_else(const ASPARTAME_IN_TYPE1(C) & in, T &&t) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, t)) {}
 }
 
-template <typename In, typename T> //
-[[nodiscard]] constexpr auto ASPARTAME_PREFIX(or_else)(const In &in, T &&t) {
-  if constexpr (details::unsupported<In>(in, t)) {}
+template <typename C, typename T> //
+[[nodiscard]] constexpr auto or_else(const ASPARTAME_IN_TYPE1(C) & in, T &&t) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, t)) {}
 }
 
 } // namespace aspartame

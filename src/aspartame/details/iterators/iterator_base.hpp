@@ -21,7 +21,8 @@ public:
     }
     return *this;
   }
-  constexpr T operator*() const noexcept { return *storage; }
+  constexpr T &operator*() & noexcept { return storage.operator*(); }
+  constexpr const T &operator*() const & noexcept { return storage.operator*(); }
   constexpr const T *operator->() const noexcept { return storage.operator->(); }
   constexpr explicit operator bool() const noexcept { return storage.operator bool(); }
 };
@@ -29,8 +30,8 @@ public:
 template <typename Derived, typename T> struct fwd_iterator {
   using difference_type = std::ptrdiff_t;
   using value_type = T;
-  using pointer = T *;
-  using reference = T &;
+  using pointer = const T *;
+  using reference = const T &;
   using iterator_category = std::forward_iterator_tag;
   constexpr fwd_iterator() {
     static_assert(std::is_same_v<                                    //

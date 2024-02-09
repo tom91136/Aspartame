@@ -4,12 +4,11 @@
 #include <vector>
 
 #include "../test_base_container1.hpp"
-#include "aspartame/fluent.hpp"
 #include "catch2/catch_test_macros.hpp"
 
 #ifndef DISABLE_MK_STRING
 TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](auto xs) { return xs OP_ mk_string(); };
+  auto op = [](auto &&xs) { return xs OP_ mk_string(); };
   RUN_CHECK(int, string, "", {4, 2, 3, 1, 5}, "42315", op);
   RUN_CHECK(int, string, "", {1}, "1", op);
   RUN_CHECK(int, string, "", {}, "", op);
@@ -20,7 +19,7 @@ TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(Foo, string, "", {Foo(1)}, "Foo(1)", op);
   RUN_CHECK(Foo, string, "", {}, {}, op);
 
-  auto customOp = [](auto xs) { return xs OP_ mk_string(", "); };
+  auto customOp = [](auto &&xs) { return xs OP_ mk_string(", "); };
   RUN_CHECK(int, string, "", {4, 2, 3, 1, 5}, "4, 2, 3, 1, 5", customOp);
   RUN_CHECK(int, string, "", {1}, "1", customOp);
   RUN_CHECK(int, string, "", {}, "", customOp);
@@ -37,8 +36,8 @@ TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, string, name, {{3, 1}}, "4", f);
     RUN_CHECK(P2, string, name, {}, "", f);
   };
-  p2("spread", [](auto xs) { return xs OP_ mk_string(",", [](auto x0, auto x1) { return to_string(x0 + x1); }); });
-  p2("single", [](auto xs) { return xs OP_ mk_string(",", [](auto x) { return to_string(get<0>(x) + get<1>(x)); }); });
+  p2("spread", [](auto &&xs) { return xs OP_ mk_string(",", [](auto x0, auto x1) { return to_string(x0 + x1); }); });
+  p2("single", [](auto &&xs) { return xs OP_ mk_string(",", [](auto x) { return to_string(get<0>(x) + get<1>(x)); }); });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -46,14 +45,14 @@ TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, string, name, {{3, 1, 3}}, "7", f);
     RUN_CHECK(P3, string, name, {}, "", f);
   };
-  p3("spread", [](auto xs) { return xs OP_ mk_string(",", [](auto x0, auto x1, auto x2) { return to_string(x0 + x1 + x2); }); });
-  p3("single", [](auto xs) { return xs OP_ mk_string(",", [](auto x) { return to_string(get<0>(x) + get<1>(x) + get<2>(x)); }); });
+  p3("spread", [](auto &&xs) { return xs OP_ mk_string(",", [](auto x0, auto x1, auto x2) { return to_string(x0 + x1 + x2); }); });
+  p3("single", [](auto &&xs) { return xs OP_ mk_string(",", [](auto x) { return to_string(get<0>(x) + get<1>(x) + get<2>(x)); }); });
 }
 #endif
 
 #ifndef DISABLE_APPEND
 TEST_CASE(TPE_NAME "_append", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](auto x) { return [x](auto xs) { return xs OP_ append(x); }; };
+  auto op = [](auto x) { return [x](auto &&xs) { return xs OP_ append(x); }; };
   #ifdef TPE_MANY_INIT
   RUN_CHECK(int, TPE_CTOR_VAR_OUT(int), "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5, 6}, op(6));
   RUN_CHECK(string, TPE_CTOR_VAR_OUT(string), "", {"banana", "cherry", "apple"}, {"banana", "cherry", "apple", "mango"}, op("mango"));
@@ -68,14 +67,21 @@ TEST_CASE(TPE_NAME "_append", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_CONCAT
 TEST_CASE(TPE_NAME "_concat", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](auto x) { return [x](auto xs) { return xs OP_ concat(x); }; };
+  auto op = [](auto x) { return [x](auto &&xs) { return xs OP_ concat(x); }; };
   #ifdef TPE_MANY_INIT
   RUN_CHECK(int, TPE_CTOR_VAR_OUT(int), "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5, 6, 7, 8}, op(TPE_CTOR_IN(int){6, 7, 8}));
+  RUN_CHECK(int, TPE_CTOR_VAR_OUT(int), "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}, op(TPE_CTOR_IN(int){}));
   RUN_CHECK(string, TPE_CTOR_VAR_OUT(string), "", {"banana", "cherry", "apple"}, {"banana", "cherry", "apple", "mango", "kiwi"},
             op(TPE_CTOR_IN(string){"mango", "kiwi"}));
+  RUN_CHECK(string, TPE_CTOR_VAR_OUT(string), "", {"banana", "cherry", "apple"}, {"banana", "cherry", "apple"}, op(TPE_CTOR_IN(string){}));
   RUN_CHECK(Foo, TPE_CTOR_VAR_OUT(Foo), "", {Foo(3), Foo(2), Foo(1)}, {Foo(3), Foo(2), Foo(1), Foo(4), Foo(5)},
             op(TPE_CTOR_IN(Foo){Foo(4), Foo(5)}));
+  RUN_CHECK(Foo, TPE_CTOR_VAR_OUT(Foo), "", {Foo(3), Foo(2), Foo(1)}, {Foo(3), Foo(2), Foo(1)}, op(TPE_CTOR_IN(Foo){}));
   #endif
+
+  RUN_CHECK(int, TPE_CTOR_VAR_OUT(int), "", {}, {}, op(TPE_CTOR_IN(int){}));
+  RUN_CHECK(string, TPE_CTOR_VAR_OUT(string), "", {}, {}, op(TPE_CTOR_IN(string){}));
+  RUN_CHECK(Foo, TPE_CTOR_VAR_OUT(Foo), "", {}, {}, op(TPE_CTOR_IN(Foo){}));
 
   RUN_CHECK(int, TPE_CTOR_VAR_OUT(int), "", {}, {1}, op(TPE_CTOR_IN(int){1}));
   RUN_CHECK(string, TPE_CTOR_VAR_OUT(string), "", {}, {"pear"}, op(TPE_CTOR_IN(string){"pear"}));
@@ -89,9 +95,9 @@ TEST_CASE(TPE_NAME "_concat", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_MAP
 TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto intOp = [](auto xs) { return xs OP_ map([](auto x) { return x * 2; }); };
-  auto strOp = [](auto xs) { return xs OP_ map([](auto x) { return x + x; }); };
-  auto fooOp = [](auto xs) { return xs OP_ map([](auto x) { return Foo(x.value * 2); }); };
+  auto intOp = [](auto &&xs) { return xs OP_ map([](auto x) { return x * 2; }); };
+  auto strOp = [](auto &&xs) { return xs OP_ map([](auto x) { return x + x; }); };
+  auto fooOp = [](auto &&xs) { return xs OP_ map([](auto x) { return Foo(x.value * 2); }); };
   #ifdef TPE_MANY_INIT
   RUN_CHECK_ID(int, "", {4, 2, 3, 1, 5}, {8, 4, 6, 2, 10}, intOp);
   RUN_CHECK_ID(string, "", {"banana", "cherry", "apple"}, {"bananabanana", "cherrycherry", "appleapple"}, strOp);
@@ -113,8 +119,8 @@ TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, TPE_CTOR_OUT(int), name, {{3, 1}}, {4}, f);
     RUN_CHECK(P2, TPE_CTOR_OUT(int), name, {}, {}, f);
   };
-  p2("spread", [](auto xs) { return xs OP_ map([](auto x0, auto x1) { return x0 + x1; }); });
-  p2("single", [](auto xs) { return xs OP_ map([](auto x) { return get<0>(x) + get<1>(x); }); });
+  p2("spread", [](auto &&xs) { return xs OP_ map([](auto x0, auto x1) { return x0 + x1; }); });
+  p2("single", [](auto &&xs) { return xs OP_ map([](auto x) { return get<0>(x) + get<1>(x); }); });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -124,24 +130,24 @@ TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, TPE_CTOR_OUT(int), name, {{3, 1, 3}}, {7}, f);
     RUN_CHECK(P3, TPE_CTOR_OUT(int), name, {}, {}, f);
   };
-  p3("spread", [](auto xs) { return xs OP_ map([](auto x0, auto x1, auto x2) { return x0 + x1 + x2; }); });
-  p3("single", [](auto xs) { return xs OP_ map([](auto x) { return get<0>(x) + get<1>(x) + get<2>(x); }); });
+  p3("spread", [](auto &&xs) { return xs OP_ map([](auto x0, auto x1, auto x2) { return x0 + x1 + x2; }); });
+  p3("single", [](auto &&xs) { return xs OP_ map([](auto x) { return get<0>(x) + get<1>(x) + get<2>(x); }); });
 }
 #endif
 
 #ifndef DISABLE_COLLECT
 TEST_CASE(TPE_NAME "_collect", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto intOp = [](auto xs) {
+  auto intOp = [](auto &&xs) {
     return xs OP_ collect([](auto x) -> std::optional<string> { //
       return x % 2 != 0 ? std::nullopt : std::optional{to_string(x)};
     });
   };
-  auto strOp = [](auto xs) {
+  auto strOp = [](auto &&xs) {
     return xs OP_ collect([](auto x) -> std::optional<string> { //
       return x == "cherry" ? std::optional{"a"} : std::nullopt;
     });
   };
-  auto fooOp = [](auto xs) {
+  auto fooOp = [](auto &&xs) {
     return xs OP_ collect([](auto x) -> std::optional<string> { //
       return x.value % 2 != 0 ? std::nullopt : std::optional{to_string(x.value)};
     });
@@ -167,13 +173,13 @@ TEST_CASE(TPE_NAME "_collect", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, TPE_CTOR_OUT(string), name, {{3, 1}}, {"4"}, f);
     RUN_CHECK(P2, TPE_CTOR_OUT(string), name, {}, {}, f);
   };
-  p2("spread", [](auto xs) {
+  p2("spread", [](auto &&xs) {
     return xs OP_ collect([](auto x0, auto x1) {
       int x = x0 + x1;
       return x % 2 != 0 ? std::nullopt : std::optional{to_string(x)};
     });
   });
-  p2("single", [](auto xs) {
+  p2("single", [](auto &&xs) {
     return xs OP_ collect([](auto x) {
       int v = get<0>(x) + get<1>(x);
       return v % 2 != 0 ? std::nullopt : std::optional{to_string(v)};
@@ -188,13 +194,13 @@ TEST_CASE(TPE_NAME "_collect", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, TPE_CTOR_OUT(string), name, {{3, 1, 3}}, {}, f);
     RUN_CHECK(P3, TPE_CTOR_OUT(string), name, {}, {}, f);
   };
-  p3("spread", [](auto xs) {
+  p3("spread", [](auto &&xs) {
     return xs OP_ collect([](auto x0, auto x1, auto x2) {
       int x = x0 + x1 + x2;
       return x % 2 != 0 ? std::nullopt : std::optional{to_string(x)};
     });
   });
-  p3("single", [](auto xs) {
+  p3("single", [](auto &&xs) {
     return xs OP_ collect([](auto x) {
       int v = get<0>(x) + get<1>(x) + get<2>(x);
       return v % 2 != 0 ? std::nullopt : std::optional{to_string(v)};
@@ -205,9 +211,9 @@ TEST_CASE(TPE_NAME "_collect", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_FILTER
 TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto intOp = [](auto xs) { return xs OP_ filter([](auto x) { return x % 2 == 0; }); };
-  auto strOp = [](auto xs) { return xs OP_ filter([](auto x) { return x == "cherry"; }); };
-  auto fooOp = [](auto xs) { return xs OP_ filter([](auto x) { return x.value % 2 == 0; }); };
+  auto intOp = [](auto &&xs) { return xs OP_ filter([](auto x) { return x % 2 == 0; }); };
+  auto strOp = [](auto &&xs) { return xs OP_ filter([](auto x) { return x == "cherry"; }); };
+  auto fooOp = [](auto &&xs) { return xs OP_ filter([](auto x) { return x.value % 2 == 0; }); };
 
   #ifdef TPE_MANY_INIT
   RUN_CHECK_ID(int, "", {4, 2, 3, 1, 5}, {4, 2}, intOp);
@@ -230,8 +236,8 @@ TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK_ID(P2, name, {{3, 1}}, {}, f);
     RUN_CHECK_ID(P2, name, {}, {}, f);
   };
-  p2("spread", [](auto xs) { return xs OP_ filter([](auto x0, auto x1) { return x0 == x1; }); });
-  p2("single", [](auto xs) { return xs OP_ filter([](auto x) { return get<0>(x) == get<1>(x); }); });
+  p2("spread", [](auto &&xs) { return xs OP_ filter([](auto x0, auto x1) { return x0 == x1; }); });
+  p2("single", [](auto &&xs) { return xs OP_ filter([](auto x) { return get<0>(x) == get<1>(x); }); });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -241,14 +247,14 @@ TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK_ID(P3, name, {{3, 3, 3}}, {{3, 3, 3}}, f);
     RUN_CHECK_ID(P3, name, {}, {}, f);
   };
-  p3("spread", [](auto xs) { return xs OP_ filter([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
-  p3("single", [](auto xs) { return xs OP_ filter([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
+  p3("spread", [](auto &&xs) { return xs OP_ filter([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
+  p3("single", [](auto &&xs) { return xs OP_ filter([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
 }
 #endif
 
 #ifndef DISABLE_BIND
 TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto bindOp = [](auto xs) { return xs OP_ bind([](auto x) { return TPE_CTOR_OUT(decltype(x)){x}; }); };
+  auto bindOp = [](auto &&xs) { return xs OP_ bind([](auto x) { return TPE_CTOR_OUT(decltype(x)){x}; }); };
   #ifdef TPE_MANY_INIT
   RUN_CHECK_ID(int, "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}, bindOp);
   RUN_CHECK_ID(string, "", {"banana", "cherry", "apple"}, {"banana", "cherry", "apple"}, bindOp);
@@ -269,9 +275,9 @@ TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, TPE_CTOR_OUT(int), name, {{3, 1}}, {3 + 1}, f);
     RUN_CHECK(P2, TPE_CTOR_OUT(int), name, {}, {}, f);
   };
-  p2("spread", [](auto xs) { return xs OP_ bind([](auto x0, auto x1) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1}; }); });
+  p2("spread", [](auto &&xs) { return xs OP_ bind([](auto x0, auto x1) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1}; }); });
   p2("single",
-     [](auto xs) { return xs OP_ bind([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x)}; }); });
+     [](auto &&xs) { return xs OP_ bind([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x)}; }); });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -281,8 +287,8 @@ TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, TPE_CTOR_OUT(int), name, {{3, 1, 3}}, {3 + 1 + 3}, f);
     RUN_CHECK(P3, TPE_CTOR_OUT(int), name, {}, {}, f);
   };
-  p3("spread", [](auto xs) { return xs OP_ bind([](auto x0, auto x1, auto x2) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1 + x2}; }); });
-  p3("single", [](auto xs) {
+  p3("spread", [](auto &&xs) { return xs OP_ bind([](auto x0, auto x1, auto x2) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1 + x2}; }); });
+  p3("single", [](auto &&xs) {
     return xs OP_ bind([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x) + get<2>(x)}; });
   });
 }
@@ -290,7 +296,7 @@ TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_FLATTEN
 TEST_CASE(TPE_NAME "_flatten", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto flattenOp = [](auto xs) { return xs OP_ flatten(); };
+  auto flattenOp = [](auto &&xs) { return xs OP_ flatten(); };
   #ifdef TPE_MANY_INIT
   RUN_CHECK(TPE_CTOR_IN(int), TPE_CTOR_OUT(int), "", {{4, 2, 3}, {1, 5}}, {4, 2, 3, 1, 5}, flattenOp);
   RUN_CHECK(TPE_CTOR_IN(string), TPE_CTOR_OUT(string), "", {{"banana", "cherry"}, {"apple"}}, {"banana", "cherry", "apple"}, flattenOp);
@@ -312,7 +318,7 @@ TEST_CASE(TPE_NAME "_flatten", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_DISTINCT
 TEST_CASE(TPE_NAME "_distinct", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](auto xs) { return xs OP_ distinct(); };
+  auto op = [](auto &&xs) { return xs OP_ distinct(); };
   #ifdef TPE_MANY_INIT
   RUN_CHECK_ID(int, "", {3, 2, 4, 5, 2, 13, 4}, {3, 2, 4, 5, 13}, op);
   RUN_CHECK_ID(string, "", {"a", "b", "c", "a"}, {"a", "b", "c"}, op);
@@ -330,9 +336,9 @@ TEST_CASE(TPE_NAME "_distinct", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_DISTINCT_BY
 TEST_CASE(TPE_NAME "_distinct_by", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto intOp = [](auto xs) { return xs OP_ distinct_by([](auto x) { return x % 10; }); };
-  auto strOp = [](auto xs) { return xs OP_ distinct_by([](auto x) { return x.length(); }); };
-  auto fooOp = [](auto xs) { return xs OP_ distinct_by([](auto x) { return x.value % 10; }); };
+  auto intOp = [](auto &&xs) { return xs OP_ distinct_by([](auto x) { return x % 10; }); };
+  auto strOp = [](auto &&xs) { return xs OP_ distinct_by([](auto x) { return x.length(); }); };
+  auto fooOp = [](auto &&xs) { return xs OP_ distinct_by([](auto x) { return x.value % 10; }); };
   #ifdef TPE_MANY_INIT
     #ifdef TPE_UNORDERED
   RUN_CHECK_ID(int, "", {13, 22, 34, 45, 13}, {13, 22, 34, 45}, intOp);
@@ -356,9 +362,9 @@ TEST_CASE(TPE_NAME "_distinct_by", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_COUNT
 TEST_CASE(TPE_NAME "_count", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto intOp = [](auto xs) { return xs OP_ count([](auto x) { return x % 2 == 0; }); };
-  auto strOp = [](auto xs) { return xs OP_ count([](auto x) { return x == "cherry"; }); };
-  auto fooOp = [](auto xs) { return xs OP_ count([](auto x) { return x.value % 2 == 0; }); };
+  auto intOp = [](auto &&xs) { return xs OP_ count([](auto x) { return x % 2 == 0; }); };
+  auto strOp = [](auto &&xs) { return xs OP_ count([](auto x) { return x == "cherry"; }); };
+  auto fooOp = [](auto &&xs) { return xs OP_ count([](auto x) { return x.value % 2 == 0; }); };
   RUN_CHECK(int, size_t, "", {4, 2, 3, 1, 5}, 2, intOp);
   RUN_CHECK(int, size_t, "", {1}, 0, intOp);
   RUN_CHECK(int, size_t, "", {}, 0, intOp);
@@ -375,8 +381,8 @@ TEST_CASE(TPE_NAME "_count", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, size_t, name, {{3, 1}}, 0, f);
     RUN_CHECK(P2, size_t, name, {}, 0, f);
   };
-  p2("spread", [](auto xs) { return xs OP_ count([](auto x0, auto x1) { return x0 == x1; }); });
-  p2("single", [](auto xs) { return xs OP_ count([](auto x) { return get<0>(x) == get<1>(x); }); });
+  p2("spread", [](auto &&xs) { return xs OP_ count([](auto x0, auto x1) { return x0 == x1; }); });
+  p2("single", [](auto &&xs) { return xs OP_ count([](auto x) { return get<0>(x) == get<1>(x); }); });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -384,16 +390,16 @@ TEST_CASE(TPE_NAME "_count", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, size_t, name, {{3, 1, 3}}, 0, f);
     RUN_CHECK(P3, size_t, name, {}, 0, f);
   };
-  p3("spread", [](auto xs) { return xs OP_ count([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
-  p3("single", [](auto xs) { return xs OP_ count([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
+  p3("spread", [](auto &&xs) { return xs OP_ count([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
+  p3("single", [](auto &&xs) { return xs OP_ count([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
 }
 #endif
 
 #ifndef DISABLE_EXISTS
 TEST_CASE(TPE_NAME "_exists", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto intOp = [](auto xs) { return xs OP_ exists([](auto x) { return x % 2 == 0; }); };
-  auto strOp = [](auto xs) { return xs OP_ exists([](auto x) { return x == "cherry"; }); };
-  auto fooOp = [](auto xs) { return xs OP_ exists([](auto x) { return x.value % 2 == 0; }); };
+  auto intOp = [](auto &&xs) { return xs OP_ exists([](auto x) { return x % 2 == 0; }); };
+  auto strOp = [](auto &&xs) { return xs OP_ exists([](auto x) { return x == "cherry"; }); };
+  auto fooOp = [](auto &&xs) { return xs OP_ exists([](auto x) { return x.value % 2 == 0; }); };
   RUN_CHECK(int, bool, "", {4, 2, 3, 1, 5}, true, intOp);
   RUN_CHECK(int, bool, "", {1}, false, intOp);
   RUN_CHECK(int, bool, "", {}, false, intOp);
@@ -410,8 +416,8 @@ TEST_CASE(TPE_NAME "_exists", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, bool, name, {{3, 1}}, false, f);
     RUN_CHECK(P2, bool, name, {}, false, f);
   };
-  p2("spread", [](auto xs) { return xs OP_ exists([](auto x0, auto x1) { return x0 == x1; }); });
-  p2("single", [](auto xs) { return xs OP_ exists([](auto x) { return get<0>(x) == get<1>(x); }); });
+  p2("spread", [](auto &&xs) { return xs OP_ exists([](auto x0, auto x1) { return x0 == x1; }); });
+  p2("single", [](auto &&xs) { return xs OP_ exists([](auto x) { return get<0>(x) == get<1>(x); }); });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -419,16 +425,16 @@ TEST_CASE(TPE_NAME "_exists", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, bool, name, {{3, 1, 3}}, false, f);
     RUN_CHECK(P3, bool, name, {}, false, f);
   };
-  p3("spread", [](auto xs) { return xs OP_ exists([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
-  p3("single", [](auto xs) { return xs OP_ exists([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
+  p3("spread", [](auto &&xs) { return xs OP_ exists([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
+  p3("single", [](auto &&xs) { return xs OP_ exists([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
 }
 #endif
 
 #ifndef DISABLE_FORALL
 TEST_CASE(TPE_NAME "_forall", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto intOp = [](auto xs) { return xs OP_ forall([](auto x) { return x % 2 == 0; }); };
-  auto strOp = [](auto xs) { return xs OP_ forall([](auto x) { return x == "cherry"; }); };
-  auto fooOp = [](auto xs) { return xs OP_ forall([](auto x) { return x.value % 2 == 0; }); };
+  auto intOp = [](auto &&xs) { return xs OP_ forall([](auto x) { return x % 2 == 0; }); };
+  auto strOp = [](auto &&xs) { return xs OP_ forall([](auto x) { return x == "cherry"; }); };
+  auto fooOp = [](auto &&xs) { return xs OP_ forall([](auto x) { return x.value % 2 == 0; }); };
   RUN_CHECK(int, bool, "", {4, 2, 8, 0, 0}, true, intOp);
   RUN_CHECK(int, bool, "", {1}, false, intOp);
   RUN_CHECK(int, bool, "", {}, true, intOp);
@@ -445,8 +451,8 @@ TEST_CASE(TPE_NAME "_forall", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, bool, name, {{2, 2}}, true, f);
     RUN_CHECK(P2, bool, name, {}, true, f);
   };
-  p2("spread", [](auto xs) { return xs OP_ forall([](auto x0, auto x1) { return x0 == x1; }); });
-  p2("single", [](auto xs) { return xs OP_ forall([](auto x) { return get<0>(x) == get<1>(x); }); });
+  p2("spread", [](auto &&xs) { return xs OP_ forall([](auto x0, auto x1) { return x0 == x1; }); });
+  p2("single", [](auto &&xs) { return xs OP_ forall([](auto x) { return get<0>(x) == get<1>(x); }); });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -454,16 +460,16 @@ TEST_CASE(TPE_NAME "_forall", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, bool, name, {{3, 3, 3}}, true, f);
     RUN_CHECK(P3, bool, name, {}, true, f);
   };
-  p3("spread", [](auto xs) { return xs OP_ forall([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
-  p3("single", [](auto xs) { return xs OP_ forall([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
+  p3("spread", [](auto &&xs) { return xs OP_ forall([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
+  p3("single", [](auto &&xs) { return xs OP_ forall([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
 }
 #endif
 
 #ifndef DISABLE_REDUCE
 TEST_CASE(TPE_NAME "_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto intOp = [](auto xs) { return xs OP_ reduce([](auto acc, auto x) { return acc + x; }); };
-  auto fooOp = [](auto xs) { return xs OP_ reduce([](auto acc, auto x) { return Foo(acc.value + x.value); }); };
-  auto stringOp = [](auto xs) {
+  auto intOp = [](auto &&xs) { return xs OP_ reduce([](auto acc, auto x) { return acc + x; }); };
+  auto fooOp = [](auto &&xs) { return xs OP_ reduce([](auto acc, auto x) { return Foo(acc.value + x.value); }); };
+  auto stringOp = [](auto &&xs) {
     return xs OP_ reduce([](auto acc, auto x) {
       auto out = acc + x;
       std::sort(out.begin(), out.end());
@@ -487,10 +493,12 @@ TEST_CASE(TPE_NAME "_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_TAP_EACH
 TEST_CASE(TPE_NAME "_tap_each", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](auto xs) {
-    std::vector<std::decay_t<typename decltype(xs)::value_type>> out;
-    auto ys = xs OP_ tap_each([&](auto &x) { out.push_back(x); });
-    CHECK((ys == xs));
+  auto op = [](auto &&xs) {
+    std::vector<std::decay_t<typename std::decay_t<decltype(xs)>::value_type>> out;
+    auto && ys = xs OP_ tap_each([&](auto &&x) { out.push_back(x); });
+     if constexpr (is_view<decltype(ys)>){
+       CHECK(((ys OP_ to_vector()) == xs));
+     }else CHECK((ys == xs));
     return out;
   };
   RUN_CHECK(int, std::vector<int>, "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}, op);
@@ -509,16 +517,20 @@ TEST_CASE(TPE_NAME "_tap_each", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, std::vector<int>, name, {{3, 1}}, {4}, f);
     RUN_CHECK(P2, std::vector<int>, name, {}, {}, f);
   };
-  p2("spread", [](auto xs) {
+  p2("spread", [](auto &&xs) {
     std::vector<int> out;
-    auto ys = xs OP_ tap_each([&](auto x0, auto x1) { out.push_back(x0 + x1); });
-    CHECK((ys == xs));
+    auto && ys = xs OP_ tap_each([&](auto x0, auto x1) { out.push_back(x0 + x1); });
+     if constexpr (is_view<decltype(ys)>){
+       CHECK(((ys OP_ to_vector()) == xs));
+     }else CHECK((ys == xs));
     return out;
   });
-  p2("single", [](auto xs) {
+  p2("single", [](auto &&xs) {
     std::vector<int> out;
-    auto ys = xs OP_ tap_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x)); });
-    CHECK((ys == xs));
+    auto && ys = xs OP_ tap_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x)); });
+     if constexpr (is_view<decltype(ys)>){
+       CHECK(((ys OP_ to_vector()) == xs));
+     }else CHECK((ys == xs));
     return out;
   });
 
@@ -528,16 +540,20 @@ TEST_CASE(TPE_NAME "_tap_each", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, std::vector<int>, name, {{3, 1, 3}}, {7}, f);
     RUN_CHECK(P3, std::vector<int>, name, {}, {}, f);
   };
-  p3("spread", [](auto xs) {
+  p3("spread", [](auto &&xs) {
     std::vector<int> out;
-    auto ys = xs OP_ tap_each([&](auto x0, auto x1, auto x2) { out.push_back(x0 + x1 + x2); });
-    CHECK((ys == xs));
+    auto && ys = xs OP_ tap_each([&](auto x0, auto x1, auto x2) { out.push_back(x0 + x1 + x2); });
+     if constexpr (is_view<decltype(ys)>){
+       CHECK(((ys OP_ to_vector()) == xs));
+     }else CHECK((ys == xs));
     return out;
   });
-  p3("single", [](auto xs) {
+  p3("single", [](auto &&xs) {
     std::vector<int> out;
-    auto ys = xs OP_ tap_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x) + get<2>(x)); });
-    CHECK((ys == xs));
+    auto && ys = xs OP_ tap_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x) + get<2>(x)); });
+     if constexpr (is_view<decltype(ys)>){
+       CHECK(((ys OP_ to_vector()) == xs));
+     }else CHECK((ys == xs));
     return out;
   });
 }
@@ -545,8 +561,8 @@ TEST_CASE(TPE_NAME "_tap_each", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_FOR_EACH
 TEST_CASE(TPE_NAME "_for_each", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](auto xs) {
-    std::vector<std::decay_t<typename decltype(xs)::value_type>> out;
+  auto op = [](auto &&xs) {
+    std::vector<std::decay_t<typename std::decay_t<decltype(xs)>::value_type>> out;
     xs OP_ for_each([&](auto x) { out.push_back(x); });
     return out;
   };
@@ -566,12 +582,12 @@ TEST_CASE(TPE_NAME "_for_each", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, std::vector<int>, name, {{3, 1}}, {4}, f);
     RUN_CHECK(P2, std::vector<int>, name, {}, {}, f);
   };
-  p2("spread", [](auto xs) {
+  p2("spread", [](auto &&xs) {
     std::vector<int> out;
     xs OP_ for_each([&](auto x0, auto x1) { out.push_back(x0 + x1); });
     return out;
   });
-  p2("single", [](auto xs) {
+  p2("single", [](auto &&xs) {
     std::vector<int> out;
     xs OP_ for_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x)); });
     return out;
@@ -583,12 +599,12 @@ TEST_CASE(TPE_NAME "_for_each", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, std::vector<int>, name, {{3, 1, 3}}, {7}, f);
     RUN_CHECK(P3, std::vector<int>, name, {}, {}, f);
   };
-  p3("spread", [](auto xs) {
+  p3("spread", [](auto &&xs) {
     std::vector<int> out;
     xs OP_ for_each([&](auto x0, auto x1, auto x2) { out.push_back(x0 + x1 + x2); });
     return out;
   });
-  p3("single", [](auto xs) {
+  p3("single", [](auto &&xs) {
     std::vector<int> out;
     xs OP_ for_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x) + get<2>(x)); });
     return out;
@@ -598,9 +614,9 @@ TEST_CASE(TPE_NAME "_for_each", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_PARTITION
 TEST_CASE(TPE_NAME "_partition", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto intOp = [](auto xs) { return xs OP_ partition([&](auto x) { return x % 2 == 0; }); };
-  auto stringOp = [](auto xs) { return xs OP_ partition([&](auto x) { return x.size() > 1; }); };
-  auto fooOp = [](auto xs) { return xs OP_ partition([&](auto x) { return x.value % 2 == 0; }); };
+  auto intOp = [](auto &&xs) { return xs OP_ partition([&](auto x) { return x % 2 == 0; }); };
+  auto stringOp = [](auto &&xs) { return xs OP_ partition([&](auto x) { return x.size() > 1; }); };
+  auto fooOp = [](auto &&xs) { return xs OP_ partition([&](auto x) { return x.value % 2 == 0; }); };
   using IntP = std::pair<TPE_CTOR_OUT(int), TPE_CTOR_OUT(int)>;
   using StringP = std::pair<TPE_CTOR_OUT(string), TPE_CTOR_OUT(string)>;
   using FooP = std::pair<TPE_CTOR_OUT(Foo), TPE_CTOR_OUT(Foo)>;
@@ -632,8 +648,8 @@ TEST_CASE(TPE_NAME "_partition", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, IntP2, name, {{3, 1}}, {{}, {{3, 1}}}, f);
     RUN_CHECK(P2, IntP2, name, {}, {{}, {}}, f);
   };
-  p2("spread", [](auto xs) { return xs OP_ partition([](auto x0, auto x1) { return x0 == x1; }); });
-  p2("single", [](auto xs) { return xs OP_ partition([](auto x) { return get<0>(x) == get<1>(x); }); });
+  p2("spread", [](auto &&xs) { return xs OP_ partition([](auto x0, auto x1) { return x0 == x1; }); });
+  p2("single", [](auto &&xs) { return xs OP_ partition([](auto x) { return get<0>(x) == get<1>(x); }); });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -645,8 +661,8 @@ TEST_CASE(TPE_NAME "_partition", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, IntP3, name, {{3, 1, 3}}, {{}, {{3, 1, 3}}}, f);
     RUN_CHECK(P3, IntP3, name, {}, {{}, {}}, f);
   };
-  p3("spread", [](auto xs) { return xs OP_ partition([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
-  p3("single", [](auto xs) { return xs OP_ partition([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
+  p3("spread", [](auto &&xs) { return xs OP_ partition([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
+  p3("single", [](auto &&xs) { return xs OP_ partition([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
 }
 #endif
 
@@ -672,12 +688,12 @@ TEST_CASE(TPE_NAME "_group_map_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(FooP, std::unordered_map<string COMMA int>, "", {}, {}, fooOp);
   };
   p2(
-      [](auto xs) {
+      [](auto &&xs) {
         return xs OP_ group_map_reduce([](auto x) { return std::to_string(get<0>(x)); }, //
                                        [](auto x) { return get<1>(x) * 2; },             //
                                        [](auto x, auto y) { return x + y; });
       },
-      [](auto xs) {
+      [](auto &&xs) {
         return xs OP_ group_map_reduce([](auto x) { return get<0>(x).substr(0, 1); }, //
                                        [](auto x) { return get<1>(x) + "X"; },        //
                                        [](auto x, auto y) {
@@ -686,18 +702,18 @@ TEST_CASE(TPE_NAME "_group_map_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
                                          return out;
                                        });
       },
-      [](auto xs) {
+      [](auto &&xs) {
         return xs OP_ group_map_reduce([](auto x, auto) { return std::to_string(x.value); }, //
                                        [](auto, auto y) { return y.value * 3; },             //
                                        [](auto x, auto y) { return x + y; });
       });
   p2(
-      [](auto xs) {
+      [](auto &&xs) {
         return xs OP_ group_map_reduce([](auto x, auto) { return std::to_string(x); }, //
                                        [](auto, auto y) { return y * 2; },             //
                                        [](auto x, auto y) { return x + y; });
       },
-      [](auto xs) {
+      [](auto &&xs) {
         return xs OP_ group_map_reduce([](auto x) { return get<0>(x).substr(0, 1); }, //
                                        [](auto, auto y) { return y + "X"; },          //
                                        [](auto x, auto y) {
@@ -706,7 +722,7 @@ TEST_CASE(TPE_NAME "_group_map_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
                                          return out;
                                        });
       },
-      [](auto xs) {
+      [](auto &&xs) {
         return xs OP_ group_map_reduce([](auto x, auto) { return std::to_string(x.value); }, //
                                        [](auto, auto y) { return y.value * 3; },             //
                                        [](auto x, auto y) { return x + y; });
@@ -735,14 +751,14 @@ TEST_CASE(TPE_NAME "_group_map", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(FooP, std::unordered_map<string COMMA TPE_CTOR_OUT(int)>, "", {{Foo(1), Foo(2)}}, {{"1", {6}}}, fooOp);
     RUN_CHECK(FooP, std::unordered_map<string COMMA TPE_CTOR_OUT(int)>, "", {}, {}, fooOp);
   };
-  p2([](auto xs) { return xs OP_ group_map([](auto x) { return std::to_string(get<0>(x)); }, [](auto x) { return get<1>(x) * 2; }); },
-     [](auto xs) { return xs OP_ group_map([](auto x) { return get<0>(x).substr(0, 1); }, [](auto x) { return get<1>(x) + "X"; }); },
-     [](auto xs) {
+  p2([](auto &&xs) { return xs OP_ group_map([](auto x) { return std::to_string(get<0>(x)); }, [](auto x) { return get<1>(x) * 2; }); },
+     [](auto &&xs) { return xs OP_ group_map([](auto x) { return get<0>(x).substr(0, 1); }, [](auto x) { return get<1>(x) + "X"; }); },
+     [](auto &&xs) {
        return xs OP_ group_map([](auto x, auto) { return std::to_string(x.value); }, [](auto, auto y) { return y.value * 3; });
      });
-  p2([](auto xs) { return xs OP_ group_map([](auto x, auto) { return std::to_string(x); }, [](auto, auto y) { return y * 2; }); },
-     [](auto xs) { return xs OP_ group_map([](auto x) { return get<0>(x).substr(0, 1); }, [](auto, auto y) { return y + "X"; }); },
-     [](auto xs) {
+  p2([](auto &&xs) { return xs OP_ group_map([](auto x, auto) { return std::to_string(x); }, [](auto, auto y) { return y * 2; }); },
+     [](auto &&xs) { return xs OP_ group_map([](auto x) { return get<0>(x).substr(0, 1); }, [](auto, auto y) { return y + "X"; }); },
+     [](auto &&xs) {
        return xs OP_ group_map([](auto x, auto) { return std::to_string(x.value); }, [](auto, auto y) { return y.value * 3; });
      });
 }
@@ -770,18 +786,18 @@ TEST_CASE(TPE_NAME "_group_by", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(FooP, std::unordered_map<string COMMA TPE_CTOR_OUT(FooP)>, "", {{Foo(1), Foo(2)}}, {{"1", {{Foo(1), Foo(2)}}}}, fooOp);
     RUN_CHECK(FooP, std::unordered_map<string COMMA TPE_CTOR_OUT(FooP)>, "", {}, {}, fooOp);
   };
-  p2([](auto xs) { return xs OP_ group_by([](auto x) { return std::to_string(get<0>(x)); }); },
-     [](auto xs) { return xs OP_ group_by([](auto x) { return get<0>(x).substr(0, 1); }); },
-     [](auto xs) { return xs OP_ group_by([](auto x, auto) { return std::to_string(x.value); }); });
-  p2([](auto xs) { return xs OP_ group_by([](auto x, auto) { return std::to_string(x); }); },
-     [](auto xs) { return xs OP_ group_by([](auto x) { return get<0>(x).substr(0, 1); }); },
-     [](auto xs) { return xs OP_ group_by([](auto x, auto) { return std::to_string(x.value); }); });
+  p2([](auto &&xs) { return xs OP_ group_by([](auto x) { return std::to_string(get<0>(x)); }); },
+     [](auto &&xs) { return xs OP_ group_by([](auto x) { return get<0>(x).substr(0, 1); }); },
+     [](auto &&xs) { return xs OP_ group_by([](auto x, auto) { return std::to_string(x.value); }); });
+  p2([](auto &&xs) { return xs OP_ group_by([](auto x, auto) { return std::to_string(x); }); },
+     [](auto &&xs) { return xs OP_ group_by([](auto x) { return get<0>(x).substr(0, 1); }); },
+     [](auto &&xs) { return xs OP_ group_by([](auto x, auto) { return std::to_string(x.value); }); });
 }
 #endif
 
 #ifndef DISABLE_TO_VECTOR
 TEST_CASE(TPE_NAME "_to_vector", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](auto xs) { return xs OP_ to_vector(); };
+  auto op = [](auto &&xs) { return xs OP_ to_vector(); };
 
   #ifdef TPE_MANY_INIT
   RUN_CHECK(int, std::vector<int>, "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}, op);
