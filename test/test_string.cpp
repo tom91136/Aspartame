@@ -1,13 +1,14 @@
 #include "test_base_includes.hpp"
-
-#include <random>
 #include "catch2/catch_test_macros.hpp"
+
+#include <cwctype>
+#include <random>
 
 #define OP_ ^
 #define TPE_GROUP "test_string"
 #define TPE_NAME "std::string"
 
-using namespace aspartame;
+using namespace ::aspartame;
 using std::optional;
 using std::string;
 using std::wstring;

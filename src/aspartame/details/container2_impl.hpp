@@ -93,8 +93,7 @@ template <typename In, typename GroupFunction, typename MapFunction, template <t
 constexpr auto group_map(const In &in, GroupFunction &&group, MapFunction &&map) {
   using K = decltype(details::ap(group, *in.begin()));
   using V = decltype(details::ap(map, *in.begin()));
-  if constexpr (details::assert_non_void<K>()) {}
-  if constexpr (details::assert_non_void<V>()) {}
+  if constexpr (details::assert_non_void<K>() && details::assert_non_void<V>()) {}
   std::unordered_map<K, Out<V>> ys;
   for (  auto  x : in) {
     auto k = details::ap(group, x);

@@ -28,7 +28,7 @@ void runTest(const std::string &typeName,       //
 
   auto check_view = [&](auto &&actual, auto &&expected) {
     using T = typename std::decay_t<decltype(actual)>::value_type;
-    if constexpr (aspartame::is_view<T>) {
+    if constexpr (::aspartame::is_view<T>) {
 
       TPE_CTOR_IN(TPE_CTOR_IN(typename T::value_type)) actual_vector;
       for (auto it = actual.begin(); it != actual.end(); ++it) {
@@ -47,15 +47,15 @@ void runTest(const std::string &typeName,       //
   auto check = [&](auto &&x) {
     using R = decltype(f(x));
 
-    if constexpr (aspartame::is_pair<Expected>) {
-      if constexpr (aspartame::is_view<typename R::first_type> && aspartame::is_view<typename R::second_type>) {
+    if constexpr (::aspartame::is_pair<Expected>) {
+      if constexpr (::aspartame::is_view<typename R::first_type> && ::aspartame::is_view<typename R::second_type>) {
         auto [l, r] = f(x);
         check_view(l, expected.first);
         check_view(r, expected.second);
       } else {
         check_direct(f(x), expected);
       }
-    } else if constexpr (aspartame::is_view<R>) {
+    } else if constexpr (::aspartame::is_view<R>) {
       check_view(f(x), expected);
     } else {
       check_direct(f(x), expected);
@@ -73,7 +73,7 @@ void runTest(const std::string &typeName,       //
                            << " @ " << location) {
     TPE_CTOR_IN(Element) v = in;
     TPE_CTOR_IN(Element) copy = v;
-    check(v | aspartame::map([](auto x) { return x; }));
+    check(v | ::aspartame::map([](auto x) { return x; }));
     CHECK((v == copy));
   }
 
@@ -82,8 +82,8 @@ void runTest(const std::string &typeName,       //
     TPE_CTOR_IN(Element) v = in;
     TPE_CTOR_IN(Element) copy = v;
     check(v                                              //
-          | aspartame::map([](auto x) { return x; })     //
-          | aspartame::filter([](auto) { return true; }) //
+          | ::aspartame::map([](auto x) { return x; })     //
+          | ::aspartame::filter([](auto) { return true; }) //
     );
     CHECK((v == copy));
   }

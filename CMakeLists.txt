@@ -13,20 +13,26 @@ FetchContent_MakeAvailable(Catch2)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_VERBOSE_MAKEFILE  ON)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(COMPILE_FLAGS
-        #        -Wno-unused-parameter
-        -Wall
-        -Wextra
-        -pedantic
-        -O0
-        -fsanitize=address -fsanitize=undefined
-)
-set(LINK_FLAGS
-        -fsanitize=address -fsanitize=undefined
-)
+option(ENABLE_SAN "Enable ASan and UBSan for Clang/GCC (not available for MSVC)" OFF)
 
+if (MSVC)
+    set(COMPILE_FLAGS /bigobj)
+else ()
+    set(COMPILE_FLAGS
+            #        -Wno-unused-parameter
+            -Wall
+            -Wextra
+            -pedantic
+            -O0
+    )
+    set(LINK_FLAGS)
+    if (ENABLE_SAN)
+        list(APPEND COMPILE_FLAGS -fsanitize=address -fsanitize=undefined)
+        list(APPEND LINK_FLAGS -fsanitize=address -fsanitize=undefined)
+    endif ()
+endif ()
 
 add_executable(tests
         test/test_view.cpp
@@ -52,6 +58,7 @@ target_link_options(tests PRIVATE ${LINK_FLAGS})
 add_executable(example example.cpp)
 target_compile_options(example PRIVATE ${COMPILE_FLAGS})
 target_link_options(example PRIVATE ${LINK_FLAGS})
+
 
 
 

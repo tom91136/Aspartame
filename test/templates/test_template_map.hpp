@@ -703,7 +703,8 @@ TEST_CASE(TPE_NAME "_map_keys", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(Foo, Foo, TPE_CTOR_OUT(Foo, Foo), "", {}, {}, fooOp);
   auto p2 = [](auto name, auto f) {
     using IntP2 = std::pair<int, int>;
-    RUN_CHECK(IntP2, string, TPE_CTOR_OUT(int, string), name, {{{3, 1}, "a"}, {{2, 2}, "b"}, {{1, 3}, "c"}}, {{4, "c"}}, f);
+    RUN_CHECK(IntP2, string, TPE_CTOR_OUT(int, string), name, {{{3, 1}, "a"}, {{2, 1}, "b"}, {{2, 3}, "c"}},
+        {{4, "a"}, {3, "b"}, {5, "c"}}, f);
     RUN_CHECK(IntP2, string, TPE_CTOR_OUT(int, string), name, {{{3, 1}, "a"}}, {{4, "a"}}, f);
     RUN_CHECK(IntP2, string, TPE_CTOR_OUT(int, string), name, {}, {}, f);
   };

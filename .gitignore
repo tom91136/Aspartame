@@ -258,3 +258,6 @@ $RECYCLE.BIN/
 venv
 
 !.env
+
+.vs/
+CMakeSettings.json

@@ -26,9 +26,7 @@ public:
     return *this;
   }
   [[nodiscard]] constexpr const U &operator*() { return current ? *current : *(current = (*f)(*it)); }
-  [[nodiscard]] constexpr bool operator==(const map_iterator &that) const {
-    return (it == that.it) || (!this->has_next() == !that.has_next());
-  }
+  [[nodiscard]] constexpr bool operator==(const map_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 
 } // namespace aspartame::details

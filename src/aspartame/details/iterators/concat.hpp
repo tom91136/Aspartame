@@ -33,8 +33,7 @@ public:
   [[nodiscard]] constexpr bool operator==(const concat_iterator &that) const {
     bool at_end1 = it1 == end1 && that.it1 == that.end1;
     bool at_end2 = it2 == end2 && that.it2 == that.end2;
-    bool same_pos = (it1 == that.it1 && it2 == that.it2);
-    return (at_end1 && at_end2) || same_pos;
+    return (at_end1 && at_end2);
   }
 };
 

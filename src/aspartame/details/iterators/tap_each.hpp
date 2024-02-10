@@ -27,9 +27,7 @@ public:
     (*f)(x);
     return x;
   }
-  [[nodiscard]] constexpr bool operator==(const tap_each_iterator &that) const {
-    return (it == that.it) || (!this->has_next() == !that.has_next());
-  }
+  [[nodiscard]] constexpr bool operator==(const tap_each_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 
 } // namespace aspartame::details

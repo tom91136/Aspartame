@@ -37,7 +37,7 @@ public:
   }
   [[nodiscard]] constexpr const U &operator*() { return *current; }
   [[nodiscard]] constexpr bool operator==(const collect_iterator &that) const {
-    return (it == that.it) || (!this->has_next() == !that.has_next());
+    return (!this->has_next() == !that.has_next());
   }
 };
 

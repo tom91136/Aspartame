@@ -33,13 +33,12 @@ template <typename In, typename T = typename In::value_type> //
     return !in.empty() ? std::optional<T>{*(std::prev(in.end()))} : std::nullopt;
 
   } else {
-    auto it = in.begin();
-    if (it == in.end()) return std::nullopt;
-    const std::decay_t<decltype(*it)> *last = &*it;
-    ++it;
-    for (; it != in.end(); ++it)
-      last = &*it;
-    return std::optional<T>{*last};
+    auto it = in.begin(), end = in.end();
+    while (it != end) {
+      T x = *it;
+      if ((++it) == end) return std::optional<T>{x};
+    }
+    return std::nullopt;
   }
 }
 
@@ -288,22 +287,36 @@ template <typename In, typename Out> //
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out take_right(const In &in, size_t n) {
+  static_assert(std::is_same_v<std::bidirectional_iterator_tag, typename In::const_iterator::iterator_category> ||
+                    std::is_same_v<std::random_access_iterator_tag, typename In::const_iterator::iterator_category>
+#if __cplusplus >= 202002L
+                    || std::is_same_v<std::contiguous_iterator_tag, typename In::const_iterator::iterator_category>
+#endif
+                ,
+                "iterator does not meet a minimum of the BidirectionalIterator requirement");
   if (n >= in.size()) return in;
   Out ys;
   if constexpr (has_reserve<Out>) ys.reserve(n);
   auto it = in.end();
-  std::advance(it, -n);
+  std::advance(it, -static_cast<std::make_signed_t<size_t>>(n));
   std::copy(it, in.end(), std::back_inserter(ys));
   return ys;
 }
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out drop_right(const In &in, size_t n) {
+  static_assert(std::is_same_v<std::bidirectional_iterator_tag, typename In::const_iterator::iterator_category> ||
+                    std::is_same_v<std::random_access_iterator_tag, typename In::const_iterator::iterator_category>
+#if __cplusplus >= 202002L
+                    || std::is_same_v<std::contiguous_iterator_tag, typename In::const_iterator::iterator_category>
+#endif
+                ,
+                "iterator does not meet a minimum of the BidirectionalIterator requirement");
   if (n >= in.size()) return In{};
   Out ys;
   if constexpr (has_reserve<Out>) ys.reserve(in.size() - n);
   auto it = in.end();
-  std::advance(it, -n);
+  std::advance(it, -static_cast<std::make_signed_t<size_t>>(n));
   std::copy(in.begin(), it, std::back_inserter(ys));
   return ys;
 }
