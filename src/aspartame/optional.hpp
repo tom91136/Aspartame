@@ -76,7 +76,9 @@ template <typename C, typename Predicate> //
 [[nodiscard]] constexpr auto filter(const std::optional<C> &in, Predicate &&predicate) -> std::optional<C> {
   if constexpr (details::assert_predicate<decltype(details::ap(predicate, *in))>()) {};
   if (in) {
-    return details::ap(predicate, *in) ? in : std::nullopt;
+    // XXX don't use ternary here, NVHPC breaks: https://forums.developer.nvidia.com/t/nvc-miscompiles-code-involving-std-tuple/281754
+    if (details::ap(predicate, *in)) return in;
+    else return std::nullopt;
   } else return std::optional<C>{};
 }
 
@@ -325,7 +327,9 @@ template <typename C, typename Predicate> //
 template <typename C, typename Predicate> //
 [[nodiscard]] constexpr auto drop_while(const std::optional<C> &in, Predicate &&predicate) -> std::optional<C> {
   if constexpr (details::assert_predicate<decltype(details::ap(predicate, *in))>()) {};
-  return in && !details::ap(predicate, *in) ? in : std::optional<C>{};
+  // XXX don't use ternary here, NVHPC breaks: https://forums.developer.nvidia.com/t/nvc-miscompiles-code-involving-std-tuple/281754
+  if (in && !details::ap(predicate, *in)) return in;
+  else return std::nullopt;
 }
 
 template <typename C, typename Accumulator, typename Function> //
