@@ -118,7 +118,7 @@ auto operator|(Iterable &&l, const Op &r) {
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] auto mk_string(view<C, Storage> &in, const std::string_view &sep, const std::string_view &prefix,
                              const std::string_view &suffix, Function &&f) {
-  return details::container::mk_string<view<C, Storage>, Function>(in, sep, prefix, suffix, f);
+  return details::container1::mk_string<view<C, Storage>, Function>(in, sep, prefix, suffix, f);
 }
 
 template <typename C, typename Storage, typename T> //
@@ -175,22 +175,27 @@ template <typename C, typename Storage> //
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto count(const view<C, Storage> &in, Predicate &&predicate) {
-  return details::container::count<view<C, Storage>, Predicate>(in, predicate);
+  return details::container1::count<view<C, Storage>, Predicate>(in, predicate);
 }
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto exists(const view<C, Storage> &in, Predicate &&predicate) {
-  return details::container::exists<view<C, Storage>, Predicate>(in, predicate);
+  return details::container1::exists<view<C, Storage>, Predicate>(in, predicate);
 }
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto forall(const view<C, Storage> &in, Predicate &&predicate) {
-  return details::container::forall<view<C, Storage>, Predicate>(in, predicate);
+  return details::container1::forall<view<C, Storage>, Predicate>(in, predicate);
+}
+
+template <typename C, typename Storage, typename Predicate> //
+[[nodiscard]] constexpr auto find(const view<C, Storage> &in, Predicate &&predicate) {
+  return details::container1::find<view<C, Storage>, Predicate>(in, predicate);
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto reduce(const view<C, Storage> &in, Function &&function) {
-  return details::container::reduce<view<C, Storage>, Function>(in, function);
+  return details::container1::reduce<view<C, Storage>, Function>(in, function);
 }
 
 template <typename C, typename Storage, typename Function> //
@@ -201,7 +206,7 @@ template <typename C, typename Storage, typename Function> //
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto for_each(const view<C, Storage> &in, Function &&function) {
-  details::container::for_each<view<C, Storage>, Function>(in, function);
+  details::container1::for_each<view<C, Storage>, Function>(in, function);
 }
 
 template <typename C, typename Storage, typename Predicate> //
@@ -213,17 +218,17 @@ template <typename C, typename Storage, typename Predicate> //
 template <typename C, typename Storage, typename GroupFunction, typename MapFunction, typename ReduceFunction> //
 [[nodiscard]] constexpr auto group_map_reduce(const view<C, Storage> &in, GroupFunction &&group, MapFunction &&map,
                                               ReduceFunction &&reduce) {
-  return details::container::group_map_reduce<view<C, Storage>, GroupFunction, MapFunction, ReduceFunction>(in, group, map, reduce);
+  return details::container1::group_map_reduce<view<C, Storage>, GroupFunction, MapFunction, ReduceFunction>(in, group, map, reduce);
 }
 
 template <typename C, typename Storage, typename GroupFunction, typename MapFunction> //
 [[nodiscard]] constexpr auto group_map(const view<C, Storage> &in, GroupFunction &&group, MapFunction &&map) {
-  return details::container::group_map<view<C, Storage>, GroupFunction, MapFunction, std::vector>(in, group, map);
+  return details::container1::group_map<view<C, Storage>, GroupFunction, MapFunction, std::vector>(in, group, map);
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto group_by(const view<C, Storage> &in, Function &&function) {
-  return details::container::group_by<view<C, Storage>, Function, std::vector>(in, function);
+  return details::container1::group_by<view<C, Storage>, Function, std::vector>(in, function);
 }
 
 template <typename C, typename Storage> //
@@ -241,27 +246,27 @@ template <typename C, typename Storage, typename T> //
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto head_maybe(const view<C, Storage> &in) {
-  return details::sequence::head_maybe<view<C, Storage>>(in);
+  return details::sequence1::head_maybe<view<C, Storage>>(in);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto last_maybe(const view<C, Storage> &in) {
-  return details::sequence::last_maybe<view<C, Storage>>(in);
+  return details::sequence1::last_maybe<view<C, Storage>>(in);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto init(const view<C, Storage> &in) {
-  return details::sequence::init<view<C, Storage>, view<C, Storage>>(in);
+  return details::sequence1::init<view<C, Storage>, view<C, Storage>>(in);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto tail(const view<C, Storage> &in) {
-  return details::sequence::tail<view<C, Storage>, view<C, Storage>>(in);
+  return details::sequence1::tail<view<C, Storage>, view<C, Storage>>(in);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto at_maybe(const view<C, Storage> &in, size_t idx) {
-  return details::sequence::at_maybe<view<C, Storage>>(in, idx);
+  return details::sequence1::at_maybe<view<C, Storage>>(in, idx);
 }
 
 template <typename C, typename Storage> //
@@ -271,82 +276,87 @@ template <typename C, typename Storage> //
 
 template <typename C, typename Storage, typename Container> //
 [[nodiscard]] constexpr auto index_of_slice(const view<C, Storage> &in, const Container &other) {
-  return details::sequence::index_of_slice<view<C, Storage>, Container>(in, other);
+  return details::sequence1::index_of_slice<view<C, Storage>, Container>(in, other);
 }
 
 template <typename C, typename Storage, typename Container> //
 [[nodiscard]] constexpr auto contains_slice(const view<C, Storage> &in, const Container &other) {
-  return details::sequence::index_of_slice<view<C, Storage>, Container>(in, other) != -1;
+  return details::sequence1::index_of_slice<view<C, Storage>, Container>(in, other) != -1;
 }
 
 template <typename C, typename Storage, typename T> //
 [[nodiscard]] constexpr auto index_of(const view<C, Storage> &in, const T &t) {
-  return details::sequence::index_of<view<C, Storage>>(in, t);
+  return details::sequence1::index_of<view<C, Storage>>(in, t);
 }
 
 template <typename C, typename Storage, typename T> //
 [[nodiscard]] constexpr auto contains(const view<C, Storage> &in, const T &t) {
-  return details::sequence::index_of<view<C, Storage>>(in, t) != -1;
+  return details::sequence1::index_of<view<C, Storage>>(in, t) != -1;
+}
+
+template <typename C, typename Storage, typename Predicate> //
+[[nodiscard]] constexpr auto find_last(const view<C, Storage> &in, Predicate &&predicate) {
+  return details::sequence1::find_last<view<C, Storage>, Predicate>(in, predicate);
 }
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto index_where(const view<C, Storage> &in, Predicate &&predicate) {
-  return details::sequence::index_where<view<C, Storage>, Predicate>(in, predicate);
+  return details::sequence1::index_where<view<C, Storage>, Predicate>(in, predicate);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto zip_with_index(const view<C, Storage> &in) {
-  return details::sequence::zip_with_index<view<C, Storage>, std::vector>(in);
+  return details::sequence1::zip_with_index<view<C, Storage>, std::vector>(in);
 }
 
 template <typename C, typename Storage, typename Container> //
 [[nodiscard]] constexpr auto zip(const view<C, Storage> &in, const Container &other) {
-  return details::sequence::zip<view<C, Storage>, Container, std::vector>(in, other);
+  return details::sequence1::zip<view<C, Storage>, Container, std::vector>(in, other);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto transpose(const view<C, Storage> &in) {
-  return details::sequence::transpose<view<C, Storage>, std::vector>(in);
+  return details::sequence1::transpose<view<C, Storage>, std::vector>(in);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto reverse(const view<C, Storage> &in) {
-  return details::sequence::reverse<view<C, Storage>, view<C, Storage>>(in);
+  return details::sequence1::reverse<view<C, Storage>, view<C, Storage>>(in);
 }
 
 template <typename C, typename Storage, typename URBG> //
 [[nodiscard]] constexpr auto shuffle(const view<C, Storage> &in, URBG &&urbg) {
-  return details::sequence::shuffle<view<C, Storage>, URBG, view<C, Storage>>(in, std::forward<URBG &&>(urbg));
+  return details::sequence1::shuffle<view<C, Storage>, URBG, view<C, Storage>>(in, std::forward<URBG &&>(urbg));
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto sort(const view<C, Storage> &in) {
-  return details::sequence::sort<view<C, Storage>, view<C, Storage>>(in);
+  return details::sequence1::sort<view<C, Storage>, view<C, Storage>>(in);
 }
 
 template <typename C, typename Storage, typename Compare> //
 [[nodiscard]] constexpr auto sort(const view<C, Storage> &in, Compare &&compare) {
-  return details::sequence::sort<view<C, Storage>, Compare, view<C, Storage>>(in, compare);
+  return details::sequence1::sort<view<C, Storage>, Compare, view<C, Storage>>(in, compare);
 }
 
 template <typename C, typename Storage, typename Select> //
 [[nodiscard]] constexpr auto sort_by(const view<C, Storage> &in, Select &&select) {
-  return details::sequence::sort_by<view<C, Storage>, Select, view<C, Storage>>(in, select);
+  return details::sequence1::sort_by<view<C, Storage>, Select, view<C, Storage>>(in, select);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto split_at(const view<C, Storage> &in, size_t idx) {
-  return details::sequence::split_at<view<C, Storage>, view<C, Storage>>(in, idx);
+  return details::sequence1::split_at<view<C, Storage>, view<C, Storage>>(in, idx);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto take_right(const view<C, Storage> &in, size_t n) {
-  return details::sequence::take_right<view<C, Storage>, view<C, Storage>>(in, n);
+  return details::sequence1::take_right<view<C, Storage>, view<C, Storage>>(in, n);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto drop_right(const view<C, Storage> &in, size_t n) {
-  return details::sequence::drop_right<view<C, Storage>, view<C, Storage>>(in, n);
+  return details::sequence1::drop_right<view<C, Storage>, view<C, Storage>>(in, n);
 }
 
 template <typename C, typename Storage> //
@@ -375,7 +385,7 @@ template <typename C, typename Storage, typename Predicate> //
 
 template <typename C, typename Storage, typename Accumulator, typename Function> //
 [[nodiscard]] constexpr auto fold_left(const view<C, Storage> &in, Accumulator &&init, Function &&function) {
-  return details::sequence::fold_left<view<C, Storage>, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
+  return details::sequence1::fold_left<view<C, Storage>, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
 }
 
 template <typename C, typename Storage, typename Accumulator, typename Function> //

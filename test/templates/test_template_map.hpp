@@ -328,6 +328,39 @@ TEST_CASE(TPE_NAME "_forall", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+#ifndef DISABLE_FIND
+TEST_CASE(TPE_NAME "_find", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto intForallOp = [](auto &&xs) { return xs OP_ find([](auto x) { return x.second == 8; }); };
+  auto strForallOp = [](auto &&xs) { return xs OP_ find([](auto x) { return x.second == "cherry"; }); };
+  auto fooForallOp = [](auto &&xs) { return xs OP_ find([](auto x) { return x.second.value == 4; }); };
+
+  using IntP = std::optional<std::pair<int, int>>;
+  using StringP = std::optional<std::pair<string, string>>;
+  using FooP = std::optional<std::pair<Foo, Foo>>;
+
+  RUN_CHECK(int, int, IntP, "", {{4, 4}, {2, 2}, {8, 8}, {0, 0}, {0, 0}}, {{8, 8}}, intForallOp);
+  RUN_CHECK(int, int, IntP, "", {{1, 1}}, {}, intForallOp);
+  RUN_CHECK(int, int, IntP, "", {}, {}, intForallOp);
+  RUN_CHECK(string, string, StringP, "", {{"cherry", "cherry"}, {"cherry", "cherry"}, {"cherry", "cherry"}}, {{"cherry", "cherry"}},
+            strForallOp);
+  RUN_CHECK(string, string, StringP, "", {{"cherry", "cherry"}, {"apple", "apple"}}, {{"cherry", "cherry"}}, strForallOp);
+  RUN_CHECK(string, string, StringP, "", {}, {}, strForallOp);
+  RUN_CHECK(Foo, Foo, FooP, "", {{Foo(2), Foo(2)}, {Foo(4), Foo(4)}, {Foo(6), Foo(6)}}, {{Foo(4), Foo(4)}}, fooForallOp);
+  RUN_CHECK(Foo, Foo, FooP, "", {{Foo(1), Foo(1)}, {Foo(2), Foo(2)}}, {}, fooForallOp);
+  RUN_CHECK(Foo, Foo, FooP, "", {}, {}, fooForallOp);
+
+  auto p2 = [](auto name, auto f) {
+    using P2 = std::pair<int, int>;
+    using P22 = std::optional<std::pair<P2, P2>>;
+    RUN_CHECK(P2, P2, P22, name, {{{3, 3}, {1, 1}}, {{2, 2}, {2, 2}}, {{1, 2}, {3, 3}}}, {{{1, 2}, {3, 3}}}, f);
+    RUN_CHECK(P2, P2, P22, name, {{{3, 2}, {2, 2}}}, {{{3, 2}, {2, 2}}}, f);
+    RUN_CHECK(P2, P2, P22, name, {}, {}, f);
+  };
+  p2("spread", [](auto &&xs) { return xs OP_ find([](auto x0, auto) { return x0.first != x0.second; }); });
+  p2("single", [](auto &&xs) { return xs OP_ find([](auto x) { return get<0>(x).first != get<0>(x).second; }); });
+}
+#endif
+
 #ifndef DISABLE_REDUCE
 TEST_CASE(TPE_NAME "_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto intReduceOp = [](auto && xs) {

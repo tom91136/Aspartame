@@ -8,7 +8,7 @@
 
 #include "base.hpp"
 
-namespace aspartame::details::container {
+namespace aspartame::details::container1 {
 
 template <typename In, typename Function> //
 [[nodiscard]] auto mk_string(const In &o, const std::string_view &sep, const std::string_view &prefix, const std::string_view &suffix,
@@ -158,6 +158,14 @@ template <typename In, typename Predicate> //
 [[nodiscard]] constexpr bool forall(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   return std::all_of(in.begin(), in.end(), [&](auto x) { return details::ap(p, x); });
+}
+
+template <typename In, typename Predicate> //
+[[nodiscard]] constexpr auto find(const In &in, Predicate p) {
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
+  auto it = std::find_if(in.begin(), in.end(), [&](auto x) { return details::ap(p, x); });
+  if (it == in.end()) return std::optional<typename In::value_type>{};
+  else return std::optional<typename In::value_type>{*it};
 }
 
 template <typename In, typename Function> //

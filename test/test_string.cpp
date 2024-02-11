@@ -160,6 +160,18 @@ TEST_CASE(TPE_NAME "_forall", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+#ifndef DISABLE_FIND
+TEST_CASE(TPE_NAME "_find", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("" ^ find([](auto x) { return x == 'a'; })) == std::nullopt);
+  CHECK(("hello" ^ find([](auto x) { return x == 'z'; })) == std::nullopt);
+  CHECK(("hello world" ^ find([](auto x) { return x == 'o'; })) == std::optional{'o'});
+  CHECK(("testing" ^ find([](auto x) { return x > 'e'; })) == std::optional{'t'});
+  CHECK(("abc123xyz" ^ find([](auto x) { return std::isdigit(x); })) == std::optional{'1'});
+
+  CHECK(("abc123xyz"_w ^ find([](auto x) { return std::isdigit(x); })) == std::optional{'1'});
+}
+#endif
+
 #ifndef DISABLE_REDUCE
 TEST_CASE(TPE_NAME "_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcd" ^ reduce([](auto a, auto b) { return std::min(a, b); })).value() == 'a');
@@ -388,6 +400,18 @@ TEST_CASE(TPE_NAME "_contains", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("" ^ contains('h')) == false);
 
   CHECK(("hello"_w ^ contains('h')) == true);
+}
+#endif
+
+#ifndef DISABLE_FIND_LAST
+TEST_CASE(TPE_NAME "_find_last", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("" ^ find_last([](auto x) { return x == 'a'; })) == std::nullopt);
+  CHECK(("hello" ^ find_last([](auto x) { return x == 'z'; })) == std::nullopt);
+  CHECK(("hello world" ^ find_last([](auto x) { return x == 'o'; })) == std::optional{'o'});
+  CHECK(("testing" ^ find_last([](auto x) { return x > 'e'; })) == std::optional{'g'});
+  CHECK(("abc123xyz" ^ find_last([](auto x) { return std::isdigit(x); })) == std::optional{'3'});
+
+  CHECK(("abc123xyz"_w ^ find_last([](auto x) { return std::isdigit(x); })) == std::optional{'3'});
 }
 #endif
 

@@ -113,6 +113,12 @@ template <typename T>
 constexpr bool has_assignable_iterator<T, std::void_t<decltype(*std::declval<T>() = *std::declval<T>())>> =
     std::is_assignable_v<decltype(*std::declval<T>()), decltype(*std::declval<T>())>;
 
+template <typename T, typename = void> constexpr bool has_rbegin = false;
+template <typename T> constexpr bool has_rbegin<T, std::void_t<decltype(std::declval<T>().rbegin())>> = true;
+
+template <typename T, typename = void> constexpr bool has_rend = false;
+template <typename T> constexpr bool has_rend<T, std::void_t<decltype(std::declval<T>().rend())>> = true;
+
 } // namespace details
 
 } // namespace aspartame

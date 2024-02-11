@@ -89,6 +89,17 @@ constexpr auto reduce(const In &in, Function f) {
   }
 }
 
+template <typename In, typename Predicate> //
+constexpr auto find(const In &in, Predicate p) {
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
+  auto it = std::find_if(in.begin(), in.end(), [&](auto x) { return details::ap(p, x); });
+  using K =  typename In::key_type;
+  using V = typename In::mapped_type;
+  using T = std::pair<K, V>;
+  if (it == in.end()) return std::optional<T>{};
+  else return std::optional<T>{std::pair{it->first, it->second}};
+}
+
 template <typename In, typename GroupFunction, typename MapFunction, template <typename...> typename Out> //
 constexpr auto group_map(const In &in, GroupFunction &&group, MapFunction &&map) {
   using K = decltype(details::ap(group, *in.begin()));

@@ -465,6 +465,50 @@ TEST_CASE(TPE_NAME "_forall", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+#ifndef DISABLE_FIND
+TEST_CASE(TPE_NAME "_find", "[" TPE_NAME "][" TPE_GROUP "]") {
+  RUN_CHECK(int, std::optional<int>, "", {4, 2, 3, 1, 5}, {4}, [](auto &&xs) { return xs OP_ find([](auto x) { return x == 4; }); });
+  RUN_CHECK(int, std::optional<int>, "", {1}, {1}, [](auto &&xs) { return xs OP_ find([](auto x) { return x == 1; }); });
+  RUN_CHECK(int, std::optional<int>, "", {1}, {}, [](auto &&xs) { return xs OP_ find([](auto x) { return x == 0; }); });
+  RUN_CHECK(int, std::optional<int>, "", {}, {}, [](auto &&xs) { return xs OP_ find([](auto x) { return x == 1; }); });
+
+  RUN_CHECK(string, std::optional<string>, "", {"banana", "cherry", "apple"}, {"banana"},
+            [](auto &&xs) { return xs OP_ find([](auto x) { return x == "banana"; }); });
+  RUN_CHECK(string, std::optional<string>, "", {"apple"}, {"apple"},
+            [](auto &&xs) { return xs OP_ find([](auto x) { return x == "apple"; }); });
+  RUN_CHECK(string, std::optional<string>, "", {"apple"}, {}, [](auto &&xs) { return xs OP_ find([](auto x) { return x == "banana"; }); });
+  RUN_CHECK(string, std::optional<string>, "", {}, {}, [](auto &&xs) { return xs OP_ find([](auto x) { return x == "apple"; }); });
+
+  RUN_CHECK(Foo, std::optional<Foo>, "", {Foo(3), Foo(2), Foo(1)}, {Foo(3)},
+            [](auto &&xs) { return xs OP_ find([](auto x) { return x == Foo(3); }); });
+  RUN_CHECK(Foo, std::optional<Foo>, "", {Foo(1)}, {Foo(1)}, [](auto &&xs) { return xs OP_ find([](auto x) { return x == Foo(1); }); });
+  RUN_CHECK(Foo, std::optional<Foo>, "", {Foo(1)}, {}, [](auto &&xs) { return xs OP_ find([](auto x) { return x == Foo(2); }); });
+  RUN_CHECK(Foo, std::optional<Foo>, "", {}, {}, [](auto &&xs) { return xs OP_ find([](auto x) { return x == Foo(1); }); });
+
+  auto p2 = [](auto name, auto f) {
+    using P2 = std::pair<int, int>;
+  #ifdef TPE_MANY_INIT
+    RUN_CHECK(P2, std::optional<P2>, name, {{3, 1}, {2, 2}, {3, 4}}, {{2, 2}}, f);
+  #endif
+    RUN_CHECK(P2, std::optional<P2>, name, {{3, 1}}, {}, f);
+    RUN_CHECK(P2, std::optional<P2>, name, {}, {}, f);
+  };
+  p2("spread", [](auto &&xs) { return xs OP_ find([](auto x0, auto x1) { return x0 == x1; }); });
+  p2("single", [](auto &&xs) { return xs OP_ find([](auto x) { return get<0>(x) == get<1>(x); }); });
+
+  auto p3 = [](auto name, auto f) {
+    using P3 = std::tuple<int, int, int>;
+  #ifdef TPE_MANY_INIT
+    RUN_CHECK(P3, std::optional<P3>, name, {{3, 1, 3}, {2, 2, 2}, {1, 3, 1}}, {{2, 2, 2}}, f);
+  #endif
+    RUN_CHECK(P3, std::optional<P3>, name, {{3, 1, 3}}, {}, f);
+    RUN_CHECK(P3, std::optional<P3>, name, {}, {}, f);
+  };
+  p3("spread", [](auto &&xs) { return xs OP_ find([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
+  p3("single", [](auto &&xs) { return xs OP_ find([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
+}
+#endif
+
 #ifndef DISABLE_REDUCE
 TEST_CASE(TPE_NAME "_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto intOp = [](auto &&xs) { return xs OP_ reduce([](auto acc, auto x) { return acc + x; }); };

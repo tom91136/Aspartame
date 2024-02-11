@@ -40,12 +40,12 @@ namespace aspartame {
 template <typename C, typename Function> //
 [[nodiscard]] auto mk_string(const std::basic_string<C> &in, const std::string_view &sep, const std::string_view &prefix,
                                                const std::string_view &suffix, Function &&f) {
-  return details::container::mk_string(in, sep, prefix, suffix, f);
+  return details::container1::mk_string(in, sep, prefix, suffix, f);
 }
 
 template <typename C, typename T> //
 [[nodiscard]] /*constexpr*/ auto append(const std::basic_string<C> &in, T &&t) {
-  return details::container::append<std::basic_string<C>, T, std::basic_string<C>>(in, std::forward<T &&>(t));
+  return details::container1::append<std::basic_string<C>, T, std::basic_string<C>>(in, std::forward<T &&>(t));
 }
 
 template <typename C, typename Container> //
@@ -70,12 +70,12 @@ template <typename C, typename Function> //
 
 template <typename C, typename Function> //
 [[nodiscard]] /*constexpr*/ auto collect(const std::basic_string<C> &in, Function &&function) {
-  return details::container::collect<std::basic_string<C>, Function, ASPARTAME_OUT_TYPE>(in, function);
+  return details::container1::collect<std::basic_string<C>, Function, ASPARTAME_OUT_TYPE>(in, function);
 }
 
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto filter(const std::basic_string<C> &in, Predicate &&predicate) {
-  return details::container::filter<std::basic_string<C>, Predicate, ASPARTAME_OUT_TYPE>(in, predicate);
+  return details::container1::filter<std::basic_string<C>, Predicate, ASPARTAME_OUT_TYPE>(in, predicate);
 }
 
 template <typename C, typename Function> //
@@ -95,63 +95,68 @@ template <typename C> //
 
 template <typename C, typename Function> //
 [[nodiscard]] /*constexpr*/ auto distinct_by(const std::basic_string<C> &in, Function &&function) {
-  return details::container::distinct_by<std::basic_string<C>, Function, std::basic_string<C>>(in, function);
+  return details::container1::distinct_by<std::basic_string<C>, Function, std::basic_string<C>>(in, function);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto distinct(const std::basic_string<C> &in) {
-  return details::container::distinct<std::basic_string<C>, std::basic_string<C>, false>(in);
+  return details::container1::distinct<std::basic_string<C>, std::basic_string<C>, false>(in);
 }
 
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto count(const std::basic_string<C> &in, Predicate &&predicate) {
-  return details::container::count<std::basic_string<C>, Predicate>(in, predicate);
+  return details::container1::count<std::basic_string<C>, Predicate>(in, predicate);
 }
 
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto exists(const std::basic_string<C> &in, Predicate &&predicate) {
-  return details::container::exists<std::basic_string<C>, Predicate>(in, predicate);
+  return details::container1::exists<std::basic_string<C>, Predicate>(in, predicate);
 }
 
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto forall(const std::basic_string<C> &in, Predicate &&predicate) {
-  return details::container::forall<std::basic_string<C>, Predicate>(in, predicate);
+  return details::container1::forall<std::basic_string<C>, Predicate>(in, predicate);
+}
+
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto find(const std::basic_string<C> &in, Predicate &&predicate) {
+  return details::container1::find<std::basic_string<C>, Predicate>(in, predicate);
 }
 
 template <typename C, typename Function> //
 [[nodiscard]] /*constexpr*/ auto reduce(const std::basic_string<C> &in, Function &&function) {
-  return details::container::reduce<std::basic_string<C>, Function>(in, function);
+  return details::container1::reduce<std::basic_string<C>, Function>(in, function);
 }
 
 template <typename C, typename Function> //
 [[nodiscard]] /*constexpr*/ auto tap_each(const std::basic_string<C> &in, Function &&function) {
-  return details::container::tap_each<std::basic_string<C>, Function>(in, function);
+  return details::container1::tap_each<std::basic_string<C>, Function>(in, function);
 }
 
 template <typename C, typename Function> //
 [[nodiscard]] /*constexpr*/ auto for_each(const std::basic_string<C> &in, Function &&function) {
-  details::container::for_each<std::basic_string<C>, Function>(in, function);
+  details::container1::for_each<std::basic_string<C>, Function>(in, function);
 }
 
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto partition(const std::basic_string<C> &in, Predicate &&predicate) {
-  return details::container::partition<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
+  return details::container1::partition<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
 }
 
 template <typename C, typename GroupFunction, typename MapFunction, typename ReduceFunction> //
 [[nodiscard]] /*constexpr*/ auto group_map_reduce(const std::basic_string<C> &in, GroupFunction &&group, MapFunction &&map,
                                                                     ReduceFunction &&reduce) {
-  return details::container::group_map_reduce<std::basic_string<C>, GroupFunction, MapFunction, ReduceFunction>(in, group, map, reduce);
+  return details::container1::group_map_reduce<std::basic_string<C>, GroupFunction, MapFunction, ReduceFunction>(in, group, map, reduce);
 }
 
 template <typename C, typename GroupFunction, typename MapFunction> //
 [[nodiscard]] /*constexpr*/ auto group_map(const std::basic_string<C> &in, GroupFunction &&group, MapFunction &&map) {
-  return details::container::group_map<std::basic_string<C>, GroupFunction, MapFunction, std::vector>(in, group, map);
+  return details::container1::group_map<std::basic_string<C>, GroupFunction, MapFunction, std::vector>(in, group, map);
 }
 
 template <typename C, typename Function> //
 [[nodiscard]] /*constexpr*/ auto group_by(const std::basic_string<C> &in, Function &&function) {
-  return details::container::group_by<std::basic_string<C>, Function, std::vector>(in, function);
+  return details::container1::group_by<std::basic_string<C>, Function, std::vector>(in, function);
 }
 
 template <typename C> //
@@ -164,75 +169,80 @@ template <typename C> //
 
 template <typename C, typename T> //
 [[nodiscard]] /*constexpr*/ auto prepend(const std::basic_string<C> &in, const T &t) {
-  return details::sequence::prepend<std::basic_string<C>, T, std::basic_string<C>>(in, t);
+  return details::sequence1::prepend<std::basic_string<C>, T, std::basic_string<C>>(in, t);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto head_maybe(const std::basic_string<C> &in) {
-  return details::sequence::head_maybe<std::basic_string<C>>(in);
+  return details::sequence1::head_maybe<std::basic_string<C>>(in);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto last_maybe(const std::basic_string<C> &in) {
-  return details::sequence::last_maybe<std::basic_string<C>>(in);
+  return details::sequence1::last_maybe<std::basic_string<C>>(in);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto init(const std::basic_string<C> &in) {
-  return details::sequence::init<std::basic_string<C>, std::basic_string<C>>(in);
+  return details::sequence1::init<std::basic_string<C>, std::basic_string<C>>(in);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto tail(const std::basic_string<C> &in) {
-  return details::sequence::tail<std::basic_string<C>, std::basic_string<C>>(in);
+  return details::sequence1::tail<std::basic_string<C>, std::basic_string<C>>(in);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto at_maybe(const std::basic_string<C> &in, size_t idx) {
-  return details::sequence::at_maybe<std::basic_string<C>>(in, idx);
+  return details::sequence1::at_maybe<std::basic_string<C>>(in, idx);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto slice(const std::basic_string<C> &in, size_t from_inclusive, size_t to_exclusive) {
-  return details::sequence::slice<std::basic_string<C>, std::basic_string<C>>(in, from_inclusive, to_exclusive);
+  return details::sequence1::slice<std::basic_string<C>, std::basic_string<C>>(in, from_inclusive, to_exclusive);
 }
 
 template <typename C, typename Container> //
 [[nodiscard]] /*constexpr*/ auto index_of_slice(const std::basic_string<C> &in, const Container &other) {
   static_assert(std::is_convertible_v<Container, std::basic_string<C>>, "other string type must be convertible to LHS string type");
-  return details::sequence::index_of_slice<std::basic_string<C>, std::basic_string<C>>(in, other);
+  return details::sequence1::index_of_slice<std::basic_string<C>, std::basic_string<C>>(in, other);
 }
 
 template <typename C, typename Container> //
 [[nodiscard]] /*constexpr*/ auto contains_slice(const std::basic_string<C> &in, const Container &other) {
   static_assert(std::is_convertible_v<Container, std::basic_string<C>>, "other string type must be convertible to LHS string type");
-  return details::sequence::index_of_slice<std::basic_string<C>, std::basic_string<C>>(in, other) != -1;
+  return details::sequence1::index_of_slice<std::basic_string<C>, std::basic_string<C>>(in, other) != -1;
 }
 
 template <typename C, typename T> //
 [[nodiscard]] /*constexpr*/ auto index_of(const std::basic_string<C> &in, const T &t) {
-  return details::sequence::index_of<std::basic_string<C>>(in, t);
+  return details::sequence1::index_of<std::basic_string<C>>(in, t);
 }
 
 template <typename C, typename T> //
 [[nodiscard]] /*constexpr*/ auto contains(const std::basic_string<C> &in, const T &t) {
-  return details::sequence::index_of<std::basic_string<C>>(in, t) != -1;
+  return details::sequence1::index_of<std::basic_string<C>>(in, t) != -1;
+}
+
+template <typename C, typename T> //
+[[nodiscard]] /*constexpr*/ auto find_last(const std::basic_string<C> &in, const T &t) {
+  return details::sequence1::find_last<std::basic_string<C>>(in, t);
 }
 
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto index_where(const std::basic_string<C> &in, Predicate &&predicate) {
-  return details::sequence::index_where<std::basic_string<C>, Predicate>(in, predicate);
+  return details::sequence1::index_where<std::basic_string<C>, Predicate>(in, predicate);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto zip_with_index(const std::basic_string<C> &in) {
-  return details::sequence::zip_with_index<std::basic_string<C>, std::vector>(in);
+  return details::sequence1::zip_with_index<std::basic_string<C>, std::vector>(in);
 }
 
 template <typename C, typename Container> //
 [[nodiscard]] /*constexpr*/ auto zip(const std::basic_string<C> &in, const Container &other) {
   static_assert(std::is_convertible_v<Container, std::basic_string<C>>, "other string type must be convertible to LHS string type");
-  return details::sequence::zip<std::basic_string<C>, std::basic_string<C>, std::vector>(in, static_cast<std::basic_string<C>>(other));
+  return details::sequence1::zip<std::basic_string<C>, std::basic_string<C>, std::vector>(in, static_cast<std::basic_string<C>>(other));
 }
 
 template <typename C> //
@@ -242,72 +252,72 @@ template <typename C> //
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto reverse(const std::basic_string<C> &in) {
-  return details::sequence::reverse<std::basic_string<C>, std::basic_string<C>>(in);
+  return details::sequence1::reverse<std::basic_string<C>, std::basic_string<C>>(in);
 }
 
 template <typename C, typename URBG> //
 [[nodiscard]] /*constexpr*/ auto shuffle(const std::basic_string<C> &in, URBG &&urbg) {
-  return details::sequence::shuffle<std::basic_string<C>, URBG, std::basic_string<C>>(in, std::forward<URBG &&>(urbg));
+  return details::sequence1::shuffle<std::basic_string<C>, URBG, std::basic_string<C>>(in, std::forward<URBG &&>(urbg));
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto sort(const std::basic_string<C> &in) {
-  return details::sequence::sort<std::basic_string<C>, std::basic_string<C>>(in);
+  return details::sequence1::sort<std::basic_string<C>, std::basic_string<C>>(in);
 }
 
 template <typename C, typename Compare> //
 [[nodiscard]] /*constexpr*/ auto sort(const std::basic_string<C> &in, Compare &&compare) {
-  return details::sequence::sort<std::basic_string<C>, Compare, std::basic_string<C>>(in, compare);
+  return details::sequence1::sort<std::basic_string<C>, Compare, std::basic_string<C>>(in, compare);
 }
 
 template <typename C, typename Select> //
 [[nodiscard]] /*constexpr*/ auto sort_by(const std::basic_string<C> &in, Select &&select) {
-  return details::sequence::sort_by<std::basic_string<C>, Select, std::basic_string<C>>(in, select);
+  return details::sequence1::sort_by<std::basic_string<C>, Select, std::basic_string<C>>(in, select);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto split_at(const std::basic_string<C> &in, size_t idx) {
-  return details::sequence::split_at<std::basic_string<C>, std::basic_string<C>>(in, idx);
+  return details::sequence1::split_at<std::basic_string<C>, std::basic_string<C>>(in, idx);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto take_right(const std::basic_string<C> &in, size_t n) {
-  return details::sequence::take_right<std::basic_string<C>, std::basic_string<C>>(in, n);
+  return details::sequence1::take_right<std::basic_string<C>, std::basic_string<C>>(in, n);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto drop_right(const std::basic_string<C> &in, size_t n) {
-  return details::sequence::drop_right<std::basic_string<C>, std::basic_string<C>>(in, n);
+  return details::sequence1::drop_right<std::basic_string<C>, std::basic_string<C>>(in, n);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto take(const std::basic_string<C> &in, size_t n) {
-  return details::sequence::take<std::basic_string<C>, std::basic_string<C>>(in, n);
+  return details::sequence1::take<std::basic_string<C>, std::basic_string<C>>(in, n);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto drop(const std::basic_string<C> &in, size_t n) {
-  return details::sequence::drop<std::basic_string<C>, std::basic_string<C>>(in, n);
+  return details::sequence1::drop<std::basic_string<C>, std::basic_string<C>>(in, n);
 }
 
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto take_while(const std::basic_string<C> &in, Predicate &&predicate) {
-  return details::sequence::take_while<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
+  return details::sequence1::take_while<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
 }
 
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto drop_while(const std::basic_string<C> &in, Predicate &&predicate) {
-  return details::sequence::drop_while<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
+  return details::sequence1::drop_while<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
 }
 
 template <typename C, typename Accumulator, typename Function> //
 [[nodiscard]] /*constexpr*/ auto fold_left(const std::basic_string<C> &in, Accumulator &&init, Function &&function) {
-  return details::sequence::fold_left<std::basic_string<C>, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
+  return details::sequence1::fold_left<std::basic_string<C>, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
 }
 
 template <typename C, typename Accumulator, typename Function> //
 [[nodiscard]] /*constexpr*/ auto fold_right(const std::basic_string<C> &in, Accumulator &&init, Function &&function) {
-  return details::sequence::fold_right<std::basic_string<C>, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
+  return details::sequence1::fold_right<std::basic_string<C>, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
 }
 
 template <typename C> //

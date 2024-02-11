@@ -124,6 +124,12 @@ template <typename C, typename Predicate> //
   return !in || details::ap(p, *in);
 }
 
+template <typename C, typename Predicate> //
+[[nodiscard]] constexpr auto find(const std::optional<C> &in, Predicate p) -> std::optional<C> {
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in))>()) {};
+  return in && details::ap(p, *in) ? in : std::nullopt;
+}
+
 template <typename C, typename Function> //
 [[nodiscard]] constexpr auto reduce(const std::optional<C> &in, Function &&) -> std::optional<C> {
   return in;
@@ -241,6 +247,11 @@ template <typename C, typename U> //
 template <typename C, typename U> //
 [[nodiscard]] constexpr auto contains(const std::optional<C> &o, const U &u) -> bool {
   return index_of(o, u) != -1;
+}
+
+template <typename C, typename Predicate> //
+[[nodiscard]] constexpr auto find_last(const std::optional<C> &in, Predicate p) -> std::optional<C> {
+  return find<C, Predicate>(in, p);
 }
 
 template <typename C, typename Predicate> //

@@ -8,7 +8,7 @@
 
 #include "base.hpp"
 
-namespace aspartame::details::sequence {
+namespace aspartame::details::sequence1 {
 
 template <typename In, typename T, typename Out> //
 [[nodiscard]] constexpr Out prepend(const In &in, const T &t) {
@@ -121,6 +121,23 @@ template <typename In, typename Predicate> //
     i++;
   }
   return -1;
+}
+
+template <typename In, typename Predicate> //
+[[nodiscard]] constexpr auto find_last(const In &in, Predicate p) {
+  using T = typename In::value_type;
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
+  if constexpr (has_rbegin<In> && has_rend<In>) {
+    auto it = std::find_if(in.rbegin(), in.rend(), [&](auto x) { return details::ap(p, x); });
+    if (it == in.rend()) return std::optional<T>{};
+    else return std::optional<T>{*it};
+  } else {
+    std::optional<T> found;
+    for (auto it = in.begin(), end = in.end(); it != end; ++it) {
+      if (details::ap(p, *it)) found = *it;
+    }
+    return found;
+  }
 }
 
 template <typename In, template <typename...> typename Out> //
