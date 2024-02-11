@@ -462,13 +462,13 @@ TEST_CASE(TPE_NAME "_reverse", "[" TPE_NAME "][" TPE_GROUP "]") {
 #ifndef DISABLE_SHUFFLE
 TEST_CASE(TPE_NAME "_shuffle", "[" TPE_NAME "][" TPE_GROUP "]") {
   std::mt19937 rng(42); // NOLINT(*-msc51-cpp)
-  CHECK(("abc" ^ shuffle(rng)) != "abc");
+  CHECK(("abcdefgh" ^ shuffle(rng)) != "abcdefgh");
   CHECK(("" ^ shuffle(rng)) == "");
 
-  CHECK(("abc"_w ^ shuffle(rng)) != "abc"_w);
+  CHECK(("abcdefgh"_w ^ shuffle(rng)) != "abcdefgh"_w);
 
   // XXX technically not part of spec
-  CHECK(("abc" ^ shuffle(std::mt19937(42))) == ("abc" ^ shuffle(std::mt19937(42)))); // NOLINT(*-msc51-cpp)
+  CHECK(("abcdefgh" ^ shuffle(std::mt19937(42))) == ("abcdefgh" ^ shuffle(std::mt19937(42)))); // NOLINT(*-msc51-cpp)
 }
 #endif
 
