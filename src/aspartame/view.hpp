@@ -14,6 +14,7 @@
 #include "details/iterators/slice.hpp"
 #include "details/iterators/sliding.hpp"
 #include "details/iterators/tap_each.hpp"
+#include "details/iterators/zip.hpp"
 #include "details/sequence1_impl.hpp"
 
 #include <limits>
@@ -26,18 +27,27 @@ consider adding a new line between this include and others to prevent reording b
 namespace aspartame {
 
 template <typename T> using owning = std::unique_ptr<T>;
+template <typename T> using sharing = std::shared_ptr<T>;
 class non_owning {};
 
-template <typename Iterator, typename Container = non_owning> class view {
+namespace details {
+template <typename> constexpr bool is_owning = false;
+template <typename T> constexpr bool is_owning<owning<T>> = true;
+template <typename> constexpr bool is_sharing = false;
+template <typename T> constexpr bool is_sharing<sharing<T>> = true;
+template <typename T> constexpr bool is_non_owning = std::is_same_v<T, non_owning>;
+} // namespace details
+
+template <typename Iterator, typename Storage = non_owning> class view {
 public:
-  Container underlying;
+  Storage storage;
   Iterator begin_, end_;
   using iterator_category = typename Iterator::iterator_category;
   using value_type = typename Iterator::value_type;
   using const_iterator = Iterator;
   constexpr view() = default;
 
-  explicit view(Iterator begin, Iterator end = {}) : underlying(), begin_(std::move(begin)), end_(std::move(end)) {
+  explicit view(Iterator begin, Iterator end = {}) : storage(), begin_(std::move(begin)), end_(std::move(end)) {
     static_assert(std::is_default_constructible_v<view>);
     static_assert(std::is_copy_constructible_v<view>);
     static_assert(std::is_copy_assignable_v<view>);
@@ -46,12 +56,10 @@ public:
     static_assert(std::is_destructible_v<view>);
   }
 
-  template <typename Ignore>
-  explicit view(view<Ignore, Container> &prev, Iterator begin, Iterator end = {})
-      : underlying(std::move(prev.underlying)), begin_(std::move(begin)), end_(std::move(end)) {}
+  explicit view(Storage storage, Iterator begin, Iterator end = {})
+      : storage(std::move(storage)), begin_(std::move(begin)), end_(std::move(end)) {}
 
-  template <typename C>
-  explicit view(C &c) : underlying(std::move(c)), begin_(std::move(underlying->begin())), end_(std::move(underlying->end())) {}
+  template <typename C> explicit view(C c) : storage(std::move(c)), begin_(std::move(storage->begin())), end_(std::move(storage->end())) {}
 
   [[nodiscard]] constexpr Iterator begin() const { return begin_; }
   [[nodiscard]] constexpr Iterator end() const { return end_; }
@@ -66,10 +74,31 @@ template <typename Iterator> //
 view(Iterator, Iterator) -> view<Iterator, non_owning>;
 
 template <typename C> //
-view(const C &) -> view<typename C::const_iterator, C>;
+view(C) -> view<typename C::const_iterator, C>;
 
-template <typename Iterator, typename Storage, typename Ignore> //
-view(view<Ignore, Storage> &, Iterator, Iterator) -> view<Ignore, Storage>;
+template <typename Iterator, typename Storage> //
+view(Storage &, Iterator, Iterator) -> view<Iterator, Storage>;
+
+namespace details {
+template <typename Storage, typename F> auto use_shared(Storage &storage, F f) {
+  using S = std::decay_t<Storage>;
+  if constexpr (details::is_non_owning<S> || details::is_sharing<S>) {
+    return f(storage);
+  } else if constexpr (details::is_owning<S>) {
+    sharing<typename S::element_type> s = std::move(storage);
+    return f(s);
+  } else static_assert(!sizeof(Storage), "unhandled ownership of storage, this is a bug");
+}
+
+template <typename C, typename Storage, typename Iter> auto make_unique_view(view<C, Storage> &in, Iter &&it) {
+  using S = std::decay_t<Storage>;
+  if constexpr (details::is_non_owning<S> || details::is_sharing<S>) {
+    return view(in.storage, std::forward<Iter &&>(it));
+  } else if constexpr (details::is_owning<S>) {
+    return view(std::move(in.storage), std::forward<Iter &&>(it));
+  } else static_assert(!sizeof(Storage), "unhandled ownership of storage, this is a bug");
+}
+} // namespace details
 
 template <typename T, typename F> auto repeat(T &&t) { //
   return view<details::iterate_iterator<T, F>, non_owning>({t, [](auto x) { return x; }});
@@ -123,49 +152,56 @@ template <typename C, typename Storage, typename Function> //
 
 template <typename C, typename Storage, typename T> //
 [[nodiscard]] constexpr auto append(view<C, Storage> &in, const T &t) {
-  return view(in, details::append_prepend_iterator<details::append_prepend_iterator_mode::append, C>( //
-                      in.begin(), in.end(), t));
+  return details::make_unique_view( //
+      in, details::append_prepend_iterator<details::append_prepend_iterator_mode::append, C>(in.begin(), in.end(), t));
 }
 
 template <typename C, typename Storage, typename Container> //
 [[nodiscard]] constexpr auto concat(view<C, Storage> &in, Container &&other) {
-  return view(in, details::concat_iterator(in.begin(), in.end(), other.begin(), other.end()));
+  return details::make_unique_view( //
+      in, details::concat_iterator(in.begin(), in.end(), other.begin(), other.end()));
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto map(view<C, Storage> &in, Function &&function) {
   auto applied = [&](auto &&x) { return details::ap(function, x); };
-  return view(in, details::map_iterator(in.begin(), in.end(), applied));
+  return details::make_unique_view( //
+      in, details::map_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto collect(view<C, Storage> &in, Function &&function) {
   auto applied = [&](auto &&x) { return details::ap(function, x); };
-  return view(in, details::collect_iterator(in.begin(), in.end(), applied));
+  return details::make_unique_view( //
+      in, details::collect_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto filter(view<C, Storage> &in, Predicate &&predicate) {
   auto applied = [&](auto &&x) { return details::ap(predicate, x); };
-  return view(in, details::filter_iterator(in.begin(), in.end(), applied));
+  return details::make_unique_view( //
+      in, details::filter_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto bind(view<C, Storage> &in, Function &&function) {
   auto applied = [&](auto &&x) { return details::ap(function, x); };
-  return view(in, details::bind_iterator(in.begin(), in.end(), applied));
+  return details::make_unique_view( //
+      in, details::bind_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto flatten(view<C, Storage> &in) {
   auto identity = [](auto &&x) { return x; };
-  return view(in, details::bind_iterator(in.begin(), in.end(), identity));
+  return details::make_unique_view( //
+      in, details::bind_iterator(in.begin(), in.end(), identity));
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto distinct_by(view<C, Storage> &in, Function &&function) {
   auto applied = [&](auto &&x) { return details::ap(function, x); };
-  return view(in, details::distinct_iterator(in.begin(), in.end(), applied));
+  return details::make_unique_view( //
+      in, details::distinct_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage> //
@@ -201,7 +237,8 @@ template <typename C, typename Storage, typename Function> //
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto tap_each(view<C, Storage> &in, Function &&function) {
   auto applied = [&](auto &&x) { details::ap(function, x); };
-  return view(in, details::tap_each_iterator(in.begin(), in.end(), applied));
+  return details::make_unique_view( //
+      in, details::tap_each_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage, typename Function> //
@@ -211,8 +248,10 @@ template <typename C, typename Storage, typename Function> //
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto partition(view<C, Storage> &in, Predicate &&predicate) {
-  return std::pair{view(in, details::filter_iterator(in.begin(), in.end(), [&](auto &&x) { return details::ap(predicate, x); })),
-                   view(in, details::filter_iterator(in.begin(), in.end(), [&](auto &&x) { return !details::ap(predicate, x); }))};
+  return details::use_shared(in.storage, [&](auto &&s) {
+    return std::pair{view(s, details::filter_iterator(in.begin(), in.end(), [&](auto &&x) { return details::ap(predicate, x); })),
+                     view(s, details::filter_iterator(in.begin(), in.end(), [&](auto &&x) { return !details::ap(predicate, x); }))};
+  });
 }
 
 template <typename C, typename Storage, typename GroupFunction, typename MapFunction, typename ReduceFunction> //
@@ -240,8 +279,9 @@ template <typename C, typename Storage> //
 
 template <typename C, typename Storage, typename T> //
 [[nodiscard]] constexpr auto prepend(view<C, Storage> &in, const T &t) {
-  return view(in, details::append_prepend_iterator<details::append_prepend_iterator_mode::prepend, C>( //
-                      in.begin(), in.end(), t));
+  return details::make_unique_view(                                                            //
+      in, details::append_prepend_iterator<details::append_prepend_iterator_mode::prepend, C>( //
+              in.begin(), in.end(), t));
 }
 
 template <typename C, typename Storage> //
@@ -255,13 +295,15 @@ template <typename C, typename Storage> //
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto init(const view<C, Storage> &in) {
-  return details::sequence1::init<view<C, Storage>, view<C, Storage>>(in);
+[[nodiscard]] constexpr auto init(const view<C, Storage> &) {
+  static_assert(details::is_supported<C>,
+                "init cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto tail(const view<C, Storage> &in) {
-  return details::sequence1::tail<view<C, Storage>, view<C, Storage>>(in);
+[[nodiscard]] constexpr auto tail(view<C, Storage> &in) {
+  return details::make_unique_view( //
+      in, details::slice_iterator(in.begin(), in.end(), 1, std::numeric_limits<size_t>::max()));
 }
 
 template <typename C, typename Storage> //
@@ -271,7 +313,8 @@ template <typename C, typename Storage> //
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto slice(view<C, Storage> &in, size_t from_inclusive, size_t to_exclusive) {
-  return view(in, details::slice_iterator(in.begin(), in.end(), from_inclusive, to_exclusive));
+  return details::make_unique_view( //
+      in, details::slice_iterator(in.begin(), in.end(), from_inclusive, to_exclusive));
 }
 
 template <typename C, typename Storage, typename Container> //
@@ -305,82 +348,100 @@ template <typename C, typename Storage, typename Predicate> //
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto zip_with_index(const view<C, Storage> &in) {
-  return details::sequence1::zip_with_index<view<C, Storage>, std::vector>(in);
+[[nodiscard]] constexpr auto zip_with_index(view<C, Storage> &in) {
+  auto idx = iterate(static_cast<size_t>(0), [](auto x) { return x + 1; });
+  return details::make_unique_view( //
+      in, details::zip_iterator(in.begin(), in.end(), idx.begin(), idx.end()));
 }
 
 template <typename C, typename Storage, typename Container> //
-[[nodiscard]] constexpr auto zip(const view<C, Storage> &in, const Container &other) {
-  return details::sequence1::zip<view<C, Storage>, Container, std::vector>(in, other);
+[[nodiscard]] constexpr auto zip(view<C, Storage> &in, const Container &other) {
+  return details::make_unique_view( //
+      in, details::zip_iterator(in.begin(), in.end(), other.begin(), other.end()));
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto transpose(const view<C, Storage> &in) {
-  return details::sequence1::transpose<view<C, Storage>, std::vector>(in);
+[[nodiscard]] constexpr auto transpose(const view<C, Storage> &) {
+  static_assert(details::is_supported<C>,
+                "transpose cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto reverse(const view<C, Storage> &in) {
-  return details::sequence1::reverse<view<C, Storage>, view<C, Storage>>(in);
+[[nodiscard]] constexpr auto reverse(const view<C, Storage> &) {
+  static_assert(details::is_supported<C>,
+                "reverse cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage, typename URBG> //
-[[nodiscard]] constexpr auto shuffle(const view<C, Storage> &in, URBG &&urbg) {
-  return details::sequence1::shuffle<view<C, Storage>, URBG, view<C, Storage>>(in, std::forward<URBG &&>(urbg));
+[[nodiscard]] constexpr auto shuffle(const view<C, Storage> &, URBG &&) {
+  static_assert(details::is_supported<C>,
+                "shuffle cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto sort(const view<C, Storage> &in) {
-  return details::sequence1::sort<view<C, Storage>, view<C, Storage>>(in);
+[[nodiscard]] constexpr auto sort(const view<C, Storage> &) {
+  static_assert(details::is_supported<C>,
+                "sort cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage, typename Compare> //
-[[nodiscard]] constexpr auto sort(const view<C, Storage> &in, Compare &&compare) {
-  return details::sequence1::sort<view<C, Storage>, Compare, view<C, Storage>>(in, compare);
+[[nodiscard]] constexpr auto sort(const view<C, Storage> &, Compare &&) {
+  static_assert(details::is_supported<C>,
+                "sort cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage, typename Select> //
-[[nodiscard]] constexpr auto sort_by(const view<C, Storage> &in, Select &&select) {
-  return details::sequence1::sort_by<view<C, Storage>, Select, view<C, Storage>>(in, select);
+[[nodiscard]] constexpr auto sort_by(const view<C, Storage> &, Select &&) {
+  static_assert(details::is_supported<C>,
+                "sort_by cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto split_at(const view<C, Storage> &in, size_t idx) {
-  return details::sequence1::split_at<view<C, Storage>, view<C, Storage>>(in, idx);
+[[nodiscard]] constexpr auto split_at(view<C, Storage> &in, size_t idx) {
+  return details::use_shared(in.storage, [&](auto s) {
+    return std::pair{view(s, details::slice_iterator(in.begin(), in.end(), 0, idx)),
+                     view(s, details::slice_iterator(in.begin(), in.end(), idx, std::numeric_limits<size_t>::max()))};
+  });
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto take_right(const view<C, Storage> &in, size_t n) {
-  return details::sequence1::take_right<view<C, Storage>, view<C, Storage>>(in, n);
+[[nodiscard]] constexpr auto take_right(const view<C, Storage> &, size_t) {
+  static_assert(details::is_supported<C>,
+                "take_right cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto drop_right(const view<C, Storage> &in, size_t n) {
-  return details::sequence1::drop_right<view<C, Storage>, view<C, Storage>>(in, n);
+[[nodiscard]] constexpr auto drop_right(const view<C, Storage> &, size_t) {
+  static_assert(details::is_supported<C>,
+                "drop_right cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto take(view<C, Storage> &in, size_t n) {
-  return view(in, details::slice_iterator(in.begin(), in.end(), 0, n));
+  return details::make_unique_view( //
+      in, details::slice_iterator(in.begin(), in.end(), 0, n));
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto drop(view<C, Storage> &in, size_t n) {
-  return view(in, details::slice_iterator(in.begin(), in.end(), n, std::numeric_limits<size_t>::max()));
+  return details::make_unique_view( //
+      in, details::slice_iterator(in.begin(), in.end(), n, std::numeric_limits<size_t>::max()));
 }
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto take_while(view<C, Storage> &in, Predicate &&predicate) {
   auto applied = [&](auto &&x) { return details::ap(predicate, x); };
-  return view(in, details::drop_take_iterator<details::drop_take_iterator_mode::take_while_true, C, decltype(applied)>( //
-                      in.begin(), in.end(), applied));
+  return details::make_unique_view( //
+      in,
+      details::drop_take_iterator<details::drop_take_iterator_mode::take_while_true, C, decltype(applied)>(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto drop_while(view<C, Storage> &in, Predicate &&predicate) {
   auto applied = [&](auto &&x) { return details::ap(predicate, x); };
-  return view(in, details::drop_take_iterator<details::drop_take_iterator_mode::drop_while_true, C, decltype(applied)>( //
-                      in.begin(), in.end(), applied));
+  return details::make_unique_view( //
+      in,
+      details::drop_take_iterator<details::drop_take_iterator_mode::drop_while_true, C, decltype(applied)>(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage, typename Accumulator, typename Function> //
@@ -389,13 +450,15 @@ template <typename C, typename Storage, typename Accumulator, typename Function>
 }
 
 template <typename C, typename Storage, typename Accumulator, typename Function> //
-[[nodiscard]] constexpr auto fold_right(const view<C, Storage> &in, Accumulator &&init, Function &&function) {
-  details::unsupported<C>(in, init, function);
+[[nodiscard]] constexpr auto fold_right(const view<C, Storage> &, Accumulator &&, Function &&) {
+  static_assert(details::is_supported<C>,
+                "fold_right cannot be implemented optimally and may not terminate, consider converting to a container first");
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto sliding(view<C, Storage> &in, size_t size, size_t step) {
-  return view(in, details::sliding_iterator<C, view>(in.begin(), in.end(), size, step));
+  return details::make_unique_view( //
+      in, details::sliding_iterator<C, view>(in.begin(), in.end(), size, step));
 }
 
 } // namespace aspartame

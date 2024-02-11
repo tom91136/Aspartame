@@ -537,12 +537,14 @@ TEST_CASE(TPE_NAME "_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_TAP_EACH
 TEST_CASE(TPE_NAME "_tap_each", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](auto &&xs) {
+  auto op = [](auto &xs) {
     std::vector<std::decay_t<typename std::decay_t<decltype(xs)>::value_type>> out;
-    auto && ys = xs OP_ tap_each([&](auto &&x) { out.push_back(x); });
-     if constexpr (is_view<decltype(ys)>){
-       CHECK(((ys OP_ to_vector()) == xs));
-     }else CHECK((ys == xs));
+    auto f = [&](auto x) { out.push_back(x); };
+  #ifdef TPE_IS_VIEW
+    CHECK((xs OP_ tap_each(f) OP_ to_vector()) == (xs OP_ to_vector()));
+  #else
+    CHECK(((xs OP_ tap_each(f)) == xs));
+  #endif
     return out;
   };
   RUN_CHECK(int, std::vector<int>, "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}, op);
@@ -561,20 +563,24 @@ TEST_CASE(TPE_NAME "_tap_each", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, std::vector<int>, name, {{3, 1}}, {4}, f);
     RUN_CHECK(P2, std::vector<int>, name, {}, {}, f);
   };
-  p2("spread", [](auto &&xs) {
+  p2("spread", [](auto &xs) {
     std::vector<int> out;
-    auto && ys = xs OP_ tap_each([&](auto x0, auto x1) { out.push_back(x0 + x1); });
-     if constexpr (is_view<decltype(ys)>){
-       CHECK(((ys OP_ to_vector()) == xs));
-     }else CHECK((ys == xs));
+    auto f = [&](auto x0, auto x1) { out.push_back(x0 + x1); };
+  #ifdef TPE_IS_VIEW
+    CHECK((xs OP_ tap_each(f) OP_ to_vector()) == (xs OP_ to_vector()));
+  #else
+    CHECK(((xs OP_ tap_each(f)) == xs));
+  #endif
     return out;
   });
-  p2("single", [](auto &&xs) {
+  p2("single", [](auto &xs) {
     std::vector<int> out;
-    auto && ys = xs OP_ tap_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x)); });
-     if constexpr (is_view<decltype(ys)>){
-       CHECK(((ys OP_ to_vector()) == xs));
-     }else CHECK((ys == xs));
+    auto f = [&](auto x) { out.push_back(get<0>(x) + get<1>(x)); };
+  #ifdef TPE_IS_VIEW
+    CHECK((xs OP_ tap_each(f) OP_ to_vector()) == (xs OP_ to_vector()));
+  #else
+    CHECK(((xs OP_ tap_each(f)) == xs));
+  #endif
     return out;
   });
 
@@ -584,20 +590,24 @@ TEST_CASE(TPE_NAME "_tap_each", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, std::vector<int>, name, {{3, 1, 3}}, {7}, f);
     RUN_CHECK(P3, std::vector<int>, name, {}, {}, f);
   };
-  p3("spread", [](auto &&xs) {
+  p3("spread", [](auto &xs) {
     std::vector<int> out;
-    auto && ys = xs OP_ tap_each([&](auto x0, auto x1, auto x2) { out.push_back(x0 + x1 + x2); });
-     if constexpr (is_view<decltype(ys)>){
-       CHECK(((ys OP_ to_vector()) == xs));
-     }else CHECK((ys == xs));
+    auto f = [&](auto x0, auto x1, auto x2) { out.push_back(x0 + x1 + x2); };
+  #ifdef TPE_IS_VIEW
+    CHECK((xs OP_ tap_each(f) OP_ to_vector()) == (xs OP_ to_vector()));
+  #else
+    CHECK(((xs OP_ tap_each(f)) == xs));
+  #endif
     return out;
   });
-  p3("single", [](auto &&xs) {
+  p3("single", [](auto &xs) {
     std::vector<int> out;
-    auto && ys = xs OP_ tap_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x) + get<2>(x)); });
-     if constexpr (is_view<decltype(ys)>){
-       CHECK(((ys OP_ to_vector()) == xs));
-     }else CHECK((ys == xs));
+    auto f = [&](auto x) { out.push_back(get<0>(x) + get<1>(x) + get<2>(x)); };
+  #ifdef TPE_IS_VIEW
+    CHECK((xs OP_ tap_each(f) OP_ to_vector()) == (xs OP_ to_vector()));
+  #else
+    CHECK(((xs OP_ tap_each(f)) == xs));
+  #endif
     return out;
   });
 }

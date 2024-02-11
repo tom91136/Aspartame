@@ -101,12 +101,17 @@ template <typename In, typename Container> //
 [[nodiscard]] constexpr std::make_signed_t<size_t> index_of_slice(const In &in, const Container &other) {
   static_assert(std::is_convertible_v<std::decay_t<typename Container::value_type>, typename In::value_type>,
                 "type does not match vector's value type");
-  if (other.empty()) return 0;
-  if (in.size() < other.size()) { return -1; }
-  for (size_t i = 0; i <= in.size() - other.size(); ++i) {
-    if (std::equal(std::next(in.begin(), i), std::next(in.begin(), i + other.size()), other.begin())) {
-      return static_cast<std::make_signed_t<size_t>>(i);
+  auto first = in.begin(), last = in.end();
+  std::make_signed_t<size_t> i = 0;
+  while (true) {
+    auto it = first;
+    for (auto s_it = other.begin();; ++it, ++s_it) {
+      if (s_it == other.end()) return i;
+      if (it == last) return -1;
+      if (!(*it == *s_it)) break;
     }
+    ++i;
+    ++first;
   }
   return -1;
 }
@@ -403,4 +408,4 @@ template <typename In, template <typename...> typename Out> //
   return ys;
 }
 
-} // namespace aspartame::details::sequence
+} // namespace aspartame::details::sequence1

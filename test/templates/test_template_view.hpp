@@ -3,6 +3,7 @@
 #include "catch2/catch_test_macros.hpp"
 #include <sstream>
 
+#define TPE_IS_VIEW 1
 
 template <typename Element, typename Expected, typename F>
 void runTest(const std::string &typeName,       //
@@ -54,59 +55,40 @@ void runTest(const std::string &typeName,       //
     }
   };
 
-  DYNAMIC_SECTION(typeName << " n=" << in.size() << " && "
-                           << " @ " << location) {
+  DYNAMIC_SECTION(typeName << " n=" << in.size() << " @ " << location) {
     TPE_CTOR_IN(Element) v = in;
     TPE_CTOR_IN(Element) copy = v;
     check(TPE_TEST_CHAIN(v));
     CHECK((v == copy));
   }
-//  DYNAMIC_SECTION(typeName << " n=" << in.size() << " |map(id) "
-//                           << " @ " << location) {
-//    TPE_CTOR_IN(Element) v = in;
-//    TPE_CTOR_IN(Element) copy = v;
-//    check(v | ::aspartame::map([](auto x) { return x; }));
-//    CHECK((v == copy));
-//  }
-//
-//  DYNAMIC_SECTION(typeName << " n=" << in.size() << " |map(id)|filter(true) "
-//                           << " @ " << location) {
-//    TPE_CTOR_IN(Element) v = in;
-//    TPE_CTOR_IN(Element) copy = v;
-//    check(v                                              //
-//          | ::aspartame::map([](auto x) { return x; })     //
-//          | ::aspartame::filter([](auto) { return true; }) //
-//    );
-//    CHECK((v == copy));
-//  }
 }
 
-#define DISABLE_TAP_EACH
+// #define DISABLE_TAP_EACH
 
 #include "test_template_container.hpp"
 
 // #define DISABLE_PREPEND
 // #define DISABLE_HEAD_MAYBE
 // #define DISABLE_LAST_MAYBE
-#define DISABLE_INIT // TODO
-#define DISABLE_TAIL
-// #define DISABLE_AT_MAYBE
-// #define DISABLE_SLICE
-#define DISABLE_INDEX_OF_SLICE
-#define DISABLE_CONTAINS_SLICE
-// #define DISABLE_INDEX_OF
-// #define DISABLE_CONTAINS
-// #define DISABLE_INDEX_WHERE
-#define DISABLE_ZIP_WITH_INDEX // TODO
-#define DISABLE_ZIP            // TODO
+#define DISABLE_INIT
+// #define DISABLE_TAIL
+//  #define DISABLE_AT_MAYBE
+//  #define DISABLE_SLICE
+// #define DISABLE_INDEX_OF_SLICE
+// #define DISABLE_CONTAINS_SLICE
+//  #define DISABLE_INDEX_OF
+//  #define DISABLE_CONTAINS
+//  #define DISABLE_INDEX_WHERE
+// #define DISABLE_ZIP_WITH_INDEX
+// #define DISABLE_ZIP
 #define DISABLE_TRANSPOSE
 #define DISABLE_REVERSE
 #define DISABLE_SHUFFLE
 #define DISABLE_SORT
 #define DISABLE_SORT_BY
-#define DISABLE_SPLIT_AT // TODO
-// #define DISABLE_TAKE
-// #define DISABLE_DROP
+// #define DISABLE_SPLIT_AT
+//  #define DISABLE_TAKE
+//  #define DISABLE_DROP
 #define DISABLE_TAKE_RIGHT
 #define DISABLE_DROP_RIGHT
 // #define DISABLE_TAKE_WHILE

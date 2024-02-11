@@ -194,8 +194,7 @@ template <typename In, typename Function> //
 constexpr void for_each(const In &in, Function f) {
   if constexpr (details::assert_void<decltype(details::ap(f, *in.begin()))>()) {}
   for (auto it = in.begin(), end = in.end(); it != end; ++it) {
-    auto x = *it;
-    details::ap(f, x);
+    details::ap(f, *it);
   }
 }
 

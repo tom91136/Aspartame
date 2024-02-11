@@ -11,6 +11,7 @@ template <typename InputIterator, //
 class tap_each_iterator : public fwd_iterator<tap_each_iterator<InputIterator, Function, T>, T> {
   InputIterator it, end;
   ca_optional<Function> f;
+  std::optional<T> current;
   [[nodiscard]] constexpr bool has_next() const { return it != end; }
 
 public:
@@ -23,9 +24,9 @@ public:
     return *this;
   }
   [[nodiscard]] constexpr const T &operator*() {
-    auto &&x = *it;
-    (*f)(x);
-    return x;
+    current = *it;
+    (*f)(*current);
+    return *current;
   }
   [[nodiscard]] constexpr bool operator==(const tap_each_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
