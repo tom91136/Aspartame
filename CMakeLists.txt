@@ -1,19 +1,20 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-project(optional_playground CXX)
+project(Aspartame CXX)
 
-Include(FetchContent)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+    cmake_policy(SET CMP0135 NEW)
+endif ()
+
+include(FetchContent)
 
 FetchContent_Declare(
         Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG v3.4.0 # or a later release
+        URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.5.2.tar.gz
+        URL_HASH SHA1=ce9613c9b25803a5b052fb75b71a6e14f1e95eb8
 )
-
-FetchContent_MakeAvailable(Catch2)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_VERBOSE_MAKEFILE ON)
 
 option(ENABLE_SAN "Enable ASan and UBSan for Clang/GCC (not available for MSVC)" OFF)
 
@@ -35,6 +36,8 @@ else ()
         list(APPEND LINK_FLAGS -fsanitize=address -fsanitize=undefined)
     endif ()
 endif ()
+
+FetchContent_MakeAvailable(Catch2)
 
 add_executable(tests
         test/test_view_id.cpp

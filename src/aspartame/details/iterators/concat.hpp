@@ -20,7 +20,6 @@ public:
       : it1(std::move(begin1)), end1(std::move(end1)), //
         it2(std::move(begin2)), end2(std::move(end2)), //
         first_iter(this->it1 != this->end1) {}
-
   constexpr concat_iterator &operator++() {
     if (first_iter) {
       if (++it1 == end1) { first_iter = false; }
@@ -28,7 +27,6 @@ public:
 
     return *this;
   }
-
   [[nodiscard]] constexpr const T &operator*() { return first_iter ? *it1 : *it2; }
   [[nodiscard]] constexpr bool operator==(const concat_iterator &that) const {
     bool at_end1 = it1 == end1 && that.it1 == that.end1;

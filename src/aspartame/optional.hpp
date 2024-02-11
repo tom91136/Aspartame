@@ -371,7 +371,7 @@ template <typename C, typename Function, typename FunctionEmpty> //
 }
 
 template <typename C, typename T> //
-[[nodiscard]] constexpr auto get_or_else(const std::optional<C> &o, const T &default_value)   {
+[[nodiscard]] constexpr auto get_or_else(const std::optional<C> &o, const T &default_value) {
   static_assert(std::is_convertible_v<T, C>, "optional value type and default_value type does not unify");
   return o ? *o : static_cast<C>(default_value);
 }

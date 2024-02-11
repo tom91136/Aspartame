@@ -471,8 +471,8 @@ template <typename String> //
 // std::string, char -> std::vector<std::string>
 // std::string, std::string -> std::vector<std::string>
 template <typename Delimiter> //
-[[nodiscard]] constexpr auto split(const Delimiter &delimeter) {
-  return [&](auto &&o) { return split(o, delimeter); };
+[[nodiscard]] constexpr auto split(const Delimiter &delimiter) {
+  return [&](auto &&o) { return split(o, delimiter); };
 }
 // std::string -> std::vector<std::string>
 [[nodiscard]] constexpr auto lines() { //

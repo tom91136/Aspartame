@@ -7,7 +7,7 @@ namespace aspartame::details {
 template <typename OuterIterator, //
           typename Function,      //
           typename InnerRange = typename std::invoke_result_t<Function, typename OuterIterator::value_type>,
-          typename U =  typename InnerRange::value_type>
+          typename U = typename InnerRange::value_type>
 class bind_iterator : public fwd_iterator<bind_iterator<OuterIterator, Function, InnerRange, U>, U> {
   struct State {
     ca_optional<Function> bind;
@@ -44,7 +44,6 @@ public:
   constexpr bind_iterator() = default;
   constexpr bind_iterator(OuterIterator begin, OuterIterator end, Function f)
       : state(begin != end ? std::make_optional<State>(f, std::move(begin), std::move(end)) : std::nullopt) {}
-
   [[nodiscard]] constexpr const U &operator*() { return state->deref(); }
   constexpr bind_iterator &operator++() {
     state->next();

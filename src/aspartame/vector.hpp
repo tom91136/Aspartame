@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include "details/base.hpp"
+#include <vector>
 
 #ifdef ASPARTAME_FINALISED
   #error "This header must be included before aspartame/fluent.hpp; \

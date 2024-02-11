@@ -1,7 +1,7 @@
 #pragma once
 
-#include <list>
 #include "details/base.hpp"
+#include <list>
 
 #ifdef ASPARTAME_FINALISED
   #error "This header must be included before aspartame/fluent.hpp; \
@@ -34,4 +34,3 @@ template <typename T, typename Op> auto operator^(const std::list<T> &l, const O
 #undef ASPARTAME_OUT_TYPE
 #undef ASPARTAME_IN_TYPE1
 #undef ASPARTAME_IN_TYPE2
-

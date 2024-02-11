@@ -8,7 +8,7 @@
 namespace aspartame::details::container2 {
 
 template <typename In, typename Function, template <typename...> typename Out> //
-constexpr auto map(const In &in, Function f) {
+[[nodiscard]] constexpr auto map(const In &in, Function f) {
   using T = decltype(details::ap(f, *in.begin()));
   if constexpr (details::assert_non_void<T>()) {}
   static_assert(is_pair<T>, "return type for mapping a map-like container must be a tuple");
@@ -20,7 +20,7 @@ constexpr auto map(const In &in, Function f) {
 }
 
 template <typename In, typename Function, template <typename...> typename Out> //
-constexpr auto collect(const In &in, Function f) {
+[[nodiscard]] constexpr auto collect(const In &in, Function f) {
   using T = decltype(details::ap(f, *in.begin()));
   static_assert(is_optional<T>, "collect function should return an optional");
   static_assert(is_pair<typename T::value_type>, "return type for mapping a map-like container must be a tuple");
@@ -33,7 +33,7 @@ constexpr auto collect(const In &in, Function f) {
 }
 
 template <typename In, typename Predicate, template <typename...> typename Out> //
-constexpr auto filter(const In &in, Predicate p) {
+[[nodiscard]] constexpr auto filter(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   using K = typename In::key_type;
   using V = typename In::mapped_type;
@@ -43,11 +43,11 @@ constexpr auto filter(const In &in, Predicate p) {
 }
 
 template <typename In, typename Function, template <typename...> typename Out> //
-constexpr auto bind(const In &in, Function f) {
+[[nodiscard]] constexpr auto bind(const In &in, Function f) {
   static_assert(is_map_like<decltype(details::ap(f, *in.begin()))>, "bind function should return a map-like type");
   using R = decltype(details::ap(f, *in.begin()));
-  using K =  typename R::key_type;
-  using V =  typename R::mapped_type;
+  using K = typename R::key_type;
+  using V = typename R::mapped_type;
   Out<K, V> ys;
   for (auto x : in) {
     auto zs = details::ap(f, x);
@@ -57,10 +57,10 @@ constexpr auto bind(const In &in, Function f) {
 }
 
 template <typename In, template <typename...> typename Out> //
-constexpr auto flatten(const In &in) {
+[[nodiscard]] constexpr auto flatten(const In &in) {
   static_assert(is_map_like<typename In::mapped_type>, "not a nested type that is map-like");
   using R = typename In::mapped_type;
-  using K =  typename R::key_type;
+  using K = typename R::key_type;
   using V = typename R::mapped_type;
   Out<K, V> ys;
   for (auto [_, v] : in)
@@ -69,8 +69,8 @@ constexpr auto flatten(const In &in) {
 }
 
 template <typename In, typename Function> //
-constexpr auto reduce(const In &in, Function f) {
-  using K =  typename In::key_type;
+[[nodiscard]] constexpr auto reduce(const In &in, Function f) {
+  using K = typename In::key_type;
   using V = typename In::mapped_type;
   using T = std::pair<K, V>;
   static_assert(std::is_invocable_v<Function, T, T>, "function must be invocable with two value types of the container");
@@ -90,10 +90,10 @@ constexpr auto reduce(const In &in, Function f) {
 }
 
 template <typename In, typename Predicate> //
-constexpr auto find(const In &in, Predicate p) {
+[[nodiscard]] constexpr auto find(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   auto it = std::find_if(in.begin(), in.end(), [&](auto x) { return details::ap(p, x); });
-  using K =  typename In::key_type;
+  using K = typename In::key_type;
   using V = typename In::mapped_type;
   using T = std::pair<K, V>;
   if (it == in.end()) return std::optional<T>{};
@@ -101,12 +101,12 @@ constexpr auto find(const In &in, Predicate p) {
 }
 
 template <typename In, typename GroupFunction, typename MapFunction, template <typename...> typename Out> //
-constexpr auto group_map(const In &in, GroupFunction &&group, MapFunction &&map) {
+[[nodiscard]] constexpr auto group_map(const In &in, GroupFunction &&group, MapFunction &&map) {
   using K = decltype(details::ap(group, *in.begin()));
   using V = decltype(details::ap(map, *in.begin()));
   if constexpr (details::assert_non_void<K>() && details::assert_non_void<V>()) {}
   std::unordered_map<K, Out<V>> ys;
-  for (  auto  x : in) {
+  for (auto x : in) {
     auto k = details::ap(group, x);
     if (auto it = ys.find(k); it != ys.end()) it->second.insert(it->second.end(), details::ap(map, x));
     else ys.emplace(k, Out<V>{details::ap(map, x)});
@@ -115,13 +115,13 @@ constexpr auto group_map(const In &in, GroupFunction &&group, MapFunction &&map)
 }
 
 template <typename In, typename GroupFunction, template <typename...> typename Out> //
-constexpr auto group_by(const In &in, GroupFunction &&group) {
+[[nodiscard]] constexpr auto group_by(const In &in, GroupFunction &&group) {
   using K = decltype(details::ap(group, *in.begin()));
   if constexpr (details::assert_non_void<K>()) {}
   using V = typename In::value_type;
   using W = std::pair<std::remove_const_t<typename V::first_type>, typename V::second_type>;
   std::unordered_map<K, Out<W>> ys;
-  for (  auto x : in) {
+  for (auto x : in) {
     auto k = details::ap(group, x);
     if (auto it = ys.find(k); it != ys.end()) it->second.insert(it->second.end(), x);
     else ys.emplace(k, Out<W>{x});

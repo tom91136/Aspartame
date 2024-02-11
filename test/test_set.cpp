@@ -11,5 +11,5 @@
 #define TPE_MANY_INIT 1
 #define TPE_UNORDERED
 
-#include "templates/test_template_container.hpp"
 #include "templates/test_template_any.hpp"
+#include "templates/test_template_container.hpp"

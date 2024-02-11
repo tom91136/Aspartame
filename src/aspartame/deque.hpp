@@ -1,7 +1,7 @@
 #pragma once
 
-#include <deque>
 #include "details/base.hpp"
+#include <deque>
 
 #ifdef ASPARTAME_FINALISED
   #error "This header must be included before aspartame/fluent.hpp; \

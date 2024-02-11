@@ -39,7 +39,7 @@ namespace aspartame {
 
 template <typename C, typename Function> //
 [[nodiscard]] auto mk_string(const std::basic_string<C> &in, const std::string_view &sep, const std::string_view &prefix,
-                                               const std::string_view &suffix, Function &&f) {
+                             const std::string_view &suffix, Function &&f) {
   return details::container1::mk_string(in, sep, prefix, suffix, f);
 }
 
@@ -145,7 +145,7 @@ template <typename C, typename Predicate> //
 
 template <typename C, typename GroupFunction, typename MapFunction, typename ReduceFunction> //
 [[nodiscard]] /*constexpr*/ auto group_map_reduce(const std::basic_string<C> &in, GroupFunction &&group, MapFunction &&map,
-                                                                    ReduceFunction &&reduce) {
+                                                  ReduceFunction &&reduce) {
   return details::container1::group_map_reduce<std::basic_string<C>, GroupFunction, MapFunction, ReduceFunction>(in, group, map, reduce);
 }
 
@@ -446,14 +446,13 @@ template <typename C, typename Delimiter> //
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto lines(const std::basic_string<C> &in) {
-  auto xs = split(in,  static_cast<C>('\n'));
-  if(!xs.empty() && xs.back().empty()) xs.erase(xs.end()-1);
+  auto xs = split(in, static_cast<C>('\n'));
+  if (!xs.empty() && xs.back().empty()) xs.erase(xs.end() - 1);
   return xs;
 }
 
 } // namespace aspartame
 #undef ASPARTAME_OUT_TYPE
-
 
 #define ASPARTAME_IN_TYPE2(K, V) std::basic_string<std::pair<K, V>>
 #define ASPARTAME_IN_TYPE1(C) std::basic_string<C>
@@ -463,4 +462,3 @@ template <typename C> //
 
 #undef ASPARTAME_IN_TYPE2
 #undef ASPARTAME_IN_TYPE1
-

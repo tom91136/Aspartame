@@ -29,16 +29,13 @@ public:
       : it(std::move(begin)), end(std::move(end)), f(function) {
     advance();
   }
-
   constexpr collect_iterator &operator++() {
     ++it;
     advance();
     return *this;
   }
   [[nodiscard]] constexpr const U &operator*() { return *current; }
-  [[nodiscard]] constexpr bool operator==(const collect_iterator &that) const {
-    return (!this->has_next() == !that.has_next());
-  }
+  [[nodiscard]] constexpr bool operator==(const collect_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 
 } // namespace aspartame::details

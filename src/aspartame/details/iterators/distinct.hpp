@@ -47,7 +47,6 @@ public:
     return *this;
   }
   [[nodiscard]] constexpr const T &operator*() { return *it; }
-
   [[nodiscard]] constexpr bool operator==(const distinct_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 

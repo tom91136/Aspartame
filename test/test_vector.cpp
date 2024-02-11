@@ -10,6 +10,6 @@
 #define TPE_INIT_SKIP(x) false
 #define TPE_MANY_INIT 1
 
+#include "templates/test_template_any.hpp"
 #include "templates/test_template_container.hpp"
 #include "templates/test_template_sequence.hpp"
-#include "templates/test_template_any.hpp"

@@ -154,11 +154,18 @@ TEST_CASE(TPE_NAME "_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
 TEST_CASE(TPE_NAME "_index_of_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   #ifdef TPE_MANY_INIT
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){}); });
-  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){4, 2}); });
-  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 2, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){3, 1}); });
-  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, -1, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){1, 2}); });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 0, [](auto &&xs) {
+    return xs OP_ index_of_slice(TPE_CTOR_IN(int){4, 2});
+  });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 2, [](auto &&xs) {
+    return xs OP_ index_of_slice(TPE_CTOR_IN(int){3, 1});
+  });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, -1, [](auto &&xs) {
+    return xs OP_ index_of_slice(TPE_CTOR_IN(int){1, 2});
+  });
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, -1, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){6}); });
-  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){}); });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, 0,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){}); });
   RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, 0, [](auto &&xs) {
     return xs OP_ index_of_slice(TPE_CTOR_IN(string){"banana", "cherry"});
   });
@@ -170,11 +177,19 @@ TEST_CASE(TPE_NAME "_index_of_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   });
   RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, -1,
             [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"pear"}); });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){}); });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(3), Foo(2)}); });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 1, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(2), Foo(1)}); });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, -1, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(1), Foo(3)}); });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, -1, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(4)}); });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 0,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){}); });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 0, [](auto &&xs) {
+    return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(3), Foo(2)});
+  });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 1, [](auto &&xs) {
+    return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(2), Foo(1)});
+  });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, -1, [](auto &&xs) {
+    return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(1), Foo(3)});
+  });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, -1,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(4)}); });
   #endif
 
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {6}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){6}); });
@@ -182,8 +197,10 @@ TEST_CASE(TPE_NAME "_index_of_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){}); });
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {}, -1, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){6}); });
 
-  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana"}, -1, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"pear"}); });
-  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana"}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"banana"}); });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana"}, -1,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"pear"}); });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana"}, 0,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"banana"}); });
   RUN_CHECK(string, std::make_signed_t<size_t>, "", {}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){}); });
   RUN_CHECK(string, std::make_signed_t<size_t>, "", {}, -1, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"pear"}); });
 
@@ -331,20 +348,27 @@ TEST_CASE(TPE_NAME "_find_last", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_INDEX_WHERE
 TEST_CASE(TPE_NAME "_index_where", "[" TPE_NAME "][" TPE_GROUP "]") {
-  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 0, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == 4; }); });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 0,
+            [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == 4; }); });
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {1}, 0, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == 1; }); });
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {1}, -1, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == 0; }); });
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {}, -1, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == 1; }); });
 
   RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, 0,
             [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == "banana"; }); });
-  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"apple"}, 0, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == "apple"; }); });
-  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"apple"}, -1, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == "banana"; }); });
-  RUN_CHECK(string, std::make_signed_t<size_t>, "", {}, -1, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == "apple"; }); });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"apple"}, 0,
+            [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == "apple"; }); });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"apple"}, -1,
+            [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == "banana"; }); });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {}, -1,
+            [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == "apple"; }); });
 
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 0, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == Foo(3); }); });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(1)}, 0, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == Foo(1); }); });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(1)}, -1, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == Foo(2); }); });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 0,
+            [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == Foo(3); }); });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(1)}, 0,
+            [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == Foo(1); }); });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(1)}, -1,
+            [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == Foo(2); }); });
   RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {}, -1, [](auto &&xs) { return xs OP_ index_where([](auto x) { return x == Foo(1); }); });
 
   auto p2 = [](auto name, auto f) {

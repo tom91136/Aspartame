@@ -38,4 +38,3 @@ template <typename K, typename V, typename Op> auto operator^(const std::map<K, 
 #undef ASPARTAME_OUT_TYPE_C1
 #undef ASPARTAME_OUT_TYPE
 #undef ASPARTAME_SET_LIKE
-

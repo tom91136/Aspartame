@@ -52,11 +52,9 @@ template <typename T> constexpr bool is_comparable = details::is_comparable_impl
 
 namespace details {
 
-template <typename T>
-struct unsupported1{};
+template <typename T> struct unsupported1 {};
 
-template <typename K, typename V>
-struct unsupported2{};
+template <typename K, typename V> struct unsupported2 {};
 
 template <typename F, typename Args> constexpr auto ap(F f, Args &&t) {
   using U = std::decay_t<Args>;
@@ -70,7 +68,6 @@ template <typename In, typename... Args> constexpr auto unsupported(Args...) {
   static_assert(is_supported<In>, "operation is unsupported for type");
   return true;
 }
-template <typename C> [[noreturn]] constexpr void assert_fail() { static_assert(!sizeof(C), "assertion failed - this should not happen!"); }
 
 template <typename T> constexpr bool assert_predicate() {
   static_assert(std::is_convertible_v<T, bool>, "predicate does not return a bool");
@@ -99,8 +96,7 @@ template <typename T>
 constexpr bool has_push_back<T, std::void_t<decltype(std::declval<T>().push_back(std::declval<typename T::value_type>()))>> = true;
 
 template <typename T, typename = void> constexpr bool has_size = false;
-template <typename T>
-constexpr bool has_size<T, std::void_t<decltype(std::declval<T>().size())>> = true;
+template <typename T> constexpr bool has_size<T, std::void_t<decltype(std::declval<T>().size())>> = true;
 
 template <typename T, typename = void> constexpr bool has_associative_insert = false;
 template <typename T>

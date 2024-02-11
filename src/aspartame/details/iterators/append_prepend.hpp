@@ -24,7 +24,6 @@ public:
       : it(std::move(begin)), end(std::move(end)), value(std::move(value)), use_value(it == this->end) {
     if constexpr (Mode == append_prepend_iterator_mode::prepend) { use_value = true; }
   }
-
   constexpr append_prepend_iterator &operator++() {
     if (use_value) use_value = false;
     else {
@@ -35,13 +34,8 @@ public:
     }
     return *this;
   }
-
   [[nodiscard]] constexpr const T &operator*() { return use_value ? *value : *it; }
-  [[nodiscard]] constexpr bool operator==(const append_prepend_iterator &that) const {
-
-    return (!this->has_next() == !that.has_next());
-    ;
-  }
+  [[nodiscard]] constexpr bool operator==(const append_prepend_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 
 } // namespace aspartame::details

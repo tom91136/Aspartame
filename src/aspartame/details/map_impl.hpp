@@ -8,16 +8,15 @@ template <typename In, template <typename...> typename Out> //
   Out<typename In::key_type> ys;
   if constexpr (has_reserve<Out<typename In::key_type>>) ys.reserve(in.size());
 
+  for (auto it = in.begin(), end = in.end(); it != end; ++it) {
+    auto k = it->first;
+    if constexpr (has_push_back<Out<typename In::key_type>>) ys.push_back(k);
+    else ys.insert(ys.end(), k);
+  }
 
-for (auto it = in.begin(), end = in.end(); it != end; ++it) {
-  auto k = it->first;
-  if constexpr (has_push_back<Out<typename In::key_type>>) ys.push_back(k);
-  else ys.insert(ys.end(), k);
-}
-
-//  for (auto [k, _] : in)
-//    if constexpr (has_push_back<Out<typename In::key_type>>) ys.push_back(k);
-//    else ys.insert(ys.end(), k);
+  //  for (auto [k, _] : in)
+  //    if constexpr (has_push_back<Out<typename In::key_type>>) ys.push_back(k);
+  //    else ys.insert(ys.end(), k);
   return ys;
 }
 
@@ -32,9 +31,9 @@ template <typename In, template <typename...> typename Out> //
     else ys.insert(ys.end(), v);
   }
 
-//  for (auto [_, v] : in)
-//    if constexpr (has_push_back<Out<typename In::key_type>>) ys.push_back(v);
-//    else ys.insert(ys.end(), v);
+  //  for (auto [_, v] : in)
+  //    if constexpr (has_push_back<Out<typename In::key_type>>) ys.push_back(v);
+  //    else ys.insert(ys.end(), v);
   return ys;
 }
 

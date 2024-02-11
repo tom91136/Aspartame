@@ -1,7 +1,7 @@
 #pragma once
 
-#include <unordered_set>
 #include "details/base.hpp"
+#include <unordered_set>
 
 #ifdef ASPARTAME_FINALISED
   #error "This header must be included before aspartame/fluent.hpp; \
