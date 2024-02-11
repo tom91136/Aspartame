@@ -61,9 +61,9 @@ struct unsupported2{};
 template <typename F, typename Args> constexpr auto ap(F f, Args &&t) {
   using U = std::decay_t<Args>;
   if constexpr (is_tuple<Args> || is_pair<Args>) {
-    if constexpr (std::is_invocable_v<F, U>) return f(std::forward<Args>(t));
-    else return std::apply(f, std::forward<Args>(t));
-  } else return f(std::forward<Args>(t));
+    if constexpr (std::is_invocable_v<F, U>) return f(std::forward<Args &&>(t));
+    else return std::apply(f, std::forward<Args &&>(t));
+  } else return f(std::forward<Args &&>(t));
 }
 
 template <typename In, typename... Args> constexpr auto unsupported(Args...) {

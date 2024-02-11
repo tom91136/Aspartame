@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <numeric>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -166,12 +167,9 @@ template <typename In, typename Function> //
   static_assert(std::is_convertible_v<std::invoke_result_t<Function, T, T>, T>,
                 "function must return something that is convertable to value type");
   auto it = in.begin();
-    if (it == in.end()) return std::optional<T>{};
-    auto r = *it;
-    ++it;
-    for (; it != in.end(); ++it)
-      r = details::ap(f, std::forward_as_tuple(r, *it));
-    return std::optional<T>{r};
+  if (it == in.end()) return std::optional<T>{};
+  T first = *it;
+  return std::optional<T>{std::accumulate(++it, in.end(), first, [&](auto l, auto r) { return f(l, r); })};
 }
 
 template <typename In, typename Function> //
@@ -208,14 +206,14 @@ template <typename In, typename GroupFunction, typename MapFunction, typename Re
 [[nodiscard]] constexpr auto group_map_reduce(const In &in, GroupFunction &&group, MapFunction &&map, ReduceFunction &&reduce) {
   using K = decltype(details::ap(group, *in.begin()));
   using V = decltype(details::ap(map, *in.begin()));
-  using R = decltype(details::ap(reduce, std::forward_as_tuple(std::declval<V>(), std::declval<V>())));
+  using R = std::invoke_result_t<ReduceFunction, V, V>;
   if constexpr (details::assert_non_void<K>()) {}
   if constexpr (details::assert_non_void<V>()) {}
   if constexpr (details::assert_non_void<R>()) {}
   std::unordered_map<K, R> ys;
   for (const auto &x : in) {
     auto k = details::ap(group, x);
-    if (auto it = ys.find(k); it != ys.end()) it->second = details::ap(reduce, std::forward_as_tuple(it->second, details::ap(map, x)));
+    if (auto it = ys.find(k); it != ys.end()) it->second = reduce(it->second, details::ap(map, x));
     else ys.emplace(k, details::ap(map, x));
   }
   return ys;

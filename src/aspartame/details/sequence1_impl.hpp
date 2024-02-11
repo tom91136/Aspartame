@@ -349,7 +349,7 @@ template <typename In, typename Accumulator, typename Function>
   static_assert(std::is_invocable_v<Function, Accumulator, decltype(*in.begin())>,
                 "function must be invocable with with accumulator and container's value type (in this exact order)");
   for (const auto &element : in)
-    init = details::ap(function, std::forward_as_tuple(init, element));
+    init = function(init, element);
   return init;
 }
 
@@ -358,7 +358,7 @@ template <typename In, typename Accumulator, typename Function>
   static_assert(std::is_invocable_v<Function, decltype(*std::rbegin(in)), Accumulator>,
                 "function must be invocable with container's value type and accumulator (in this exact order)");
   for (auto it = in.rbegin(); it != in.rend(); ++it)
-    init = details::ap(function, std::forward_as_tuple(*it, init));
+    init = function(*it, init);
   return init;
 }
 

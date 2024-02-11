@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deque>
+
 #include "../base.hpp"
 #include "iterator_base.hpp"
 

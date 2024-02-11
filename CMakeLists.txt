@@ -24,8 +24,10 @@ else ()
             #        -Wno-unused-parameter
             -Wall
             -Wextra
-            -pedantic
-            -O0
+            $<$<CXX_COMPILER_ID:Clang,GNU>:-pedantic>
+            $<$<CXX_COMPILER_ID:PGI,NVHPC>:--pedantic>
+
+            $<$<CXX_COMPILER_ID:Clang,GNU>:-march=native>
     )
     set(LINK_FLAGS)
     if (ENABLE_SAN)
@@ -35,7 +37,15 @@ else ()
 endif ()
 
 add_executable(tests
-        test/test_view.cpp
+        test/test_view_id.cpp
+        test/test_view_map.cpp
+        test/test_view_filter.cpp
+        test/test_view_bind.cpp
+        test/test_view_slice.cpp
+        test/test_view_collect.cpp
+        test/test_view_concat.cpp
+
+
         test/test_vector.cpp
         test/test_optional.cpp
         test/test_list.cpp
@@ -45,20 +55,23 @@ add_executable(tests
         test/test_map.cpp
         test/test_string.cpp
         test/test_unordered_map.cpp
+
+        #test/test_array.cpp
+
 )
-
-#test/test_array.cpp
-
-
-target_include_directories(tests PRIVATE src)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
-target_compile_options(tests PRIVATE ${COMPILE_FLAGS})
-target_link_options(tests PRIVATE ${LINK_FLAGS})
+
+add_executable(benchmarks
+        benchmark/numeric.cpp
+)
+target_link_libraries(benchmarks PRIVATE Catch2::Catch2WithMain)
+target_compile_features(benchmarks PRIVATE cxx_std_20)
 
 add_executable(example example.cpp)
-target_compile_options(example PRIVATE ${COMPILE_FLAGS})
-target_link_options(example PRIVATE ${LINK_FLAGS})
 
 
-
-
+foreach (TARGET "tests" "benchmarks" "example")
+    target_include_directories(${TARGET} PRIVATE src)
+    target_compile_options(${TARGET} PRIVATE ${COMPILE_FLAGS})
+    target_link_options(${TARGET} PRIVATE ${LINK_FLAGS})
+endforeach ()

@@ -9,10 +9,12 @@
 #include "details/iterators/distinct.hpp"
 #include "details/iterators/drop_take.hpp"
 #include "details/iterators/filter.hpp"
+#include "details/iterators/iterate.hpp"
 #include "details/iterators/map.hpp"
 #include "details/iterators/slice.hpp"
 #include "details/iterators/sliding.hpp"
 #include "details/iterators/tap_each.hpp"
+#include "details/sequence1_impl.hpp"
 
 #include <limits>
 
@@ -49,7 +51,7 @@ public:
       : underlying(std::move(prev.underlying)), begin_(std::move(begin)), end_(std::move(end)) {}
 
   template <typename C>
-  explicit view(C c) : underlying(std::move(c)), begin_(std::move(underlying->begin())), end_(std::move(underlying->end())) {}
+  explicit view(C &c) : underlying(std::move(c)), begin_(std::move(underlying->begin())), end_(std::move(underlying->end())) {}
 
   [[nodiscard]] constexpr Iterator begin() const { return begin_; }
   [[nodiscard]] constexpr Iterator end() const { return end_; }
@@ -64,10 +66,38 @@ template <typename Iterator> //
 view(Iterator, Iterator) -> view<Iterator, non_owning>;
 
 template <typename C> //
-view(C) -> view<typename C::const_iterator, C>;
+view(const C &) -> view<typename C::const_iterator, C>;
 
 template <typename Iterator, typename Storage, typename Ignore> //
-view(view<Ignore, Storage>, Iterator, Iterator) -> view<Ignore, Storage>;
+view(view<Ignore, Storage> &, Iterator, Iterator) -> view<Ignore, Storage>;
+
+template <typename T, typename F> auto repeat(T &&t) { //
+  return view<details::iterate_iterator<T, F>, non_owning>({t, [](auto x) { return x; }});
+}
+
+template <typename T, typename F> auto iterate(T &&init, F &&next) { //
+  return view<details::iterate_iterator<T, F>, non_owning>({init, next});
+}
+
+template <typename N> auto iota(N &&from_inclusive) { //
+  auto next = [](auto x) { return x + 1; };
+  return view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next});
+}
+
+template <typename N> auto iota(N &&from_inclusive, N &&to_exclusive) { //
+  auto v = iota<N>(from_inclusive);
+  return v | view(v, details::slice_iterator(v.begin(), v.end(), 0, to_exclusive));
+}
+
+template <typename N> auto exclusive(N &&from_inclusive, N &&step, N &&to_exclusive) { //
+  auto next = [=](auto x) { return x + step; };
+  auto v = view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next});
+  return v | view(v, details::slice_iterator(v.begin(), v.end(), 0, to_exclusive));
+}
+
+template <typename N> auto inclusive(N &&from_inclusive, N &&step, N &&to_inclusive) { //
+  return exclusive(from_inclusive, step, to_inclusive + 1);
+}
 
 namespace details {
 template <typename> constexpr bool is_view_impl = false;

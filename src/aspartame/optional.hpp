@@ -152,7 +152,7 @@ template <typename C, typename GroupFunction, typename MapFunction, typename Red
 [[nodiscard]] constexpr auto group_map_reduce(const std::optional<C> &in, GroupFunction &&group, MapFunction &&map, ReduceFunction &&) {
   using K = decltype(details::ap(group, *in));
   using V = decltype(details::ap(map, *in));
-  using R = decltype(details::ap(std::declval<ReduceFunction>(), std::forward_as_tuple(std::declval<V>(), std::declval<V>())));
+  using R = std::invoke_result_t<ReduceFunction, V, V>;
   if constexpr (details::assert_non_void<K>()) {}
   if constexpr (details::assert_non_void<V>()) {}
   if constexpr (details::assert_non_void<R>()) {}
@@ -334,12 +334,12 @@ template <typename C, typename Predicate> //
 
 template <typename C, typename Accumulator, typename Function> //
 [[nodiscard]] constexpr auto fold_left(const std::optional<C> &in, Accumulator &&init, Function &&function) -> Accumulator {
-  return in ? details::ap(function, std::forward_as_tuple(init, *in)) : init;
+  return in ? function(init, *in) : init;
 }
 
 template <typename C, typename Accumulator, typename Function> //
 [[nodiscard]] constexpr auto fold_right(const std::optional<C> &in, Accumulator &&init, Function &&function) -> Accumulator {
-  return in ? details::ap(function, std::forward_as_tuple(*in, init)) : init;
+  return in ? function(*in, init) : init;
 }
 
 template <typename C> //

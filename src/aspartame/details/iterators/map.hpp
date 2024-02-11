@@ -22,10 +22,9 @@ public:
   }
   constexpr map_iterator &operator++() {
     ++it;
-    current.reset();
     return *this;
   }
-  [[nodiscard]] constexpr const U &operator*() { return current ? *current : *(current = (*f)(*it)); }
+  [[nodiscard]] constexpr const U &operator*() { return *(current = (*f)(*it)); }
   [[nodiscard]] constexpr bool operator==(const map_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 

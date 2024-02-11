@@ -234,7 +234,7 @@ template <typename T> //
 [[nodiscard]] constexpr auto slice(size_t from_inclusive, size_t to_exclusive) {
   return [&, from_inclusive, to_exclusive](  auto &&o) { return slice(o, from_inclusive, to_exclusive); };
 }
-// Container<T>, Container<T> -> int
+// Container<T>, Container<T> -> std::make_signed_t<size_t>
 template <typename Container> //
 [[nodiscard]] constexpr auto index_of_slice(const Container &other) {
   return [&](  auto &&o) { return index_of_slice(o, other); };
@@ -244,7 +244,7 @@ template <typename Container> //
 [[nodiscard]] constexpr auto contains_slice(const Container &other) {
   return [&](  auto &&o) { return contains_slice(o, other); };
 }
-// Container<T>, T -> long
+// Container<T>, T -> std::make_signed_t<size_t>
 template <typename T> //
 [[nodiscard]] constexpr auto index_of(const T &t) {
   return [&](  auto &&o) { return index_of(o, t); };
@@ -254,7 +254,7 @@ template <typename T> //
 [[nodiscard]] constexpr auto contains(const T &t) {
   return [&](  auto &&o) { return contains(o, t); };
 }
-// Container<T>, (T -> bool) -> long
+// Container<T>, (T -> bool) -> std::make_signed_t<size_t>
 template <typename Predicate> //
 [[nodiscard]] constexpr auto index_where(Predicate &&predicate) {
   return [&](  auto &&o) { return index_where(o, predicate); };

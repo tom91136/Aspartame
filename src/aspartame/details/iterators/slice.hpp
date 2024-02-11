@@ -18,12 +18,12 @@ public:
       : it(std::move(begin)), end(std::move(end)), idx(0), to_exclusive(to_exclusive) {
     while (it != this->end && idx < from_inclusive) {
       ++it;
-      idx++;
+      ++idx;
     }
   }
   constexpr slice_iterator &operator++() {
     ++it;
-    idx++;
+    ++idx;
     return *this;
   }
   [[nodiscard]] constexpr const T &operator*() { return *it; }

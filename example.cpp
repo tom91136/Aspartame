@@ -56,6 +56,19 @@ int main() {
     std::cout << "r=" << x << "\n";
   }
 
+  auto p = (iterate(0, [](auto x) { return x + 1; })                             //
+            | map([](int n) { return (n % 2 == 0 ? 1.0 : -1.0) / (2 * n + 1); }) //
+            | take(10000000)                                                     //
+            | reduce(std::plus<>())) ^
+           fold([](auto x) { return x * 4; }, []() { return 0; });
+
+  std::cout << "Pi=" << p << "\n";
+
+  //  for(auto i : iterate(0, [](auto x) { return x+1; })
+  //               | map([](int n) { return (n % 2 == 0 ? 1.0 : -1.0) / (2 * n + 1); })){
+  //
+  //    std::cout << "x = " << i << "\n";
+  //  }
 
   auto mm = std::unordered_map<int, int>{{2, 1}, {3, 2}};
   for(auto [k,v] : mm

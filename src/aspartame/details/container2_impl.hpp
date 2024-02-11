@@ -84,7 +84,7 @@ constexpr auto reduce(const In &in, Function f) {
     T r = *it;
     ++it;
     for (; it != in.end(); ++it)
-      r = details::ap(f, std::forward_as_tuple(r, *it));
+      r = f(r, *it);
     return std::optional<T>{r};
   }
 }
