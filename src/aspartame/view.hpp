@@ -131,7 +131,7 @@ template <typename N> auto inclusive(N &&from_inclusive, N &&step, N &&to_inclus
 namespace details {
 template <typename> constexpr bool is_view_impl = false;
 template <typename T, typename U> constexpr bool is_view_impl<view<T, U>> = true;
-}; // namespace details
+} // namespace details
 template <typename T> constexpr bool is_view = details::is_view_impl<std::decay_t<T>>;
 
 template <typename Iterable, //

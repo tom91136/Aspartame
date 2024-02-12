@@ -76,7 +76,7 @@ TEST_CASE("view_owning-observe") {
                 return std::list<int>{x.begin(), x.end()};
               });
   CHECK(ys == std::list{2, 4, 6, 8, 10, 12});
-};
+}
 
 TEST_CASE("view_non-owning-observe") {
   std::vector source{1, 2, 3, 4, 5, 6};
@@ -86,4 +86,4 @@ TEST_CASE("view_non-owning-observe") {
                 return std::list<int>{x.begin(), x.end()};
               });
   CHECK(ys == std::list{2, 4, 6, 8, 10, 12});
-};
+}

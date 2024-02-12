@@ -7,7 +7,6 @@
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/matchers/catch_matchers_floating_point.hpp"
 
-#include <numeric>
 #include <ranges>
 #include <vector>
 
@@ -30,8 +29,11 @@ double range_pi(int iter) {
 
 TEST_CASE("pi") {
   volatile int iter = 1000000;
-  CHECK_THAT(view_pi(iter), Catch::Matchers::WithinRel(std::numbers::pi, 0.00001));
-  CHECK_THAT(range_pi(iter), Catch::Matchers::WithinRel(std::numbers::pi, 0.00001));
+
+  auto Pi = std::atan(1) * 4;
+
+  CHECK_THAT(view_pi(iter), Catch::Matchers::WithinRel(Pi, 0.00001));
+  CHECK_THAT(range_pi(iter), Catch::Matchers::WithinRel(Pi, 0.00001));
   BENCHMARK("aspartame_view") { return view_pi(iter); };
   BENCHMARK("cxx20_ranges") { return range_pi(iter); };
 }

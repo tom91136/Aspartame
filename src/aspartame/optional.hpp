@@ -63,7 +63,7 @@ template <typename C, typename Function> //
   using T = decltype(details::ap(function, *in));
   if constexpr (details::assert_non_void<T>()) {};
   if (in) return std::optional<T>{details::ap(function, *in)};
-  else return std::optional<T>{};
+  else return std::optional<T>{std::nullopt};
 }
 
 template <typename C, typename Function> //
@@ -79,7 +79,7 @@ template <typename C, typename Predicate> //
     // XXX don't use ternary here, NVHPC breaks: https://forums.developer.nvidia.com/t/nvc-miscompiles-code-involving-std-tuple/281754
     if (details::ap(predicate, *in)) return in;
     else return std::nullopt;
-  } else return std::optional<C>{};
+  } else return std::optional<C>{std::nullopt};
 }
 
 template <typename C, typename Function> //
@@ -151,7 +151,8 @@ constexpr auto for_each(const std::optional<C> &in, Function &&function) -> void
 template <typename C, typename Predicate> //
 [[nodiscard]] constexpr auto partition(const std::optional<C> &in, Predicate &&predicate) -> std::pair<std::optional<C>, std::optional<C>> {
   if constexpr (details::assert_predicate<decltype(details::ap(predicate, *in))>()) {}
-  return (in && details::ap(predicate, *in)) ? std::pair{in, std::optional<C>{}} : std::pair{std::optional<C>{}, in};
+  return (in && details::ap(predicate, *in)) ? std::pair{in, std::optional<C>{std::nullopt}}
+                                             : std::pair{std::optional<C>{std::nullopt}, in};
 }
 
 template <typename C, typename GroupFunction, typename MapFunction, typename ReduceFunction> //
@@ -218,12 +219,12 @@ template <typename C> //
 
 template <typename C> //
 [[nodiscard]] constexpr auto at_maybe(const std::optional<C> &o, size_t idx) -> std::optional<C> {
-  return idx == 0 ? o : std::optional<C>{};
+  return idx == 0 ? o : std::optional<C>{std::nullopt};
 }
 
 template <typename C> //
 [[nodiscard]] constexpr auto slice(const std::optional<C> &in, size_t from_inclusive, size_t to_exclusive) -> std::optional<C> {
-  return (!in || from_inclusive > 0 || to_exclusive == 0) ? std::optional<C>{} : in;
+  return (!in || from_inclusive > 0 || to_exclusive == 0) ? std::optional<C>{std::nullopt} : in;
 }
 
 template <typename C, typename Container> //
@@ -262,20 +263,20 @@ template <typename C, typename Predicate> //
 template <typename C, typename N> //
 [[nodiscard]] constexpr auto zip_with_index(const std::optional<C> &in, N from) -> std::optional<std::pair<std::decay_t<C>, N>> {
   using R = std::optional<std::pair<std::decay_t<C>, N>>;
-  return in ? R{{*in, from}} : R{};
+  return in ? R{{*in, from}} : R{std::nullopt};
 }
 
 template <typename C, typename Container> //
 [[nodiscard]] constexpr auto zip(const std::optional<C> &in, Container &&container) {
   static_assert(is_optional<Container>, "other value is not an optional type");
   using R = std::optional<std::pair<std::decay_t<C>, typename std::decay_t<Container>::value_type>>;
-  return in && container ? R{{*in, *container}} : R{};
+  return in && container ? R{{*in, *container}} : R{std::nullopt};
 }
 
 template <typename C> //
 [[nodiscard]] constexpr auto transpose(const std::optional<C> &in) -> std::optional<C> {
   static_assert(is_optional<C>, "not a nested optional type");
-  return in && *in ? in : std::optional<C>{};
+  return in && *in ? in : std::optional<C>{std::nullopt};
 }
 
 template <typename C> //
@@ -311,28 +312,28 @@ template <typename C> //
 
 template <typename C> //
 [[nodiscard]] constexpr auto take(const std::optional<C> &in, size_t n) -> std::optional<C> {
-  return n == 0 ? std::optional<C>{} : in;
+  return n == 0 ? std::optional<C>{std::nullopt} : in;
 }
 
 template <typename C> //
 [[nodiscard]] constexpr auto drop(const std::optional<C> &in, size_t n) -> std::optional<C> {
-  return n != 0 ? std::optional<C>{} : in;
+  return n != 0 ? std::optional<C>{std::nullopt} : in;
 }
 
 template <typename C> //
 [[nodiscard]] constexpr auto take_right(const std::optional<C> &in, size_t n) -> std::optional<C> {
-  return n == 0 ? std::optional<C>{} : in;
+  return n == 0 ? std::optional<C>{std::nullopt} : in;
 }
 
 template <typename C> //
 [[nodiscard]] constexpr auto drop_right(const std::optional<C> &in, size_t n) -> std::optional<C> {
-  return n != 0 ? std::optional<C>{} : in;
+  return n != 0 ? std::optional<C>{std::nullopt} : in;
 }
 
 template <typename C, typename Predicate> //
 [[nodiscard]] constexpr auto take_while(const std::optional<C> &in, Predicate &&predicate) -> std::optional<C> {
   if constexpr (details::assert_predicate<decltype(details::ap(predicate, *in))>()) {};
-  return in && details::ap(predicate, *in) ? in : std::optional<C>{};
+  return in && details::ap(predicate, *in) ? in : std::optional<C>{std::nullopt};
 }
 
 template <typename C, typename Predicate> //

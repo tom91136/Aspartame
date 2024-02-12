@@ -133,7 +133,7 @@ template <typename In, typename Predicate> //
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   if constexpr (has_rbegin<In> && has_rend<In>) {
     auto it = std::find_if(in.rbegin(), in.rend(), [&](auto &&x) { return details::ap(p, x); });
-    if (it == in.rend()) return std::optional<T>{};
+    if (it == in.rend()) return std::optional<T>{std::nullopt};
     else return std::optional<T>{*it};
   } else {
     std::optional<T> found;

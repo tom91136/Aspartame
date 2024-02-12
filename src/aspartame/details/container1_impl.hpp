@@ -162,7 +162,7 @@ template <typename In, typename Predicate> //
 [[nodiscard]] constexpr auto find(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   auto it = std::find_if(in.begin(), in.end(), [&](auto &&x) { return details::ap(p, x); });
-  if (it == in.end()) return std::optional<typename In::value_type>{};
+  if (it == in.end()) return std::optional<typename In::value_type>{std::nullopt};
   else return std::optional<typename In::value_type>{*it};
 }
 
@@ -173,7 +173,7 @@ template <typename In, typename Function> //
   static_assert(std::is_convertible_v<std::invoke_result_t<Function, T, T>, T>,
                 "function must return something that is convertable to value type");
   auto it = in.begin();
-  if (it == in.end()) return std::optional<T>{};
+  if (it == in.end()) return std::optional<T>(std::nullopt);
   T first = *it;
   return std::optional<T>{std::accumulate(++it, in.end(), first, [&](auto &&l, auto &&r) { return f(l, r); })};
 }

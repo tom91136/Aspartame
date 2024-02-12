@@ -76,11 +76,11 @@ template <typename In, typename Function> //
   static_assert(std::is_invocable_v<Function, T, T>, "function must be invocable with two value types of the container");
   static_assert(std::is_convertible_v<std::invoke_result_t<Function, T, T>, T>,
                 "function must return something that is convertable to value type");
-  if (auto size = in.size(); size == 0) return std::optional<T>{};
+  if (auto size = in.size(); size == 0) return std::optional<T>{std::nullopt};
   else if (size == 1) return std::optional<T>{*in.begin()};
   else {
     auto it = in.begin();
-    if (it == in.end()) return std::optional<T>{};
+    if (it == in.end()) return std::optional<T>{std::nullopt};
     T r = *it;
     ++it;
     for (; it != in.end(); ++it)
@@ -96,7 +96,7 @@ template <typename In, typename Predicate> //
   using K = typename In::key_type;
   using V = typename In::mapped_type;
   using T = std::pair<K, V>;
-  if (it == in.end()) return std::optional<T>{};
+  if (it == in.end()) return std::optional<T>{std::nullopt};
   else return std::optional<T>{std::pair{it->first, it->second}};
 }
 
