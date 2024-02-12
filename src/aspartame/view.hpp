@@ -101,16 +101,16 @@ template <typename C, typename Storage, typename Iter> auto make_unique_view(vie
 } // namespace details
 
 template <typename T, typename F> auto repeat(T &&t) { //
-  return view<details::iterate_iterator<T, F>, non_owning>({t, [](auto x) { return x; }});
+  return view<details::iterate_iterator<std::decay_t<T>, F>, non_owning>({t, [](auto &&x) { return x; }});
 }
 
 template <typename T, typename F> auto iterate(T &&init, F &&next) { //
-  return view<details::iterate_iterator<T, F>, non_owning>({init, next});
+  return view<details::iterate_iterator<std::decay_t<T>, F>, non_owning>({init, next});
 }
 
 template <typename N> auto iota(N &&from_inclusive) { //
-  auto next = [](auto x) { return x + 1; };
-  return view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next});
+  auto next = [](auto &&x) { return x + 1; };
+  return view<details::iterate_iterator<std::decay_t<N>, decltype(next)>, non_owning>({from_inclusive, next});
 }
 
 template <typename N> auto iota(N &&from_inclusive, N &&to_exclusive) { //
@@ -119,7 +119,7 @@ template <typename N> auto iota(N &&from_inclusive, N &&to_exclusive) { //
 }
 
 template <typename N> auto exclusive(N &&from_inclusive, N &&step, N &&to_exclusive) { //
-  auto next = [=](auto x) { return x + step; };
+  auto next = [=](auto &&x) { return x + step; };
   auto v = view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next});
   return v | view(v, details::slice_iterator(v.begin(), v.end(), 0, to_exclusive));
 }
@@ -206,7 +206,7 @@ template <typename C, typename Storage, typename Function> //
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto distinct(view<C, Storage> &in) {
-  return distinct_by(in, [](auto x) { return x; });
+  return distinct_by(in, [](auto &&x) { return x; });
 }
 
 template <typename C, typename Storage, typename Predicate> //
@@ -347,9 +347,9 @@ template <typename C, typename Storage, typename Predicate> //
   return details::sequence1::index_where<view<C, Storage>, Predicate>(in, predicate);
 }
 
-template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto zip_with_index(view<C, Storage> &in) {
-  auto idx = iterate(static_cast<size_t>(0), [](auto x) { return x + 1; });
+template <typename C, typename Storage, typename N> //
+[[nodiscard]] constexpr auto zip_with_index(view<C, Storage> &in, N from) {
+  auto idx = iterate(from, [](auto &&x) { return x + 1; });
   return details::make_unique_view( //
       in, details::zip_iterator(in.begin(), in.end(), idx.begin(), idx.end()));
 }
@@ -398,7 +398,7 @@ template <typename C, typename Storage, typename Select> //
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto split_at(view<C, Storage> &in, size_t idx) {
-  return details::use_shared(in.storage, [&](auto s) {
+  return details::use_shared(in.storage, [&](auto &&s) {
     return std::pair{view(s, details::slice_iterator(in.begin(), in.end(), 0, idx)),
                      view(s, details::slice_iterator(in.begin(), in.end(), idx, std::numeric_limits<size_t>::max()))};
   });

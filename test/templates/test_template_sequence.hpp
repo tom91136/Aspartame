@@ -401,7 +401,7 @@ TEST_CASE(TPE_NAME "_zip_with_index", "[" TPE_NAME "][" TPE_GROUP "]") {
   using StringP = TPE_CTOR_OUT(std::pair<string COMMA size_t>);
   using FooP = TPE_CTOR_OUT(std::pair<Foo COMMA size_t>);
 
-  auto zipIdxOp = [](auto &&xs) { return xs OP_ zip_with_index(); };
+  auto zipIdxOp = [](auto &&xs) { return xs OP_ zip_with_index<size_t>(); };
 
   #ifdef TPE_MANY_INIT
   RUN_CHECK(int, IntP, "", {4, 2, 3, 1, 5}, {{4, 0}, {2, 1}, {3, 2}, {1, 3}, {5, 4}}, zipIdxOp);

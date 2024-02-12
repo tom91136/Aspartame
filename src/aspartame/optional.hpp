@@ -259,10 +259,10 @@ template <typename C, typename Predicate> //
   return o && details::ap(predicate, *o) ? 0 : -1;
 }
 
-template <typename C> //
-[[nodiscard]] constexpr auto zip_with_index(const std::optional<C> &in) -> std::optional<std::pair<std::decay_t<C>, size_t>> {
-  using R = std::optional<std::pair<std::decay_t<C>, size_t>>;
-  return in ? R{{*in, 0}} : R{};
+template <typename C, typename N> //
+[[nodiscard]] constexpr auto zip_with_index(const std::optional<C> &in, N from) -> std::optional<std::pair<std::decay_t<C>, N>> {
+  using R = std::optional<std::pair<std::decay_t<C>, N>>;
+  return in ? R{{*in, from}} : R{};
 }
 
 template <typename C, typename Container> //

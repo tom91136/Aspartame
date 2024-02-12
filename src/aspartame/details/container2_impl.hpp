@@ -15,7 +15,7 @@ template <typename In, typename Function, template <typename...> typename Out> /
   using K = typename In::key_type;
   using V = typename In::mapped_type;
   Out<K, V> ys;
-  std::transform(in.begin(), in.end(), std::inserter(ys, ys.begin()), [&](auto x) { return details::ap(f, x); });
+  std::transform(in.begin(), in.end(), std::inserter(ys, ys.begin()), [&](auto &&x) { return details::ap(f, x); });
   return ys;
 }
 
@@ -27,7 +27,7 @@ template <typename In, typename Function, template <typename...> typename Out> /
   using K = typename T::value_type::first_type;
   using V = typename T::value_type::second_type;
   Out<K, V> ys;
-  for (auto x : in)
+  for (auto &&x : in)
     if (auto y = details::ap(f, x); y) ys.emplace(y->first, y->second);
   return ys;
 }
@@ -38,7 +38,7 @@ template <typename In, typename Predicate, template <typename...> typename Out> 
   using K = typename In::key_type;
   using V = typename In::mapped_type;
   Out<K, V> ys;
-  std::copy_if(in.begin(), in.end(), std::inserter(ys, ys.begin()), [&](auto x) { return details::ap(p, x); });
+  std::copy_if(in.begin(), in.end(), std::inserter(ys, ys.begin()), [&](auto &&x) { return details::ap(p, x); });
   return ys;
 }
 
@@ -49,7 +49,7 @@ template <typename In, typename Function, template <typename...> typename Out> /
   using K = typename R::key_type;
   using V = typename R::mapped_type;
   Out<K, V> ys;
-  for (auto x : in) {
+  for (auto &&x : in) {
     auto zs = details::ap(f, x);
     ys.insert(zs.begin(), zs.end());
   }
@@ -92,7 +92,7 @@ template <typename In, typename Function> //
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr auto find(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
-  auto it = std::find_if(in.begin(), in.end(), [&](auto x) { return details::ap(p, x); });
+  auto it = std::find_if(in.begin(), in.end(), [&](auto &&x) { return details::ap(p, x); });
   using K = typename In::key_type;
   using V = typename In::mapped_type;
   using T = std::pair<K, V>;
@@ -106,7 +106,7 @@ template <typename In, typename GroupFunction, typename MapFunction, template <t
   using V = decltype(details::ap(map, *in.begin()));
   if constexpr (details::assert_non_void<K>() && details::assert_non_void<V>()) {}
   std::unordered_map<K, Out<V>> ys;
-  for (auto x : in) {
+  for (auto &&x : in) {
     auto k = details::ap(group, x);
     if (auto it = ys.find(k); it != ys.end()) it->second.insert(it->second.end(), details::ap(map, x));
     else ys.emplace(k, Out<V>{details::ap(map, x)});
@@ -121,7 +121,7 @@ template <typename In, typename GroupFunction, template <typename...> typename O
   using V = typename In::value_type;
   using W = std::pair<std::remove_const_t<typename V::first_type>, typename V::second_type>;
   std::unordered_map<K, Out<W>> ys;
-  for (auto x : in) {
+  for (auto &&x : in) {
     auto k = details::ap(group, x);
     if (auto it = ys.find(k); it != ys.end()) it->second.insert(it->second.end(), x);
     else ys.emplace(k, Out<W>{x});

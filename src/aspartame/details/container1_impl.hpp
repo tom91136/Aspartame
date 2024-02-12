@@ -51,12 +51,12 @@ template <typename In, typename Function, template <typename...> typename Out> /
   if constexpr (details::assert_non_void<T>()) {}
   if constexpr (std::is_default_constructible_v<T> && has_assignable_iterator<typename Out<T>::iterator>) {
     Out<T> ys(in.size());
-    std::transform(in.begin(), in.end(), ys.begin(), [&](auto x) { return details::ap(f, x); });
+    std::transform(in.begin(), in.end(), ys.begin(), [&](auto &&x) { return details::ap(f, x); });
     return ys;
   } else {
     Out<T> ys;
     if constexpr (has_reserve<Out<T>>) ys.reserve(in.size());
-    const auto map = [&](auto x) { return details::ap(f, x); };
+    const auto map = [&](auto &&x) { return details::ap(f, x); };
     if constexpr (has_push_back<Out<T>>) //
       std::transform(in.begin(), in.end(), std::back_inserter(ys), map);
     else std::transform(in.begin(), in.end(), std::inserter(ys, ys.begin()), map);
@@ -70,8 +70,7 @@ template <typename In, typename Function, template <typename...> typename Out> /
   static_assert(is_optional<T>, "collect function should return an optional");
   Out<typename T::value_type> ys;
   for (auto it = in.begin(), end = in.end(); it != end; ++it) {
-    auto x = *it;
-    if (auto y = details::ap(f, x); y) ys.insert(ys.end(), *y);
+    if (auto y = details::ap(f, *it); y) ys.insert(ys.end(), *y);
   }
   return ys;
 }
@@ -81,7 +80,7 @@ template <typename In, typename Predicate, template <typename...> typename Out> 
   using T = typename In::value_type;
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   Out<T> ys;
-  const auto filter = [&](auto x) { return details::ap(p, x); };
+  const auto filter = [&](auto &&x) { return details::ap(p, x); };
   if constexpr (has_push_back<Out<T>>) //
     std::copy_if(in.begin(), in.end(), std::back_inserter(ys), filter);
   else std::copy_if(in.begin(), in.end(), std::inserter(ys, ys.begin()), filter);
@@ -94,8 +93,7 @@ template <typename In, typename Function, template <typename...> typename Out> /
   using T = typename decltype(details::ap(f, *in.begin()))::value_type;
   Out<T> ys;
   for (auto it = in.begin(), end = in.end(); it != end; ++it) {
-    auto x = *it;
-    auto zs = details::ap(f, x);
+    auto zs = details::ap(f, *it);
     if constexpr (has_associative_insert<Out<T>>) ys.insert(zs.begin(), zs.end());
     else ys.insert(ys.end(), zs.begin(), zs.end());
   }
@@ -107,7 +105,7 @@ template <typename In, template <typename...> typename Out> //
   static_assert(is_iterable<typename In::value_type>, "not a nested type that is iterable");
   using T = typename In::value_type::value_type;
   Out<T> ys;
-  for (auto x : in)
+  for (auto &&x : in)
     if constexpr (has_associative_insert<Out<T>>) ys.insert(x.begin(), x.end());
     else ys.insert(ys.end(), x.begin(), x.end());
   return ys;
@@ -125,7 +123,7 @@ template <typename In, typename Function, typename Out> //
   const auto hash = [&](const auto &x) { return std::hash<V>()(details::ap(f, x)); };
   const auto eq = [&](const auto &l, const auto &r) { return details::ap(f, l) == details::ap(f, r); };
   std::unordered_set<T, decltype(hash), decltype(eq)> set{0, hash, eq};
-  auto unique = [&](auto x) { return set.insert(x).second; };
+  auto unique = [&](auto &&x) { return set.insert(x).second; };
   Out ys;
   if constexpr (has_push_back<Out>) //
     std::copy_if(in.begin(), in.end(), std::back_inserter(ys), unique);
@@ -137,7 +135,7 @@ template <typename In, typename Out, bool set_like> //
 [[nodiscard]] constexpr auto distinct(const In &in) {
   if constexpr (set_like) return in;
   else {
-    auto id = [](auto x) { return x; };
+    auto id = [](auto &&x) { return x; };
     return distinct_by<In, decltype(id), Out>(in, id);
   }
 }
@@ -145,25 +143,25 @@ template <typename In, typename Out, bool set_like> //
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr size_t count(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
-  return std::count_if(in.begin(), in.end(), [&](auto x) { return details::ap(p, x); });
+  return std::count_if(in.begin(), in.end(), [&](auto &&x) { return details::ap(p, x); });
 }
 
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr bool exists(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
-  return std::any_of(in.begin(), in.end(), [&](auto x) { return details::ap(p, x); });
+  return std::any_of(in.begin(), in.end(), [&](auto &&x) { return details::ap(p, x); });
 }
 
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr bool forall(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
-  return std::all_of(in.begin(), in.end(), [&](auto x) { return details::ap(p, x); });
+  return std::all_of(in.begin(), in.end(), [&](auto &&x) { return details::ap(p, x); });
 }
 
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr auto find(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
-  auto it = std::find_if(in.begin(), in.end(), [&](auto x) { return details::ap(p, x); });
+  auto it = std::find_if(in.begin(), in.end(), [&](auto &&x) { return details::ap(p, x); });
   if (it == in.end()) return std::optional<typename In::value_type>{};
   else return std::optional<typename In::value_type>{*it};
 }
@@ -177,15 +175,14 @@ template <typename In, typename Function> //
   auto it = in.begin();
   if (it == in.end()) return std::optional<T>{};
   T first = *it;
-  return std::optional<T>{std::accumulate(++it, in.end(), first, [&](auto l, auto r) { return f(l, r); })};
+  return std::optional<T>{std::accumulate(++it, in.end(), first, [&](auto &&l, auto &&r) { return f(l, r); })};
 }
 
 template <typename In, typename Function> //
 [[nodiscard]] constexpr In tap_each(const In &in, Function f) {
   if constexpr (details::assert_void<decltype(details::ap(f, *in.begin()))>()) {}
   for (auto it = in.begin(), end = in.end(); it != end; ++it) {
-    auto x = *it;
-    details::ap(f, x);
+    details::ap(f, *it);
   }
   return in;
 }

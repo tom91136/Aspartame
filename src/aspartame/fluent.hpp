@@ -1,13 +1,14 @@
 #pragma once
 
 #include "details/base.hpp"
+#include <cstddef>
 #include <sstream>
 
 #define ASPARTAME_FINALISED 1
 
 namespace aspartame {
 
-constexpr auto show_string = [](auto x) {
+constexpr auto show_string = [](auto &&x) {
   std::stringstream out;
   out << x;
   return out.str();
@@ -272,8 +273,9 @@ template <typename Predicate> //
   return [&](auto &&o) { return index_where(o, predicate); };
 }
 // Container<T> -> Container<std::pair<T, size_t>>
-[[nodiscard]] constexpr auto zip_with_index() { //
-  return [&](auto &&o) { return zip_with_index(o); };
+template <typename N = size_t> //
+[[nodiscard]] constexpr auto zip_with_index(N from = 0) { //
+  return [&, from](auto &&o) { return zip_with_index(o, from); };
 }
 // Container<T>, Container<U> -> Container<std::pair<T, U>>
 template <typename Container> //

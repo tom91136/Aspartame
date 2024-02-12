@@ -78,9 +78,9 @@ template <typename C, typename Predicate> //
   return details::sequence1::index_where<ASPARTAME_IN_TYPE1(C), Predicate>(in, predicate);
 }
 
-template <typename C> //
-[[nodiscard]] constexpr auto zip_with_index(const ASPARTAME_IN_TYPE1(C) & in) {
-  return details::sequence1::zip_with_index<ASPARTAME_IN_TYPE1(C), ASPARTAME_OUT_TYPE>(in);
+template < typename C, typename N> //
+[[nodiscard]] constexpr auto zip_with_index(const ASPARTAME_IN_TYPE1(C) & in, N from ) {
+  return details::sequence1::zip_with_index<ASPARTAME_IN_TYPE1(C), ASPARTAME_OUT_TYPE, N>(in, from);
 }
 
 template <typename C, typename Container> //

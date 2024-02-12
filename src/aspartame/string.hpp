@@ -59,11 +59,11 @@ template <typename C, typename Function> //
   static_assert(std::is_trivial_v<T>, "return type must be trivial for a string container");
   if constexpr (std::is_convertible_v<C, T>) {
     std::basic_string<C> ys(in.size(), {});
-    std::transform(in.begin(), in.end(), ys.begin(), [&](auto x) { return details::ap(function, x); });
+    std::transform(in.begin(), in.end(), ys.begin(), [&](auto &&x) { return details::ap(function, x); });
     return ys;
   } else {
     std::basic_string<T> ys(in.size(), {});
-    std::transform(in.begin(), in.end(), ys.begin(), [&](auto x) { return details::ap(function, x); });
+    std::transform(in.begin(), in.end(), ys.begin(), [&](auto &&x) { return details::ap(function, x); });
     return ys;
   }
 }
@@ -83,7 +83,7 @@ template <typename C, typename Function> //
   using T = decltype(details::ap(function, *std::begin(in)));
   static_assert(std::is_convertible_v<T, std::basic_string<C>>, "bind function should return an string type");
   std::basic_string<C> ys;
-  for (auto x : in)
+  for (auto &&x : in)
     ys += details::ap(function, x);
   return ys;
 }
@@ -234,9 +234,9 @@ template <typename C, typename Predicate> //
   return details::sequence1::index_where<std::basic_string<C>, Predicate>(in, predicate);
 }
 
-template <typename C> //
-[[nodiscard]] /*constexpr*/ auto zip_with_index(const std::basic_string<C> &in) {
-  return details::sequence1::zip_with_index<std::basic_string<C>, std::vector>(in);
+template <typename C, typename N> //
+[[nodiscard]] /*constexpr*/ auto zip_with_index(const std::basic_string<C> &in, N from) {
+  return details::sequence1::zip_with_index<std::basic_string<C>, std::vector, N>(in, from);
 }
 
 template <typename C, typename Container> //
@@ -355,7 +355,7 @@ template <typename C> //
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ bool is_blank(const std::basic_string<C> &in) {
-  return std::all_of(in.begin(), in.end(), [](auto c) { return std::isspace(c); });
+  return std::all_of(in.begin(), in.end(), [](auto &&c) { return std::isspace(c); });
 }
 
 template <typename C> //
@@ -363,7 +363,7 @@ template <typename C> //
   std::basic_string<C> out;
   std::basic_string<C> line;
   std::basic_string<C> prefix(n > 0 ? n : 0, ' ');
-  for (auto c : in) {
+  for (auto &&c : in) {
     if (c == '\n' || c == in.back()) {
       if (n < 0) {
         line.erase(0, line.find_first_not_of(' '));
@@ -379,14 +379,14 @@ template <typename C> //
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto to_upper(const std::basic_string<C> &in) {
   std::basic_string<C> out(in.length(), char());
-  std::transform(in.begin(), in.end(), out.begin(), [](auto x) { return std::toupper(x); });
+  std::transform(in.begin(), in.end(), out.begin(), [](auto &&x) { return std::toupper(x); });
   return out;
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto to_lower(const std::basic_string<C> &in) {
   std::basic_string<C> out(in.length(), char());
-  std::transform(in.begin(), in.end(), out.begin(), [](auto x) { return std::tolower(x); });
+  std::transform(in.begin(), in.end(), out.begin(), [](auto &&x) { return std::tolower(x); });
   return out;
 }
 
@@ -409,8 +409,8 @@ template <typename C, typename Needle, typename With> //
 template <typename C, typename String> //
 [[nodiscard]] /*constexpr*/ auto contains_ignore_case(const std::basic_string<C> &in, const String &that) {
   std::basic_string<C> in_lower = in, that_lower = static_cast<std::basic_string<C>>(that);
-  std::transform(in_lower.begin(), in_lower.end(), in_lower.begin(), [](auto x) { return std::tolower(x); });
-  std::transform(that_lower.begin(), that_lower.end(), that_lower.begin(), [](auto x) { return std::tolower(x); });
+  std::transform(in_lower.begin(), in_lower.end(), in_lower.begin(), [](auto &&x) { return std::tolower(x); });
+  std::transform(that_lower.begin(), that_lower.end(), that_lower.begin(), [](auto &&x) { return std::tolower(x); });
   return in_lower.find(that_lower) != std::basic_string<C>::npos;
 }
 

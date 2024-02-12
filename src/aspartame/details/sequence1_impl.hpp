@@ -121,8 +121,7 @@ template <typename In, typename Predicate> //
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   size_t i = 0;
   for (auto it = in.begin(), end = in.end(); it != end; ++it) {
-    auto x = *it;
-    if (details::ap(p, x)) return static_cast<std::make_signed_t<size_t>>(i);
+    if (details::ap(p, *it)) return static_cast<std::make_signed_t<size_t>>(i);
     i++;
   }
   return -1;
@@ -133,7 +132,7 @@ template <typename In, typename Predicate> //
   using T = typename In::value_type;
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   if constexpr (has_rbegin<In> && has_rend<In>) {
-    auto it = std::find_if(in.rbegin(), in.rend(), [&](auto x) { return details::ap(p, x); });
+    auto it = std::find_if(in.rbegin(), in.rend(), [&](auto &&x) { return details::ap(p, x); });
     if (it == in.rend()) return std::optional<T>{};
     else return std::optional<T>{*it};
   } else {
@@ -145,22 +144,22 @@ template <typename In, typename Predicate> //
   }
 }
 
-template <typename In, template <typename...> typename Out> //
-[[nodiscard]] constexpr auto zip_with_index(const In &in) {
+template <typename In, template <typename...> typename Out, typename N> //
+[[nodiscard]] constexpr auto zip_with_index(const In &in, N from) {
   using T = typename In::value_type;
   if constexpr (std::is_default_constructible_v<T>) {
-    Out<std::pair<T, size_t>> ys(in.size());
+    Out<std::pair<T, N>> ys(in.size());
     auto it = ys.begin();
-    size_t i = 0;
-    for (auto x : in) {
+    N i = from;
+    for (auto &&x : in) {
       *it++ = {x, i};
       i++;
     }
     return ys;
   } else {
-    Out<std::pair<T, size_t>> ys;
-    if constexpr (has_reserve<Out<std::pair<T, size_t>>>) ys.reserve(in.size());
-    size_t i = 0;
+    Out<std::pair<T, N>> ys;
+    if constexpr (has_reserve<Out<std::pair<T, N>>>) ys.reserve(in.size());
+    N i = from;
     for (auto it = in.begin(), end = in.end(); it != end; ++it) {
       auto x = *it;
       ys.emplace_back(x, i);
@@ -261,7 +260,7 @@ template <typename In, typename Compare, typename Out> //
 template <typename In, typename Select, typename Out> //
 [[nodiscard]] constexpr Out sort_by(const In &in, Select &&s) {
   Out ys = in;
-  const auto compare = [&](auto l, auto r) { return details::ap(s, l) < details::ap(s, r); };
+  const auto compare = [&](const auto &l, const auto &r) { return details::ap(s, l) < details::ap(s, r); };
   if constexpr (has_sort<In>) ys.sort(compare);
   else std::sort(ys.begin(), ys.end(), compare);
   return ys;
@@ -347,7 +346,7 @@ template <typename In, typename Predicate, typename Out> //
 [[nodiscard]] constexpr Out take_while(const In &in, Predicate &&p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   Out ys;
-  for (const auto &x : in) {
+  for (auto &&x : in) {
     if (!details::ap(p, x)) break;
     ys.insert(ys.end(), x);
   }

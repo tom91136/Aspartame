@@ -42,7 +42,7 @@ template <typename In, typename Function, template <typename...> typename Out> /
   using K = decltype(details::ap(function, in.begin()->first));
   if constexpr (details::assert_non_void<K>()) {}
   Out<K, typename In::mapped_type> ys;
-  for (auto [k, v] : in)
+  for (auto &&[k, v] : in)
     ys.emplace(details::ap(function, k), v);
   return ys;
 }
@@ -52,7 +52,7 @@ template <typename In, typename Function, template <typename...> typename Out> /
   using V = decltype(details::ap(function, in.begin()->second));
   if constexpr (details::assert_non_void<V>()) {}
   Out<typename In::key_type, V> ys;
-  for (auto [k, v] : in)
+  for (auto &&[k, v] : in)
     ys.emplace(k, details::ap(function, v));
   return ys;
 }
