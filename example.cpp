@@ -1,6 +1,7 @@
 // #include "src/aspartame/array.hpp"
 #include "src/aspartame/deque.hpp"
 #include "src/aspartame/list.hpp"
+#include "src/aspartame/map.hpp"
 #include "src/aspartame/optional.hpp"
 #include "src/aspartame/set.hpp"
 #include "src/aspartame/string.hpp"
@@ -11,15 +12,47 @@
 
 #include <iostream>
 #include <list>
+#include <map>
 #include <memory>
 #include <set>
 #include <utility>
 
 #include "src/aspartame/fluent.hpp"
 
+class Foo {
+  int *a;
+  Foo() = delete;
+  Foo(Foo &&) = delete;
+};
+
 int main() {
 
   using namespace aspartame;
+
+  auto csv = R"(
+    SensorID,Day1,Day2,Day3
+    SensorA,100,150,130
+    SensorB,90,120,110
+    SensorC,200,230,210)";
+
+  auto rows = (csv ^ lines()) //
+              | collect([](auto l) { return l ^ is_blank() ? std::nullopt : std::optional{l ^ trim()}; });
+  auto header = (rows | head_maybe()) ^ get_or_else("") ^ split(",");
+  auto data = (rows | tail()                                                             //
+               | map([](auto row) { return row ^ split(","); })                          //
+               | group_map_reduce(                                                       //
+                     [](auto &x) { return x[0]; },                                       //
+                     [&](auto &xs) { return header | zip(xs) | drop(1) | to_vector(); }, //
+                     [](auto l, auto r) { return l ^ concat(r); }))                      //
+              ^ map_values([](auto vvs) {
+                  return vvs | and_then([](auto xs) { return std::map<std::string, std::string>{xs.begin(), xs.end()}; });
+                });
+
+  for (auto [row, values] : data) {
+    std::cout << row << " = " << (values | mk_string(", ", [](auto k, auto v) { return k + ":" + v; })) << "\n";
+  }
+
+  return 0;
 
   auto U = std::optional{std::tuple<int, int>{42, 43}};
 
@@ -37,10 +70,7 @@ int main() {
   }
 
   auto [aa, bb] = std::vector{1, 2, 3} | partition([](auto x) { return x < 2; });
-  for (auto a_ : aa | tap_each([](auto x){
-                   std::cout << "t=" << x << "\n";
-
-                 })) {
+  for (auto a_ : aa | tap_each([](auto x) { std::cout << "t=" << x << "\n"; })) {
     std::cout << "aa=" << a_ << "\n";
   }
   for (auto b_ : bb) {
@@ -88,7 +118,7 @@ int main() {
                        return std::pair{x + x, y + 1};
                      }) | bind([](auto x) {
                        return std::vector{x, x};
-                     }) | distinct_by([](auto x, auto y) { return x; })
+                     }) | distinct_by([](auto x, auto ) { return x; })
 
   ) {
     std::cout << "kv=" << k << " = " << v << "\n";

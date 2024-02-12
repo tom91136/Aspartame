@@ -483,7 +483,7 @@ template <typename Delimiter> //
 // T, (T -> U) -> U
 template <typename Function> //
 [[nodiscard]] constexpr auto and_then(Function &&function) {
-  return [&](auto &o) {
+  return [&](auto &&o) {
     if constexpr (details::assert_non_void<decltype(details::ap(function, o))>()) {}
     return details::ap(function, o);
   };
@@ -491,7 +491,7 @@ template <typename Function> //
 // T, (T -> void) -> T
 template <typename Function> //
 [[nodiscard]] constexpr auto tap(Function &&function) {
-  return [&](auto &o) {
+  return [&](auto &&o) {
     if constexpr (details::assert_void<decltype(details::ap(function, o))>()) {}
     details::ap(function, o);
     return;

@@ -48,6 +48,8 @@ add_executable(tests
         test/test_view_collect.cpp
         test/test_view_concat.cpp
 
+        test/test_view_ownership.cpp
+
 
         test/test_vector.cpp
         test/test_optional.cpp

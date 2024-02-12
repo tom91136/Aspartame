@@ -15,7 +15,8 @@ using std::get, std::string, std::to_string;
 namespace {
 class Foo {
 public:
-  explicit Foo(int x) : value(x) {}
+  explicit Foo(int x) : value(x) { static_assert(!std::is_default_constructible_v<Foo>); }
+  Foo() = delete;
   int value;
   bool operator==(const Foo &rhs) const { return value == rhs.value; }
   bool operator<(const Foo &rhs) const { return value < rhs.value; }
