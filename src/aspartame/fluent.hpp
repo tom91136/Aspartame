@@ -14,72 +14,31 @@ constexpr auto show_string = [](auto &&x) {
   return out.str();
 };
 
-namespace range {
-
-template <typename N> struct inclusive {
-  N from_inclusive, to_inclusive, step = 1;
-
-  template <template <typename, typename...> typename C, typename F> //
-  [[nodiscard]] constexpr auto tabulate(F &&f) {
-    C<std::invoke_result_t<F, N>> xs;
-    for (N i = from_inclusive; i <= to_inclusive; i += step)
-      if constexpr (details::has_push_back<decltype(xs)>) xs.push_back(f(i));
-      else xs.insert(xs.end(), f(i));
-    return xs;
-  }
-  template <template <typename, typename...> typename C, typename F> //
-  [[nodiscard]] constexpr auto fill(F &&f) {
-    C<std::invoke_result_t<F>> xs;
-    for (N i = from_inclusive; i <= to_inclusive; i += step)
-      if constexpr (details::has_push_back<decltype(xs)>) xs.push_back(f());
-      else xs.insert(xs.end(), f());
-    return xs;
-  }
-};
-template <typename T> inclusive(T, T) -> inclusive<T>;
-
-template <typename N> struct exclusive {
-  N from_inclusive, to_exclusive, step = 1;
-
-  template <template <typename, typename...> typename C, typename F> //
-  [[nodiscard]] constexpr auto tabulate(F &&f) {
-    C<std::invoke_result_t<F, N>> xs;
-    for (N i = from_inclusive; i < to_exclusive; i += step)
-      if constexpr (details::has_push_back<decltype(xs)>) xs.push_back(f(i));
-      else xs.insert(xs.end(), f(i));
-
-    return xs;
-  }
-  template <template <typename, typename...> typename C, typename F> //
-  [[nodiscard]] constexpr auto fill(F &&f) {
-    C<std::invoke_result_t<F>> xs;
-    for (N i = from_inclusive; i < to_exclusive; i += step)
-      if constexpr (details::has_push_back<decltype(xs)>) xs.push_back(f());
-      else xs.insert(xs.end(), f());
-    return xs;
-  }
-};
-template <typename T> exclusive(T, T) -> exclusive<T>;
-
-} // namespace range
-
 // ====== [containers common] ======
 
 // Container<T>, std::string_view, (T -> std::string) -> std::string
 template <typename Show> //
-[[nodiscard]] constexpr auto mk_string(const std::string_view &separator, const std::string_view &prefix, const std::string_view &suffix,
+[[nodiscard]] constexpr auto mk_string(const std::string_view &prefix,    //
+                                       const std::string_view &separator, //
+                                       const std::string_view &suffix,    //
                                        Show &&show) {
-  return [&](auto &&o) { return mk_string(o, separator, prefix, suffix, show); };
+  return [&](auto &&o) { return mk_string(o, prefix, separator, suffix, show); };
+}
+// Container<T>, std::string_view -> std::string
+[[nodiscard]] constexpr auto mk_string(const std::string_view &prefix,    //
+                                       const std::string_view &separator, //
+                                       const std::string_view &suffix) {  //
+  return [&](auto &&o) { return mk_string(o, prefix, separator, suffix, show_string); };
+}
+
+[[nodiscard]] constexpr auto mk_string(const std::string_view &separator = "") { //
+  return [&](auto &&o) { return mk_string(o, "", separator, "", show_string); };
 }
 template <typename Show> //
 [[nodiscard]] constexpr auto mk_string(const std::string_view &separator, Show &&show) {
-  return [&](auto &&o) { return mk_string(o, separator, "", "", show); };
+  return [&](auto &&o) { return mk_string(o, "", separator, "", show); };
 }
-// Container<T>, std::string_view -> std::string
-[[nodiscard]] constexpr auto mk_string(const std::string_view &separator = "", const std::string_view &prefix = "",
-                                       const std::string_view &suffix = "") { //
-  return [&](auto &&o) { return mk_string(o, separator, prefix, suffix, show_string); };
-}
+
 // ITER
 // Container<T>, T -> Container<T>
 // Map<K, V>, std::pair<K, V> -> Map<K, V>
@@ -444,10 +403,6 @@ template <typename T> //
   return [&](auto &&o) { return is_blank(o); };
 }
 // std::string -> std::string
-[[nodiscard]] constexpr auto indent(int n) { //
-  return [&, n](auto &&o) { return indent(o, n); };
-}
-// std::string -> std::string
 [[nodiscard]] constexpr auto to_upper() { //
   return [&](auto &&o) { return to_upper(o); };
 }
@@ -459,6 +414,14 @@ template <typename T> //
 template <typename Needle, typename With> //
 [[nodiscard]] constexpr auto replace_all(const Needle &needle, const With &with) {
   return [&](auto &&o) { return replace_all(o, needle, with); };
+}
+// std::string -> std::string
+[[nodiscard]] constexpr auto indent(int n) { //
+  return [&, n](auto &&o) { return indent(o, n, std::decay_t<decltype(o)>{'\n'}); };
+}
+template <typename NewLine>                                          //
+[[nodiscard]] constexpr auto indent(int n, const NewLine &newLine) { //
+  return [&, n](auto &&o) { return indent(o, n, newLine); };
 }
 // std::string, std::string-> std::string
 template <typename String> //

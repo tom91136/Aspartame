@@ -145,9 +145,9 @@ auto operator|(Iterable &&l, const Op &r) {
 // == container
 
 template <typename C, typename Storage, typename Function> //
-[[nodiscard]] auto mk_string(view<C, Storage> &in, const std::string_view &sep, const std::string_view &prefix,
+[[nodiscard]] auto mk_string(view<C, Storage> &in, const std::string_view &prefix, const std::string_view &sep,
                              const std::string_view &suffix, Function &&f) {
-  return details::container1::mk_string<view<C, Storage>, Function>(in, sep, prefix, suffix, f);
+  return details::container1::mk_string<view<C, Storage>, Function>(in, prefix, sep, suffix, f);
 }
 
 template <typename C, typename Storage, typename T> //

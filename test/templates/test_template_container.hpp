@@ -13,22 +13,33 @@ TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(int, string, "", {1}, "1", op);
   RUN_CHECK(int, string, "", {}, "", op);
   RUN_CHECK(string, string, "", {"banana", "cherry", "apple"}, "bananacherryapple", op);
-  RUN_CHECK(string, string, "", {"apple"}, {"apple"}, op);
-  RUN_CHECK(string, string, "", {}, {}, op);
+  RUN_CHECK(string, string, "", {"apple"}, "apple", op);
+  RUN_CHECK(string, string, "", {}, "", op);
   RUN_CHECK(Foo, string, "", {Foo(3), Foo(2), Foo(1)}, "Foo(3)Foo(2)Foo(1)", op);
   RUN_CHECK(Foo, string, "", {Foo(1)}, "Foo(1)", op);
-  RUN_CHECK(Foo, string, "", {}, {}, op);
+  RUN_CHECK(Foo, string, "", {}, "", op);
 
   auto customOp = [](auto &&xs) { return xs OP_ mk_string(", "); };
   RUN_CHECK(int, string, "", {4, 2, 3, 1, 5}, "4, 2, 3, 1, 5", customOp);
   RUN_CHECK(int, string, "", {1}, "1", customOp);
   RUN_CHECK(int, string, "", {}, "", customOp);
   RUN_CHECK(string, string, "", {"banana", "cherry", "apple"}, "banana, cherry, apple", customOp);
-  RUN_CHECK(string, string, "", {"apple"}, {"apple"}, customOp);
-  RUN_CHECK(string, string, "", {}, {}, customOp);
+  RUN_CHECK(string, string, "", {"apple"}, "apple", customOp);
+  RUN_CHECK(string, string, "", {}, "", customOp);
   RUN_CHECK(Foo, string, "", {Foo(3), Foo(2), Foo(1)}, "Foo(3), Foo(2), Foo(1)", customOp);
   RUN_CHECK(Foo, string, "", {Foo(1)}, "Foo(1)", customOp);
-  RUN_CHECK(Foo, string, "", {}, {}, customOp);
+  RUN_CHECK(Foo, string, "", {}, "", customOp);
+
+  auto customOp2 = [](auto &&xs) { return xs OP_ mk_string("[" ,", ", "]"); };
+  RUN_CHECK(int, string, "", {4, 2, 3, 1, 5}, "[4, 2, 3, 1, 5]", customOp2);
+  RUN_CHECK(int, string, "", {1}, "[1]", customOp2);
+  RUN_CHECK(int, string, "", {}, "[]", customOp2);
+  RUN_CHECK(string, string, "", {"banana", "cherry", "apple"}, "[banana, cherry, apple]", customOp2);
+  RUN_CHECK(string, string, "", {"apple"}, "[apple]", customOp2);
+  RUN_CHECK(string, string, "", {}, "[]", customOp2);
+  RUN_CHECK(Foo, string, "", {Foo(3), Foo(2), Foo(1)}, "[Foo(3), Foo(2), Foo(1)]", customOp2);
+  RUN_CHECK(Foo, string, "", {Foo(1)}, "[Foo(1)]", customOp2);
+  RUN_CHECK(Foo, string, "", {}, "[]", customOp2);
 
   auto p2 = [](auto name, auto f) {
     using P2 = std::pair<int, int>;

@@ -21,7 +21,7 @@ template <typename C, typename Op> auto operator^(const std::optional<C> &l, con
 // ---
 
 template <typename C, typename Function> //
-[[nodiscard]] auto mk_string(const std::optional<C> &in, const std::string_view &, const std::string_view &prefix,
+[[nodiscard]] auto mk_string(const std::optional<C> &in, const std::string_view &prefix, const std::string_view &,
                              const std::string_view &suffix, Function &&function) {
   static_assert(std::is_convertible_v<decltype(details::ap(function, *in)), std::string>, "function does not return a string type");
   std::string out{prefix};

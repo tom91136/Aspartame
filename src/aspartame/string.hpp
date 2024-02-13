@@ -38,9 +38,9 @@ namespace aspartame {
 // container
 
 template <typename C, typename Function> //
-[[nodiscard]] auto mk_string(const std::basic_string<C> &in, const std::string_view &sep, const std::string_view &prefix,
+[[nodiscard]] auto mk_string(const std::basic_string<C> &in, const std::string_view &prefix, const std::string_view &sep,
                              const std::string_view &suffix, Function &&f) {
-  return details::container1::mk_string(in, sep, prefix, suffix, f);
+  return details::container1::mk_string(in, prefix, sep, suffix, f);
 }
 
 template <typename C, typename T> //
@@ -359,24 +359,6 @@ template <typename C> //
 }
 
 template <typename C> //
-[[nodiscard]] /*constexpr*/ auto indent(const std::basic_string<C> &in, int n) {
-  std::basic_string<C> out;
-  std::basic_string<C> line;
-  std::basic_string<C> prefix(n > 0 ? n : 0, ' ');
-  for (auto &&c : in) {
-    if (c == '\n' || c == in.back()) {
-      if (n < 0) {
-        line.erase(0, line.find_first_not_of(' '));
-        if (static_cast<std::make_signed_t<size_t>>(line.length()) > -n) { line.erase(0, -n); }
-      }
-      out += prefix + line + c;
-      line.clear();
-    } else line += c;
-  }
-  return out;
-}
-
-template <typename C> //
 [[nodiscard]] /*constexpr*/ auto to_upper(const std::basic_string<C> &in) {
   std::basic_string<C> out(in.length(), char());
   std::transform(in.begin(), in.end(), out.begin(), [](auto &&x) { return std::toupper(x); });
@@ -401,6 +383,34 @@ template <typename C, typename Needle, typename With> //
     out.append(in, start_pos, pos - start_pos);
     out += with_;
     start_pos = pos + needle_.length();
+  }
+  out += in.substr(start_pos);
+  return out;
+}
+
+template <typename C, typename NewLine> //
+[[nodiscard]] /*constexpr*/ auto indent(const std::basic_string<C> &in, int n, const NewLine &nl) {
+  if (n == 0 || in.empty()) return in;
+  auto nl_ = static_cast<std::basic_string<C>>(nl);
+  std::basic_string<C> prefix(n > 0 ? n : 0, ' ');
+  std::basic_string<C> out(prefix);
+  size_t start_pos = 0, pos;
+  if (n < 0) {
+    while (start_pos < in.size() && start_pos < static_cast<size_t>(-n) && in[start_pos] == ' ')
+      start_pos++;
+  }
+  while ((pos = in.find(nl_, start_pos)) != std::basic_string<C>::npos) {
+    size_t after_nl = pos + nl_.size();
+    out.append(in, start_pos, after_nl - start_pos);
+    if (n > 0) {
+      if (pos != in.size() - nl_.size()) out += prefix;
+      start_pos = after_nl;
+    } else {
+      int drop = 0; // find out how many ws chars after nl and drop those
+      while (after_nl + drop < in.size() && drop < -n && in[after_nl + drop] == ' ')
+        drop++;
+      start_pos = after_nl + drop;
+    }
   }
   out += in.substr(start_pos);
   return out;

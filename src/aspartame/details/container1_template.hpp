@@ -14,9 +14,9 @@
 namespace aspartame {
 
 template <typename C, typename Function> //
-[[nodiscard]] auto mk_string(const ASPARTAME_IN_TYPE1(C) & in, const std::string_view &sep, const std::string_view &prefix,
+[[nodiscard]] auto mk_string(const ASPARTAME_IN_TYPE1(C) & in, const std::string_view &prefix, const std::string_view &sep,
                              const std::string_view &suffix, Function &&f) {
-  return details::container1::mk_string<ASPARTAME_IN_TYPE1(C), Function>(in, sep, prefix, suffix, f);
+  return details::container1::mk_string<ASPARTAME_IN_TYPE1(C), Function>(in, prefix, sep, suffix, f);
 }
 
 template <typename C, typename T> //

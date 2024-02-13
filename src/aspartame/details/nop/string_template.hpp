@@ -21,9 +21,9 @@ template <typename C> //
 [[nodiscard]] constexpr auto is_blank(const ASPARTAME_IN_TYPE1(C) & in) {
   if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {}
 }
-template <typename C> //
-[[nodiscard]] constexpr auto indent(const ASPARTAME_IN_TYPE1(C) & in, int n) {
-  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, n)) {}
+template <typename C, typename NewLine> //
+[[nodiscard]] constexpr auto indent(const ASPARTAME_IN_TYPE1(C) & in, int n, const NewLine &nl) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, n, nl)) {}
 }
 template <typename C> //
 [[nodiscard]] constexpr auto to_upper(const ASPARTAME_IN_TYPE1(C) & in) {

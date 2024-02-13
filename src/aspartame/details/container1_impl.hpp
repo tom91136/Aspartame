@@ -11,7 +11,7 @@
 namespace aspartame::details::container1 {
 
 template <typename In, typename Function> //
-[[nodiscard]] auto mk_string(const In &o, const std::string_view &sep, const std::string_view &prefix, const std::string_view &suffix,
+[[nodiscard]] auto mk_string(const In &o, const std::string_view &prefix, const std::string_view &sep, const std::string_view &suffix,
                              Function f) {
   static_assert(std::is_convertible_v<decltype(details::ap(f, *o.begin())), std::string>, "function does not return a string type");
   std::string out{prefix};

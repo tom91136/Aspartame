@@ -19,13 +19,13 @@ std::wstring operator"" _w(const char *str, std::size_t len) { return {str, str 
 TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("123" ^ mk_string()) == "123");
   CHECK(("abc" ^ mk_string(", ")) == "a, b, c");
-  CHECK(("hello" ^ mk_string(", ", "[", "]")) == "[h, e, l, l, o]");
+  CHECK(("hello" ^ mk_string("[", ", ", "]")) == "[h, e, l, l, o]");
   CHECK(("" ^ mk_string(", ")) == "");
   CHECK(("a" ^ mk_string()) == "a");
   CHECK(("123" ^ mk_string("")) == "123");
-  CHECK(("numbers" ^ mk_string("-", "<", ">")) == "<n-u-m-b-e-r-s>");
-  CHECK(("" ^ mk_string("", "start-", "-end")) == "start--end");
-  CHECK(("1" ^ mk_string(",", "(", ")")) == "(1)");
+  CHECK(("numbers" ^ mk_string("<", "-", ">")) == "<n-u-m-b-e-r-s>");
+  CHECK(("" ^ mk_string("start-", "", "-end")) == "start--end");
+  CHECK(("1" ^ mk_string("(", ",", ")")) == "(1)");
   CHECK(("single" ^ mk_string()) == "single");
 }
 #endif
@@ -684,15 +684,42 @@ TEST_CASE(TPE_NAME "_indent", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ indent(3)) == "   abcde");
   CHECK(("abcde" ^ indent(0)) == "abcde");
   CHECK(("" ^ indent(3)) == "");
+  CHECK((" " ^ indent(3)) == "    ");
   CHECK(("\nabc\n" ^ indent(2)) == "  \n  abc\n");
   CHECK(("abc" ^ indent(0)) == "abc");
   CHECK(("abc\nxyz" ^ indent(2)) == "  abc\n  xyz");
+
   CHECK(("\nabc\nxyz\n" ^ indent(3)) == "   \n   abc\n   xyz\n");
+  CHECK(("\nab c\nxy z\n" ^ indent(3)) == "   \n   ab c\n   xy z\n");
   CHECK(("abc\nxyz" ^ indent(-3)) == "abc\nxyz");
+  CHECK(("  " ^ indent(-1)) == " ");
+  CHECK(("  " ^ indent(-2)) == "");
   CHECK(("   abc\n   xyz" ^ indent(-3)) == "abc\nxyz");
+  CHECK(("   abc\n   xyz" ^ indent(-2)) == " abc\n xyz");
   CHECK(("   abc\n   xyz" ^ indent(-10)) == "abc\nxyz");
+  CHECK((("A--A\nB--B\nC--C") ^ indent(2)) == "  A--A\n  B--B\n  C--C");
 
   CHECK(("\nabc\nxyz\n"_w ^ indent(3)) == "   \n   abc\n   xyz\n"_w);
+
+  CHECK(("abcde" ^ indent(3, "\r\n")) == "   abcde");
+  CHECK(("abcde" ^ indent(0, "\r\n")) == "abcde");
+  CHECK(("" ^ indent(3, "\r\n")) == "");
+  CHECK((" " ^ indent(3, "\r\n")) == "    ");
+  CHECK(("\r\nabc\r\n" ^ indent(2, "\r\n")) == "  \r\n  abc\r\n");
+  CHECK(("abc" ^ indent(0, "\r\n")) == "abc");
+  CHECK(("abc\r\nxyz" ^ indent(2, "\r\n")) == "  abc\r\n  xyz");
+
+  CHECK(("\r\nabc\r\nxyz\r\n" ^ indent(3, "\r\n")) == "   \r\n   abc\r\n   xyz\r\n");
+  CHECK(("\r\nab c\r\nxy z\r\n" ^ indent(3, "\r\n")) == "   \r\n   ab c\r\n   xy z\r\n");
+  CHECK(("abc\r\nxyz" ^ indent(-3, "\r\n")) == "abc\r\nxyz");
+  CHECK(("  " ^ indent(-1, "\r\n")) == " ");
+  CHECK(("  " ^ indent(-2, "\r\n")) == "");
+  CHECK(("   abc\r\n   xyz" ^ indent(-3, "\r\n")) == "abc\r\nxyz");
+  CHECK(("   abc\r\n   xyz" ^ indent(-2, "\r\n")) == " abc\r\n xyz");
+  CHECK(("   abc\r\n   xyz" ^ indent(-10, "\r\n")) == "abc\r\nxyz");
+  CHECK((("A--A\r\nB--B\r\nC--C") ^ indent(2, "\r\n")) == "  A--A\r\n  B--B\r\n  C--C");
+
+  CHECK(("\r\nabc\r\nxyz\r\n"_w ^ indent(3, "\r\n"_w)) == "   \r\n   abc\r\n   xyz\r\n"_w);
 }
 #endif
 
