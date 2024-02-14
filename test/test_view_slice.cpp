@@ -7,6 +7,6 @@
 #define TPE_MANY_INIT 1
 #define TPE_RUN_TEST
 
-#define TPE_TEST_CHAIN(xs) ((xs) | aspartame::slice(0, std::numeric_limits<size_t>::max()))
+#define TPE_TEST_CHAIN(xs) ((xs) | ::aspartame::slice(0, std::numeric_limits<size_t>::max()))
 
 #include "templates/test_template_view.hpp"

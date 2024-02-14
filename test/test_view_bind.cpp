@@ -7,6 +7,6 @@
 #define TPE_MANY_INIT 1
 #define TPE_RUN_TEST
 
-#define TPE_TEST_CHAIN(xs) ((xs) | aspartame::bind([](auto x) { return TPE_CTOR_IN(decltype(x)){x}; }))
+#define TPE_TEST_CHAIN(xs) ((xs) | ::aspartame::bind([](auto x) { return TPE_CTOR_IN(decltype(x)){x}; }))
 
 #include "templates/test_template_view.hpp"

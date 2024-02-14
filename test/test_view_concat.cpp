@@ -7,6 +7,6 @@
 #define TPE_MANY_INIT 1
 #define TPE_RUN_TEST
 
-#define TPE_TEST_CHAIN(xs) ((xs) | aspartame::concat(TPE_CTOR_IN(typename std::decay_t<decltype((xs))>::value_type){}))
+#define TPE_TEST_CHAIN(xs) ((xs) | ::aspartame::concat(TPE_CTOR_IN(typename std::decay_t<decltype((xs))>::value_type){}))
 
 #include "templates/test_template_view.hpp"

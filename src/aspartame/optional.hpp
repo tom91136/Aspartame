@@ -252,7 +252,8 @@ template <typename C, typename U> //
 
 template <typename C, typename Predicate> //
 [[nodiscard]] constexpr auto find_last(const std::optional<C> &in, Predicate p) -> std::optional<C> {
-  return find<C, Predicate>(in, p);
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in))>()) {};
+  return in && details::ap(p, *in) ? in : std::nullopt;
 }
 
 template <typename C, typename Predicate> //
