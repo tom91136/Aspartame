@@ -1,15 +1,11 @@
 #pragma once
 
-#include <unordered_map>
-#include <unordered_set>
-
+#include "fluent.hpp"
 #include "details/base.hpp"
 #include "details/map_impl.hpp"
 
-#ifdef ASPARTAME_FINALISED
-  #error "This header must be included before aspartame/fluent.hpp; \
-consider adding a new line between this include and others to prevent reording by formatters."
-#endif
+#include <unordered_map>
+#include <unordered_set>
 
 namespace aspartame {
 namespace details {

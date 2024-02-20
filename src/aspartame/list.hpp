@@ -1,12 +1,10 @@
 #pragma once
 
 #include "details/base.hpp"
+#include "fluent.hpp"
+
 #include <list>
 
-#ifdef ASPARTAME_FINALISED
-  #error "This header must be included before aspartame/fluent.hpp; \
-consider adding a new line between this include and others to prevent reording by formatters."
-#endif
 
 namespace aspartame {
 namespace details {

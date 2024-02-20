@@ -50,6 +50,8 @@ template <typename T> constexpr bool is_map_like = details::is_map_like_impl<std
 template <typename T> constexpr bool is_hashable = details::is_hashable_impl<std::decay_t<T>>;
 template <typename T> constexpr bool is_comparable = details::is_comparable_impl<std::decay_t<T>>;
 
+struct tag{};
+
 namespace details {
 
 template <typename T> struct unsupported1 {};
