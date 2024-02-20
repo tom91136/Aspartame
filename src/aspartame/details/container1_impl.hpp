@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <numeric>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -175,7 +174,10 @@ template <typename In, typename Function> //
   auto it = in.begin();
   if (it == in.end()) return std::optional<T>(std::nullopt);
   T first = *it;
-  return std::optional<T>{std::accumulate(++it, in.end(), first, [&](auto &&l, auto &&r) { return f(l, r); })};
+  ++it;
+  for (; it != in.end(); ++it)
+    first = f(std::move(first), *it);
+  return std::optional<T>{first};
 }
 
 template <typename In, typename Function> //
