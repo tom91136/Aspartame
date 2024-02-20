@@ -11,6 +11,15 @@
 
 namespace aspartame {
 
+template <typename K, typename V, typename Key, typename Function> //
+[[nodiscard]] constexpr auto get_or_emplace(ASPARTAME_IN_TYPE2(K, V) & in, Key &key, Function &&function, tag = {}) {
+  if (auto it = in.find(key); it != in.end()) {
+    return it->second;
+  } else {
+    return in.emplace(key, std::move(details::ap(function, key))).first->second;
+  }
+}
+
 template <typename K, typename V> //
 [[nodiscard]] constexpr auto keys(const ASPARTAME_IN_TYPE2(K, V) & in, tag = {}) {
   return details::container2::keys<ASPARTAME_IN_TYPE2(K, V), ASPARTAME_OUT_TYPE_C1>(in);

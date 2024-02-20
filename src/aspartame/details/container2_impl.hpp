@@ -12,8 +12,8 @@ template <typename In, typename Function, template <typename...> typename Out> /
   using T = decltype(details::ap(f, *in.begin()));
   if constexpr (details::assert_non_void<T>()) {}
   static_assert(is_pair<T>, "return type for mapping a map-like container must be a tuple");
-  using K = typename In::key_type;
-  using V = typename In::mapped_type;
+  using K = typename T::first_type;
+  using V = typename T::second_type;
   Out<K, V> ys;
   std::transform(in.begin(), in.end(), std::inserter(ys, ys.begin()), [&](auto &&x) { return details::ap(f, x); });
   return ys;

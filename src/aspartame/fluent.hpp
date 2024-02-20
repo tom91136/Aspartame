@@ -17,7 +17,7 @@ constexpr auto show_string = [](auto &&x) {
 // ====== [containers common] ======
 
 // Container<T>, std::string_view, (T -> std::string) -> std::string
-template <typename Show> //
+template <typename Show>                                                  //
 [[nodiscard]] constexpr auto mk_string(const std::string_view &prefix,    //
                                        const std::string_view &separator, //
                                        const std::string_view &suffix,    //
@@ -232,7 +232,7 @@ template <typename Predicate> //
   return [&](auto &&o) { return index_where(o, predicate, tag{}); };
 }
 // Container<T> -> Container<std::pair<T, size_t>>
-template <typename N = size_t> //
+template <typename N = size_t>                            //
 [[nodiscard]] constexpr auto zip_with_index(N from = 0) { //
   return [&, from](auto &&o) { return zip_with_index(o, from, tag{}); };
 }
@@ -334,6 +334,12 @@ template <typename Accumulator, typename Function> //
 
 // ====== [map-like only] ======
 
+// Map<K, V>, K, (K -> V) -> V
+template <typename Key, typename Function> //
+[[nodiscard]] constexpr auto get_or_emplace(const Key &key, Function &&function) {
+  return [&](auto &&o) { return get_or_emplace(o, key, function, tag{}); };
+}
+
 // Map<K, V> -> Set<K>
 [[nodiscard]] constexpr auto keys() { //
   return [&](auto &&o) { return keys(o, tag{}); };
@@ -372,6 +378,11 @@ template <typename K, typename V> //
 template <typename Function, typename FunctionEmpty> //
 [[nodiscard]] constexpr auto fold(Function &&action, FunctionEmpty &&empty_action) {
   return [&](auto &&o) { return fold(o, action, empty_action, tag{}); };
+}
+// std::optional<T>, (() -> U) -> U
+template <typename FunctionEmpty> //
+[[nodiscard]] constexpr auto fold(FunctionEmpty &&empty_action) {
+  return [&](auto &&o) { return fold(o, empty_action, tag{}); };
 }
 // std::optional<T>, T -> T
 template <typename T> //

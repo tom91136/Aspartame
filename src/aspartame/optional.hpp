@@ -368,6 +368,13 @@ template <typename C, typename Function, typename FunctionEmpty> //
   else return static_cast<T>(empty());
 }
 
+template <typename C,   typename FunctionEmpty> //
+[[nodiscard]] constexpr auto fold(const std::optional<C> &o,  FunctionEmpty empty, tag={}) {
+  static_assert(std::is_convertible_v<decltype(empty()), C>, "empty does not unify with value type");
+  if (o) return *o;
+  else return static_cast<C>(empty());
+}
+
 template <typename C, typename T> //
 [[nodiscard]] constexpr auto get_or_else(const std::optional<C> &o, const T &default_value, tag={}) {
   static_assert(std::is_convertible_v<T, C>, "optional value type and default_value type does not unify");

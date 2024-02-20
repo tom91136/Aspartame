@@ -9,6 +9,7 @@
 
 #include <ranges>
 #include <vector>
+#include <numeric>
 
 double view_pi(int iter) {
   using namespace aspartame;

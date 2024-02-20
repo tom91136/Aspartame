@@ -14,6 +14,8 @@ template <typename K, typename V> constexpr bool is_map_impl<std::map<K, V>> = t
 } // namespace details
 template <typename T> constexpr bool is_map = details::is_map_impl<std::decay_t<T>>;
 template <typename K, typename V, typename Op> auto operator^(const std::map<K, V> &l, const Op &r) { return r(l); }
+template <typename K, typename V, typename Op> auto operator^=(std::map<K, V> &l, const Op &r) { return r(l); }
+
 } // namespace aspartame
 
 #define ASPARTAME_IN_TYPE2(K, V) std::map<K, V>

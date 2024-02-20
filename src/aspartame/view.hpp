@@ -458,4 +458,34 @@ template <typename C, typename Storage> //
       in, details::sliding_iterator<C, view>(in.begin(), in.end(), size, step));
 }
 
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto keys(view<C, Storage> &in, tag = {}) {
+  static_assert(is_pair<typename C::value_type>, "keys operation requires a pair for the value type");
+  return details::make_unique_view( //
+      in, details::map_iterator(in.begin(), in.end(), [](auto &&x) { return x.first; }));
+}
+
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto values(view<C, Storage> &in, tag = {}) {
+  static_assert(is_pair<typename C::value_type>, "values operation requires a pair for the value type");
+  return details::make_unique_view( //
+      in, details::map_iterator(in.begin(), in.end(), [](auto &&x) { return x.second; }));
+}
+
+template <typename C, typename Storage, typename Function> //
+[[nodiscard]] constexpr auto map_keys(view<C, Storage> &in, Function &&function, tag = {}) {
+  static_assert(is_pair<typename C::value_type>, "map_keys operation requires a pair for the value type");
+  auto applied = [&](auto &&x) { return details::ap(function, x.first); };
+  return details::make_unique_view( //
+      in, details::map_iterator(in.begin(), in.end(), applied));
+}
+
+template <typename C, typename Storage, typename Function> //
+[[nodiscard]] constexpr auto map_values(view<C, Storage> &in, Function &&function, tag = {}) {
+  static_assert(is_pair<typename C::value_type>, "map_values operation requires a pair for the value type");
+  auto applied = [&](auto &&x) { return details::ap(function, x.second); };
+  return details::make_unique_view( //
+      in, details::map_iterator(in.begin(), in.end(), applied));
+}
+
 } // namespace aspartame
