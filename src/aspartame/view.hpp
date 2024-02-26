@@ -39,8 +39,8 @@ template <typename Iterator, typename Storage = non_owning> class view {
 public:
   Storage storage;
   Iterator begin_, end_;
-  using iterator_category = typename Iterator::iterator_category;
-  using value_type = typename Iterator::value_type;
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = details::value_type_of_t<Iterator>;
   using const_iterator = Iterator;
   constexpr view() = default;
 
@@ -460,21 +460,21 @@ template <typename C, typename Storage> //
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto keys(view<C, Storage> &in, tag = {}) {
-  static_assert(is_pair<typename C::value_type>, "keys operation requires a pair for the value type");
+  static_assert(is_pair<typename details::value_type_of_t<C>>, "keys operation requires a pair for the value type");
   return details::make_unique_view( //
       in, details::map_iterator(in.begin(), in.end(), [](auto &&x) { return x.first; }));
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto values(view<C, Storage> &in, tag = {}) {
-  static_assert(is_pair<typename C::value_type>, "values operation requires a pair for the value type");
+  static_assert(is_pair<typename details::value_type_of_t<C>>, "values operation requires a pair for the value type");
   return details::make_unique_view( //
       in, details::map_iterator(in.begin(), in.end(), [](auto &&x) { return x.second; }));
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto map_keys(view<C, Storage> &in, Function &&function, tag = {}) {
-  static_assert(is_pair<typename C::value_type>, "map_keys operation requires a pair for the value type");
+  static_assert(is_pair<typename details::value_type_of_t<C>>, "map_keys operation requires a pair for the value type");
   auto applied = [&](auto &&x) { return details::ap(function, x.first); };
   return details::make_unique_view( //
       in, details::map_iterator(in.begin(), in.end(), applied));
@@ -482,7 +482,7 @@ template <typename C, typename Storage, typename Function> //
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto map_values(view<C, Storage> &in, Function &&function, tag = {}) {
-  static_assert(is_pair<typename C::value_type>, "map_values operation requires a pair for the value type");
+  static_assert(is_pair<typename details::value_type_of_t<C>>, "map_values operation requires a pair for the value type");
   auto applied = [&](auto &&x) { return details::ap(function, x.second); };
   return details::make_unique_view( //
       in, details::map_iterator(in.begin(), in.end(), applied));

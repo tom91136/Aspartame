@@ -8,7 +8,7 @@ enum class append_prepend_iterator_mode : uint8_t { append, prepend };
 
 template <append_prepend_iterator_mode Mode,
           typename InputIterator, //
-          typename T = typename InputIterator::value_type>
+          typename T = typename details::value_type_of_t<InputIterator>>
 class append_prepend_iterator : public fwd_iterator<append_prepend_iterator<Mode, InputIterator, T>, T> {
 public:
 private:

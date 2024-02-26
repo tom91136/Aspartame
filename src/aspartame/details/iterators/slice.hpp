@@ -6,7 +6,7 @@
 namespace aspartame::details {
 
 template <typename InputIterator, //
-          typename T = typename InputIterator::value_type>
+          typename T = typename details::value_type_of_t<InputIterator>>
 class slice_iterator : public fwd_iterator<slice_iterator<InputIterator, T>, T> {
   InputIterator it, end;
   size_t idx{}, to_exclusive{};

@@ -24,10 +24,13 @@ template <typename In, typename T = typename In::value_type> //
 
 template <typename In, typename T = typename In::value_type> //
 [[nodiscard]] constexpr std::optional<T> last_maybe(const In &in) {
-  if constexpr (std::is_same_v<std::bidirectional_iterator_tag, typename In::const_iterator::iterator_category> ||
-                std::is_same_v<std::random_access_iterator_tag, typename In::const_iterator::iterator_category>
+  if constexpr (std::is_same_v<std::bidirectional_iterator_tag,
+                               typename std::iterator_traits<typename In::const_iterator>::iterator_category> ||
+                std::is_same_v<std::random_access_iterator_tag,
+                               typename std::iterator_traits<typename In::const_iterator>::iterator_category>
 #if __cplusplus >= 202002L
-                || std::is_same_v<std::contiguous_iterator_tag, typename In::const_iterator::iterator_category>
+                ||
+                std::is_same_v<std::contiguous_iterator_tag, typename std::iterator_traits<typename In::const_iterator>::iterator_category>
 #endif
   ) {
     return !in.empty() ? std::optional<T>{*(std::prev(in.end()))} : std::nullopt;
@@ -308,10 +311,11 @@ template <typename In, typename Out> //
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out take_right(const In &in, size_t n) {
-  static_assert(std::is_same_v<std::bidirectional_iterator_tag, typename In::const_iterator::iterator_category> ||
-                    std::is_same_v<std::random_access_iterator_tag, typename In::const_iterator::iterator_category>
+  static_assert(
+      std::is_same_v<std::bidirectional_iterator_tag, typename std::iterator_traits<typename In::const_iterator>::iterator_category> ||
+          std::is_same_v<std::random_access_iterator_tag, typename std::iterator_traits<typename In::const_iterator>::iterator_category>
 #if __cplusplus >= 202002L
-                    || std::is_same_v<std::contiguous_iterator_tag, typename In::const_iterator::iterator_category>
+          || std::is_same_v<std::contiguous_iterator_tag, typename std::iterator_traits<typename In::const_iterator>::iterator_category>
 #endif
                 ,
                 "iterator does not meet a minimum of the BidirectionalIterator requirement");
@@ -326,10 +330,11 @@ template <typename In, typename Out> //
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out drop_right(const In &in, size_t n) {
-  static_assert(std::is_same_v<std::bidirectional_iterator_tag, typename In::const_iterator::iterator_category> ||
-                    std::is_same_v<std::random_access_iterator_tag, typename In::const_iterator::iterator_category>
+  static_assert(
+      std::is_same_v<std::bidirectional_iterator_tag, typename std::iterator_traits<typename In::const_iterator>::iterator_category> ||
+          std::is_same_v<std::random_access_iterator_tag, typename std::iterator_traits<typename In::const_iterator>::iterator_category>
 #if __cplusplus >= 202002L
-                    || std::is_same_v<std::contiguous_iterator_tag, typename In::const_iterator::iterator_category>
+          || std::is_same_v<std::contiguous_iterator_tag, typename std::iterator_traits<typename In::const_iterator>::iterator_category>
 #endif
                 ,
                 "iterator does not meet a minimum of the BidirectionalIterator requirement");

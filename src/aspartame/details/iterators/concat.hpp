@@ -6,9 +6,9 @@ namespace aspartame::details {
 
 template <typename Iter1, //
           typename Iter2, //
-          typename T = typename Iter1::value_type>
+          typename T = typename details::value_type_of_t<Iter1>>
 class concat_iterator : public fwd_iterator<concat_iterator<Iter1, Iter2, T>, T> {
-  static_assert(std::is_same_v<T, typename std::iterator_traits<Iter2>::value_type>, //
+  static_assert(std::is_same_v<T, typename details::value_type_of_t<Iter2>>, //
                 "Iterators must be of the same value type");
   Iter1 it1, end1;
   Iter2 it2, end2;

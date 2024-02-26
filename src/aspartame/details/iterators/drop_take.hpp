@@ -10,7 +10,7 @@ enum class drop_take_iterator_mode : uint8_t { drop_while_true, take_while_true 
 template <drop_take_iterator_mode Mode,
           typename InputIterator, //
           typename Predicate,     //
-          typename T = typename InputIterator::value_type>
+          typename T = typename details::value_type_of_t<InputIterator>>
 class drop_take_iterator : public fwd_iterator<drop_take_iterator<Mode, InputIterator, Predicate, T>, T> {
   InputIterator it, end;
   ca_optional<Predicate> p;

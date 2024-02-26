@@ -7,7 +7,7 @@ namespace aspartame::details {
 
 template <typename InputIterator, //
           typename Function,      //
-          typename U = std::decay_t<typename std::invoke_result_t<Function, typename InputIterator::value_type>>>
+          typename U = std::decay_t<typename std::invoke_result_t<Function, typename details::value_type_of_t<InputIterator>>>>
 class map_iterator : public fwd_iterator<map_iterator<InputIterator, Function, U>, U> {
   InputIterator it, end;
   ca_optional<Function> f;

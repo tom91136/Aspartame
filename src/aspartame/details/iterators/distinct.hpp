@@ -22,7 +22,7 @@ template <class F> struct Equal {
 
 template <typename InputIterator, //
           typename Function,      //
-          typename T = typename InputIterator::value_type>
+          typename T = typename details::value_type_of_t<InputIterator>>
 class distinct_iterator : public fwd_iterator<distinct_iterator<InputIterator, Function, T>, T> {
   InputIterator it, end;
   ca_optional<Function> f;

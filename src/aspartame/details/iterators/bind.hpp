@@ -6,7 +6,7 @@ namespace aspartame::details {
 
 template <typename OuterIterator, //
           typename Function,      //
-          typename InnerRange = typename std::invoke_result_t<Function, typename OuterIterator::value_type>,
+          typename InnerRange = typename std::invoke_result_t<Function, typename details::value_type_of_t<OuterIterator>>,
           typename U = typename InnerRange::value_type>
 class bind_iterator : public fwd_iterator<bind_iterator<OuterIterator, Function, InnerRange, U>, U> {
   struct State {

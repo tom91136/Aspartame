@@ -7,7 +7,7 @@ namespace aspartame::details {
 
 template <typename InputIterator, //
           typename Predicate,     //
-          typename T = typename InputIterator::value_type>
+          typename T = typename details::value_type_of_t<InputIterator>>
 class filter_iterator : public fwd_iterator<filter_iterator<InputIterator, Predicate, T>, T> {
   InputIterator it, end;
   ca_optional<Predicate> p;

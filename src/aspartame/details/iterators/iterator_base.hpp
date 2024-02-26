@@ -1,9 +1,12 @@
 #pragma once
 
+#include <iterator>
 #include <memory>
 #include <optional>
 
 namespace aspartame::details {
+
+template <typename T> using value_type_of_t = typename std::iterator_traits<T>::value_type;
 
 template <typename T> class ca_optional {
   std::optional<T> storage;

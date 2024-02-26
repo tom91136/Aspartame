@@ -9,7 +9,7 @@ namespace aspartame::details {
 
 template <typename InputIterator,                          //
           template <typename...> typename C,               //
-          typename T = typename InputIterator::value_type, //
+          typename T = typename details::value_type_of_t<InputIterator>, //
           typename W = C<typename std::deque<T>::const_iterator>>
 class sliding_iterator : public fwd_iterator<sliding_iterator<InputIterator, C, T, W>, W> {
   InputIterator it, end;
