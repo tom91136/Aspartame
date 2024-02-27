@@ -723,6 +723,36 @@ TEST_CASE(TPE_NAME "_indent", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+#ifndef DISABLE_STARTS_WITH
+TEST_CASE(TPE_NAME "_starts_with", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("abcde" ^ starts_with("abcde")) == true);
+  CHECK(("abcde" ^ starts_with("ab")) == true);
+  CHECK(("abcde" ^ starts_with("de")) == false);
+  CHECK(("" ^ starts_with("")) == true);
+  CHECK(("A" ^ starts_with("a")) == false);
+  CHECK(("A" ^ starts_with("A")) == true);
+  CHECK(("" ^ starts_with("a")) == false);
+  CHECK(("a" ^ starts_with("")) == true);
+
+  CHECK(("abcde"_w ^ starts_with("a"_w)) == true);
+}
+#endif
+
+#ifndef DISABLE_ENDS_WITH
+TEST_CASE(TPE_NAME "_ends_with", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("abcde" ^ ends_with("abcde")) == true);
+  CHECK(("abcde" ^ ends_with("ab")) == false);
+  CHECK(("abcde" ^ ends_with("de")) == true);
+  CHECK(("" ^ ends_with("")) == true);
+  CHECK(("A" ^ ends_with("a")) == false);
+  CHECK(("A" ^ ends_with("A")) == true);
+  CHECK(("" ^ ends_with("a")) == false);
+  CHECK(("a" ^ ends_with("")) == true);
+
+  CHECK(("abcde"_w ^ ends_with("a"_w)) == false);
+}
+#endif
+
 #ifndef DISABLE_TO_UPPER
 TEST_CASE(TPE_NAME "_to_upper", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ to_upper()) == "ABCDE");

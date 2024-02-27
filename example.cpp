@@ -74,7 +74,7 @@ int main() {
 
   std::cout << xxx.has_value() <<"\n";
 
-  std::cout << (foo ^ get<long>()).value() <<"\n";
+  std::cout << (foo ^ get<int>()).value() <<"\n";
 
 
   foo ^ foreach_partial(  [](std::string s){

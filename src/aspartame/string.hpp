@@ -412,6 +412,18 @@ template <typename C, typename NewLine> //
 }
 
 template <typename C, typename String> //
+[[nodiscard]] /*constexpr*/ auto starts_with(const std::basic_string<C> &in, const String &that, tag = {}) {
+  auto that_ = static_cast<std::basic_string<C>>(that);
+  return in.size() >= that_.size() && in.compare(0, that_.size(), that_) == 0;
+}
+
+template <typename C, typename String> //
+[[nodiscard]] /*constexpr*/ auto ends_with(const std::basic_string<C> &in, const String &that, tag = {}) {
+  auto that_ = static_cast<std::basic_string<C>>(that);
+  return in.size() >= that_.size() && in.compare(in.size() - that_.size(), that_.size(), that_) == 0;
+}
+
+template <typename C, typename String> //
 [[nodiscard]] /*constexpr*/ auto contains_ignore_case(const std::basic_string<C> &in, const String &that, tag = {}) {
   std::basic_string<C> in_lower = in, that_lower = static_cast<std::basic_string<C>>(that);
   std::transform(in_lower.begin(), in_lower.end(), in_lower.begin(), [](auto &&x) { return std::tolower(x); });

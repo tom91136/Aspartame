@@ -468,6 +468,16 @@ template <typename NewLine>                                          //
 }
 // std::string, std::string-> std::string
 template <typename String> //
+[[nodiscard]] constexpr auto starts_with(const String &that) {
+  return [&](auto &&o) { return starts_with(o, that, tag{}); };
+}
+// std::string, std::string-> std::string
+template <typename String> //
+[[nodiscard]] constexpr auto ends_with(const String &that) {
+  return [&](auto &&o) { return ends_with(o, that, tag{}); };
+}
+// std::string, std::string-> std::string
+template <typename String> //
 [[nodiscard]] constexpr auto contains_ignore_case(const String &that) {
   return [&](auto &&o) { return contains_ignore_case(o, that, tag{}); };
 }
