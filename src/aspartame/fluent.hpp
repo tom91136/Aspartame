@@ -372,6 +372,38 @@ template <typename K, typename V> //
   return [&](auto &&o) { return get_or_default(o, key, default_value, tag{}); };
 }
 
+// ====== [variant only] ======
+
+// std::variant<T...>, T -> T
+template <typename T> //
+[[nodiscard]] constexpr auto get() {
+  return [&](auto &&o) { return get<T>(o, tag{}); };
+}
+
+// std::variant<T...>, ...(T -> U) -> U
+template <typename... Function> //
+[[nodiscard]] constexpr auto fold_total(Function &&...functions) {
+  return [&](auto &&o) { return fold_total(tag{}, o, functions...); };
+}
+
+// std::variant<T...>, ...(T -> U) -> U
+template <typename... Function> //
+[[nodiscard]] constexpr auto fold_partial(Function &&...functions) {
+  return [&](auto &&o) { return fold_partial(tag{}, o, functions...); };
+}
+
+// std::variant<T...>, ...(T -> void) -> void
+template <typename... Function> //
+[[nodiscard]] constexpr auto foreach_total(Function &&...functions) {
+  return [&](auto &&o) { return foreach_total(tag{}, o, functions...); };
+}
+
+// std::variant<T...>, ...(T -> void) -> void
+template <typename... Function> //
+[[nodiscard]] constexpr auto foreach_partial(Function &&...functions) {
+  return [&](auto &&o) { return foreach_partial(tag{}, o, functions...); };
+}
+
 // ====== [optional only] ======
 
 // std::optional<T>, (T -> U), (() -> U) -> U

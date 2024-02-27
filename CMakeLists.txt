@@ -65,6 +65,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
 
                 test/test_view_custom_ptr_iterator.cpp
 
+                test/test_variant.cpp
                 test/test_vector.cpp
                 test/test_optional.cpp
                 test/test_list.cpp

@@ -9,6 +9,7 @@
 #include "src/aspartame/unordered_set.hpp"
 #include "src/aspartame/vector.hpp"
 #include "src/aspartame/view.hpp"
+#include "src/aspartame/variant.hpp"
 
 #include <iostream>
 #include <list>
@@ -16,6 +17,7 @@
 #include <memory>
 #include <set>
 #include <utility>
+#include <variant>
 
 #include "src/aspartame/fluent.hpp"
 
@@ -52,6 +54,33 @@ int main() {
     std::cout << row << " = " << (values | mk_string(", ", [](auto k, auto v) { return k + ":" + v; })) << "\n";
   }
 
+
+  std::variant<int, std::string> foo{"a"};
+
+  auto m = foo ^ fold_total([](int s){
+    std::cout << s<<"\n";
+    return 42;
+  }, [](std::string s){
+    std::cout << s<<"\n";
+    return 0;
+  } );
+
+  auto xxx = foo ^ fold_partial(  [](std::string s){
+                     std::cout << s<<"\n";
+                     return 0;
+                   } );
+
+  std::cout << m <<"\n";
+
+  std::cout << xxx.has_value() <<"\n";
+
+  std::cout << (foo ^ get<long>()).value() <<"\n";
+
+
+  foo ^ foreach_partial(  [](std::string s){
+               std::cout << s<<"\n";
+             } );
+
   return 0;
 
   auto U = std::optional{std::tuple<int, int>{42, 43}};
@@ -63,6 +92,7 @@ int main() {
   static_assert(std::is_same_v<decltype(xs.begin().operator*()), int &>);
 
   static_assert(is_iterable<decltype(xs)>, "a");
+
 
   auto vvv = xs | append(1) | concat(xs) | to_vector();
   for (auto &x : vvv) {

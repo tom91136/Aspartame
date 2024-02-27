@@ -10,3 +10,4 @@
 #include "aspartame/unordered_set.hpp"
 #include "aspartame/vector.hpp"
 #include "aspartame/view.hpp"
+#include "aspartame/variant.hpp"
