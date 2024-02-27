@@ -117,6 +117,9 @@ template <typename T> constexpr bool has_rbegin<T, std::void_t<decltype(std::dec
 template <typename T, typename = void> constexpr bool has_rend = false;
 template <typename T> constexpr bool has_rend<T, std::void_t<decltype(std::declval<T>().rend())>> = true;
 
+template <typename T, typename = void> constexpr bool has_const_iterator = false;
+template <typename T> constexpr bool has_const_iterator<T, std::void_t<typename T::const_iterator>> = true;
+
 } // namespace details
 
 } // namespace aspartame

@@ -136,7 +136,9 @@ template <typename Iterable, //
           typename = std::enable_if_t<is_iterable<Iterable> && !is_view<Iterable>>>
 auto operator|(Iterable &&l, const Op &r) {
   if constexpr (!std::is_rvalue_reference_v<Iterable &&>) return r(view(l.begin(), l.end()));
-  else return r(view<typename Iterable::const_iterator, owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))));
+  else if constexpr (details::has_const_iterator<Iterable>)
+    return r(view<typename Iterable::const_iterator, owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))));
+  else return r(view<decltype(l.begin()), owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))));
 }
 
 // == container
