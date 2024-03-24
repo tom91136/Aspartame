@@ -318,7 +318,8 @@ template <typename C, typename Accumulator, typename Function> //
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto sliding(const std::basic_string<C> &in, size_t size, size_t step, tag = {}) {
   if (size == 0 || step == 0)
-    throw std::range_error("cannot apply windowing with zero size or step, size=" + std::to_string(size) = " step=" + std::to_string(step));
+    details::raise<std::range_error>("cannot apply windowing with zero size or step, size=" + std::to_string(size) =
+                                         " step=" + std::to_string(step));
   if (in.empty()) return std::vector<std::basic_string<C>>{};
   if (in.length() <= size) return std::vector<std::basic_string<C>>{in};
   std::vector<std::basic_string<C>> ys;

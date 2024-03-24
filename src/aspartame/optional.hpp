@@ -354,7 +354,8 @@ template <typename C, typename Accumulator, typename Function> //
 template <typename C> //
 [[nodiscard]] constexpr auto sliding(const std::optional<C> &in, size_t size, size_t step, tag={}) -> std::optional<std::optional<C>> {
   if (size == 0 || step == 0)
-    throw std::range_error("cannot apply windowing with zero size or step, size=" + std::to_string(size) = " step=" + std::to_string(step));
+    details::raise<std::range_error>("cannot apply windowing with zero size or step, size=" + std::to_string(size) =
+                                         " step=" + std::to_string(step));
   return in ? std::optional<std::optional<C>>{*in} : std::optional<std::optional<C>>{std::nullopt};
 }
 

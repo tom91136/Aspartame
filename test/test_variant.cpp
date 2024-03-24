@@ -20,6 +20,36 @@ TEST_CASE("std::variant_get") {
   CHECK((v ^ get<Foo>()) == Foo{42});
 }
 
+TEST_CASE("std::variant_fold_total_return_unique_ptr") {
+  std::variant<std::unique_ptr<Foo>, int> v{1};
+  CHECK(*(v ^ fold_total([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); },
+                         [](int x) { return std::make_unique<std::string>(std::to_string(x)); })) == "1");
+  v = std::make_unique<Foo>(42);
+  CHECK(*(v ^ fold_total([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); },
+                         [](int x) { return std::make_unique<std::string>(std::to_string(x)); })) == "42");
+}
+
+TEST_CASE("std::variant_fold_partial_return_unique_ptr") {
+  std::variant<std::unique_ptr<Foo>, int> v{1};
+  CHECK((v ^ fold_partial([](int x) { return std::make_unique<std::string>(std::to_string(x)); }) ^
+         map([](const auto &x) { return *x; })) == //
+        "1");
+  CHECK((v ^ fold_partial([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); })) == //
+        std::nullopt);
+
+  v = std::make_unique<Foo>(42);
+  CHECK((v ^ fold_partial([](int x) { return std::make_unique<std::string>(std::to_string(x)); })) == std::nullopt);
+  CHECK((v ^ fold_partial([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); }) ^
+         map([](const auto &x) { return *x; })) == "42");
+}
+
+TEST_CASE("std::variant_fold_total_unique_ptr") {
+  std::variant<std::unique_ptr<Foo>, int> v{1};
+  CHECK((v ^ fold_total([](const std::unique_ptr<Foo> &x) { return x->value; }, [](int x) { return x; })) == 1);
+  v = std::make_unique<Foo>(42);
+  CHECK((v ^ fold_total([](const std::unique_ptr<Foo> &x) { return x->value; }, [](int x) { return x; })) == 42);
+}
+
 TEST_CASE("std::variant_fold_total") {
   std::variant<Foo, int, std::string> v{1};
   CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s) -> int { return s.length(); })) ==

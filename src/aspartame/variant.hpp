@@ -76,13 +76,13 @@ template <bool total, typename... Cs, typename... Fs> //
   ([&]() -> bool {
     using T = std::decay_t<arg1_t<Fs>>;
     if (std::holds_alternative<T>(o)) {
-      r = f(std::get<T>(o));
+      r = std::move(f(std::get<T>(o)));
       return true;
     }
     return false;
   }() || ...);
-  if constexpr (total) return *r;
-  else return r;
+  if constexpr (total) return std::move(*r);
+  else return  (r);
 }
 } // namespace
 

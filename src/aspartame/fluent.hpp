@@ -205,6 +205,14 @@ template <typename Container> //
 [[nodiscard]] constexpr auto index_of_slice(const Container &other) {
   return [&](auto &&o) { return index_of_slice(o, other, tag{}); };
 }
+// Container<T>, Container<T> -> std::optional<size_t>
+template <typename Container> //
+[[nodiscard]] constexpr auto index_of_slice_maybe(const Container &other) {
+  return [&](auto &&o) -> std::optional<size_t> {
+    if (auto idx = index_of_slice(o, other, tag{}); idx != -1) return idx;
+    else return std::nullopt;
+  };
+}
 // Container<T>, Container<T> -> bool
 template <typename Container> //
 [[nodiscard]] constexpr auto contains_slice(const Container &other) {
@@ -214,6 +222,14 @@ template <typename Container> //
 template <typename T> //
 [[nodiscard]] constexpr auto index_of(const T &t) {
   return [&](auto &&o) { return index_of(o, t, tag{}); };
+}
+// Container<T>, T -> std::optional<size_t>
+template <typename T> //
+[[nodiscard]] constexpr auto index_of_maybe(const T &t) {
+  return [&](auto &&o) -> std::optional<size_t> {
+    if (auto idx = index_of(o, t, tag{}); idx != -1) return idx;
+    else return std::nullopt;
+  };
 }
 // Container<T>, T -> bool
 template <typename T> //
@@ -230,6 +246,14 @@ template <typename Predicate> //
 template <typename Predicate> //
 [[nodiscard]] constexpr auto index_where(Predicate &&predicate) {
   return [&](auto &&o) { return index_where(o, predicate, tag{}); };
+}
+// Container<T>, (T -> bool) -> std::optional<size_t>
+template <typename Predicate> //
+[[nodiscard]] constexpr auto index_where_maybe(Predicate &&predicate) {
+  return [&](auto &&o) -> std::optional<size_t> {
+    if (auto idx = index_where(o, predicate, tag{}); idx != -1) return idx;
+    else return std::nullopt;
+  };
 }
 // Container<T> -> Container<std::pair<T, size_t>>
 template <typename N = size_t>                            //
@@ -386,7 +410,7 @@ template <typename... Function> //
   return [&](auto &&o) { return fold_total(tag{}, o, functions...); };
 }
 
-// std::variant<T...>, ...(T -> U) -> U
+// std::variant<T...>, ...(T -> U) -> std::optional<U>
 template <typename... Function> //
 [[nodiscard]] constexpr auto fold_partial(Function &&...functions) {
   return [&](auto &&o) { return fold_partial(tag{}, o, functions...); };

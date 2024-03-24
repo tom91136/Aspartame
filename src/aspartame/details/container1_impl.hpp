@@ -165,6 +165,12 @@ template <typename In, typename Predicate> //
   else return std::optional<typename In::value_type>{*it};
 }
 
+template <typename In, typename T> //
+[[nodiscard]] constexpr auto contains(const In &in, const T &t) {
+  if constexpr (is_set_like_impl<In>) return in.find(t) != in.end();
+  else return std::find(in.begin(), in.end(), t) != in.end();
+}
+
 template <typename In, typename Function> //
 [[nodiscard]] constexpr auto reduce(const In &in, Function f) {
   using T = typename In::value_type;

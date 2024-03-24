@@ -199,9 +199,9 @@ template <typename In, template <typename...> typename Out> //
   size_t idx = 1;
   for (auto it = std::next(in.begin()); it != in.end(); ++it, ++idx) {
     if (it->size() != cols)
-      throw std::length_error("cannot transposed a non-square (i.e all nested contains must share the same size) nested container"
-                              ": container at [" +
-                              std::to_string(idx) + "] has size of " + std::to_string(it->size()) + " but [0] is " + std::to_string(cols));
+      details::raise<std::length_error>("cannot transposed a non-square (i.e all nested contains must share the same size) nested container"
+                                        ": container at [" +
+                                        std::to_string(idx) + "] has size of " + std::to_string(it->size()) + " but [0] is " + std::to_string(cols));
   }
 
   Out<Out<T>> ys;
@@ -393,7 +393,8 @@ template <typename In, template <typename...> typename Out> //
   using T = typename In::value_type;
 
   if (size == 0 || step == 0)
-    throw std::range_error("cannot apply windowing with zero size or step, size=" + std::to_string(size) = " step=" + std::to_string(step));
+    details::raise<std::range_error>("cannot apply windowing with zero size or step, size=" + std::to_string(size) =
+                                         " step=" + std::to_string(step));
   if (in.empty()) return Out<Out<T>>{};
   if (in.size() <= size) return Out<Out<T>>{in};
 

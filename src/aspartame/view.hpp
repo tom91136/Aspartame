@@ -228,6 +228,11 @@ template <typename C, typename Storage, typename Predicate> //
   return details::container1::find<view<C, Storage>, Predicate>(in, predicate);
 }
 
+template <typename C, typename Storage, typename T> //
+[[nodiscard]] constexpr auto contains(const view<C, Storage> &in, const T &t, tag = {}) {
+  return details::container1::contains<view<C, Storage>, T>(in, t);
+}
+
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto reduce(const view<C, Storage> &in, Function &&function, tag = {}) {
   return details::container1::reduce<view<C, Storage>, Function>(in, function);
@@ -329,11 +334,6 @@ template <typename C, typename Storage, typename Container> //
 template <typename C, typename Storage, typename T> //
 [[nodiscard]] constexpr auto index_of(const view<C, Storage> &in, const T &t, tag = {}) {
   return details::sequence1::index_of<view<C, Storage>>(in, t);
-}
-
-template <typename C, typename Storage, typename T> //
-[[nodiscard]] constexpr auto contains(const view<C, Storage> &in, const T &t, tag = {}) {
-  return details::sequence1::index_of<view<C, Storage>>(in, t) != -1;
 }
 
 template <typename C, typename Storage, typename Predicate> //

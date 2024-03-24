@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdio>
 #include <functional>
 #include <optional>
 #include <tuple>
@@ -30,6 +31,12 @@ template <typename, typename = void> constexpr bool is_map_like_impl = false;
 template <typename T>
 constexpr bool is_map_like_impl<T, std::void_t<typename T::key_type, typename T::mapped_type,
                                                decltype(std::declval<T &>()[std::declval<const typename T::key_type &>()])>> = true;
+
+template <typename, typename = void> constexpr bool is_set_like_impl = false;
+template <typename T>
+constexpr bool is_set_like_impl<T, std::void_t<typename T::key_type, typename T::value_type,
+                                               decltype(std::declval<T &>().emplace(std::declval<const typename T::value_type &&>()))>> =
+    true;
 
 template <typename T, typename = void> constexpr bool is_hashable_impl = false;
 template <typename T> constexpr bool is_hashable_impl<T, std::void_t<decltype(std::declval<std::hash<T>>()(std::declval<T>()))>> = true;
@@ -119,6 +126,15 @@ template <typename T> constexpr bool has_rend<T, std::void_t<decltype(std::declv
 
 template <typename T, typename = void> constexpr bool has_const_iterator = false;
 template <typename T> constexpr bool has_const_iterator<T, std::void_t<typename T::const_iterator>> = true;
+
+template <typename E, typename M> [[noreturn]] void raise(const M &message) {
+#if __cpp_exceptions == 199711
+  throw E(message);
+#else
+  std::fprintf(stderr, "%s\n", message.c_str());
+  std::abort();
+#endif
+}
 
 } // namespace details
 

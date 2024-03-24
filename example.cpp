@@ -27,9 +27,23 @@ class Foo {
   Foo(Foo &&) = delete;
 };
 
-int main() {
+class Foo2 {
+public:
+  explicit Foo2(int x) : value(x) { static_assert(!std::is_default_constructible_v<Foo2>); }
+  Foo2() = delete;
+  int value;
+  bool operator==(const Foo2 &rhs) const { return value == rhs.value; }
+  bool operator<(const Foo2 &rhs) const { return value < rhs.value; }
+};
 
+int main() {
   using namespace aspartame;
+
+  std::variant<std::unique_ptr<Foo2>, int> v{1};
+   (v ^ fold_total([](const std::unique_ptr<Foo2> &x) { return "x->value"; }, [](int x) { return "a"; })) ;
+  v = std::make_unique<Foo2>(1);
+   (v ^ fold_total([](const std::unique_ptr<Foo2> &x) { return "x->value"; }, [](int x) { return "a"; })) ;
+
 
   auto csv = R"(
     SensorID,Day1,Day2,Day3

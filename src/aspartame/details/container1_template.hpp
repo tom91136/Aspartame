@@ -84,6 +84,11 @@ template <typename C, typename Predicate> //
   return details::container1::find<ASPARTAME_IN_TYPE1(C), Predicate>(in, predicate);
 }
 
+template <typename C, typename T> //
+[[nodiscard]] constexpr auto contains(const ASPARTAME_IN_TYPE1(C) & in, const T &t, tag = {}) {
+  return details::container1::contains<ASPARTAME_IN_TYPE1(C)>(in, t);
+}
+
 template <typename C, typename Function> //
 [[nodiscard]] constexpr auto reduce(const ASPARTAME_IN_TYPE1(C) & in, Function &&function, tag = {}) {
   return details::container1::reduce<ASPARTAME_IN_TYPE1(C), Function>(in, function);

@@ -280,25 +280,6 @@ TEST_CASE(TPE_NAME "_index_of", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
-#ifndef DISABLE_CONTAINS
-TEST_CASE(TPE_NAME "_contains", "[" TPE_NAME "][" TPE_GROUP "]") {
-  RUN_CHECK(int, bool, "", {4, 2, 3, 1, 5}, true, [](auto &&xs) { return xs OP_ contains(4); });
-  RUN_CHECK(int, bool, "", {1}, true, [](auto &&xs) { return xs OP_ contains(1); });
-  RUN_CHECK(int, bool, "", {1}, false, [](auto &&xs) { return xs OP_ contains(0); });
-  RUN_CHECK(int, bool, "", {}, false, [](auto &&xs) { return xs OP_ contains(1); });
-
-  RUN_CHECK(string, bool, "", {"banana", "cherry", "apple"}, true, [](auto &&xs) { return xs OP_ contains("banana"); });
-  RUN_CHECK(string, bool, "", {"apple"}, true, [](auto &&xs) { return xs OP_ contains("apple"); });
-  RUN_CHECK(string, bool, "", {"apple"}, false, [](auto &&xs) { return xs OP_ contains("banana"); });
-  RUN_CHECK(string, bool, "", {}, false, [](auto &&xs) { return xs OP_ contains("apple"); });
-
-  RUN_CHECK(Foo, bool, "", {Foo(3), Foo(2), Foo(1)}, true, [](auto &&xs) { return xs OP_ contains(Foo(3)); });
-  RUN_CHECK(Foo, bool, "", {Foo(1)}, true, [](auto &&xs) { return xs OP_ contains(Foo(1)); });
-  RUN_CHECK(Foo, bool, "", {Foo(1)}, false, [](auto &&xs) { return xs OP_ contains(Foo(2)); });
-  RUN_CHECK(Foo, bool, "", {}, false, [](auto &&xs) { return xs OP_ contains(Foo(1)); });
-}
-#endif
-
 #ifndef DISABLE_FIND_LAST
 TEST_CASE(TPE_NAME "_find_last", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(int, std::optional<int>, "", {4, 2, 3, 8, 1}, {8},

@@ -63,11 +63,6 @@ template <typename C, typename T> //
   return details::sequence1::index_of<ASPARTAME_IN_TYPE1(C)>(in, t);
 }
 
-template <typename C, typename T> //
-[[nodiscard]] constexpr auto contains(const ASPARTAME_IN_TYPE1(C) & in, const T &t, tag = {}) {
-  return details::sequence1::index_of<ASPARTAME_IN_TYPE1(C)>(in, t) != -1;
-}
-
 template <typename C, typename Predicate> //
 [[nodiscard]] constexpr auto find_last(const ASPARTAME_IN_TYPE1(C) & in, Predicate &&predicate, tag = {}) {
   return details::sequence1::find_last<ASPARTAME_IN_TYPE1(C), Predicate>(in, predicate);
