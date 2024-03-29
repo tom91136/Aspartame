@@ -3,11 +3,6 @@
 #include <array>
 
 #include "details/base.hpp"
-// #include "vector.hpp"
-
-#ifdef ASPARTAME_FINALISED
-  #error "This header must be included before aspartame/fluent.hpp"
-#endif
 
 #define ASPARTAME_ARRAY(T, op, ...)                                                                                                        \
   if constexpr (is_array<T>) { return array_##op(__VA_ARGS__); }

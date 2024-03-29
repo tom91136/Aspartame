@@ -357,14 +357,14 @@ template <typename C> //
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto to_upper(const std::basic_string<C> &in, tag = {}) {
   std::basic_string<C> out(in.length(), char());
-  std::transform(in.begin(), in.end(), out.begin(), [](auto &&x) { return std::toupper(x); });
+  std::transform(in.begin(), in.end(), out.begin(), [](auto &&x) { return static_cast<C>(std::toupper(x)); });
   return out;
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto to_lower(const std::basic_string<C> &in, tag = {}) {
   std::basic_string<C> out(in.length(), char());
-  std::transform(in.begin(), in.end(), out.begin(), [](auto &&x) { return std::tolower(x); });
+  std::transform(in.begin(), in.end(), out.begin(), [](auto &&x) { return static_cast<C>(std::tolower(x)); });
   return out;
 }
 
@@ -427,8 +427,8 @@ template <typename C, typename String> //
 template <typename C, typename String> //
 [[nodiscard]] /*constexpr*/ auto contains_ignore_case(const std::basic_string<C> &in, const String &that, tag = {}) {
   std::basic_string<C> in_lower = in, that_lower = static_cast<std::basic_string<C>>(that);
-  std::transform(in_lower.begin(), in_lower.end(), in_lower.begin(), [](auto &&x) { return std::tolower(x); });
-  std::transform(that_lower.begin(), that_lower.end(), that_lower.begin(), [](auto &&x) { return std::tolower(x); });
+  std::transform(in_lower.begin(), in_lower.end(), in_lower.begin(), [](auto &&x) { return static_cast<C>(std::tolower(x)); });
+  std::transform(that_lower.begin(), that_lower.end(), that_lower.begin(), [](auto &&x) { return static_cast<C>(std::tolower(x)); });
   return in_lower.find(that_lower) != std::basic_string<C>::npos;
 }
 

@@ -40,9 +40,9 @@ int main() {
   using namespace aspartame;
 
   std::variant<std::unique_ptr<Foo2>, int> v{1};
-   (v ^ fold_total([](const std::unique_ptr<Foo2> &x) { return "x->value"; }, [](int x) { return "a"; })) ;
+   (v ^ fold_total([](const std::unique_ptr<Foo2> &) { return "x->value"; }, [](int) { return "a"; })) ;
   v = std::make_unique<Foo2>(1);
-   (v ^ fold_total([](const std::unique_ptr<Foo2> &x) { return "x->value"; }, [](int x) { return "a"; })) ;
+   (v ^ fold_total([](const std::unique_ptr<Foo2> &) { return "x->value"; }, [](int) { return "a"; })) ;
 
 
   auto csv = R"(

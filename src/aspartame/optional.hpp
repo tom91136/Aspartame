@@ -392,13 +392,14 @@ template <typename C, typename U> //
   }
 }
 
-#define ASPARTAME_IN_TYPE1(T) std::basic_string<T>
-#define ASPARTAME_IN_TYPE2(K, V) std::basic_string<std::pair<K, V>>
+} // namespace aspartame
+
+
+#define ASPARTAME_IN_TYPE1(T) std::optional<T>
+#define ASPARTAME_IN_TYPE2(K, V) std::optional<std::pair<K, V>>
 
 #include "details/nop/map_template.hpp"
 #include "details/nop/string_template.hpp"
 
 #undef ASPARTAME_IN_TYPE2
 #undef ASPARTAME_IN_TYPE1
-
-} // namespace aspartame

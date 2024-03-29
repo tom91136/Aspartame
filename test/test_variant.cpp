@@ -52,26 +52,26 @@ TEST_CASE("std::variant_fold_total_unique_ptr") {
 
 TEST_CASE("std::variant_fold_total") {
   std::variant<Foo, int, std::string> v{1};
-  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s) -> int { return s.length(); })) ==
+  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s)  { return int(s.length()); })) ==
         1);
   v = "aaa";
-  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s) -> int { return s.length(); })) ==
+  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s)  { return int(s.length()); })) ==
         3);
   v = Foo{42};
-  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s) -> int { return s.length(); })) ==
+  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s)  { return int(s.length()); })) ==
         42);
 }
 
 TEST_CASE("std::variant_fold_partial") {
   std::variant<Foo, int, std::string> v{1};
   CHECK((v ^ fold_partial([](Foo x) { return x.value; }, [](int x) { return x; },
-                          [](const std::string &s) -> int { return s.length(); })) == 1);
+                          [](const std::string &s) { return static_cast<int>(s.length()); })) == 1);
   v = "aaa";
   CHECK((v ^ fold_partial([](Foo x) { return x.value; }, [](int x) { return x; },
-                          [](const std::string &s) -> int { return s.length(); })) == 3);
+                          [](const std::string &s) { return static_cast<int>(s.length()); })) == 3);
   v = Foo{42};
   CHECK((v ^ fold_partial([](Foo x) { return x.value; }, [](int x) { return x; },
-                          [](const std::string &s) -> int { return s.length(); })) == 42);
+                          [](const std::string &s) { return static_cast<int>(s.length()); })) == 42);
 
   v = 1;
   CHECK((v ^ fold_partial([](Foo x) { return x.value; })) == std::nullopt);

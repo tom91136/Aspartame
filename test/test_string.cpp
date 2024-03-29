@@ -54,12 +54,12 @@ TEST_CASE(TPE_NAME "_concat", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_MAP
 TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
-  CHECK(("abc" ^ map([](auto c) { return toupper(c); })) == "ABC");
-  CHECK(("XYZ" ^ map([](auto c) { return tolower(c); })) == "xyz");
-  CHECK(("123" ^ map([](auto c) { return c + 1; })) == "234");
-  CHECK(("" ^ map([](auto c) { return toupper(c); })) == "");
+  CHECK(("abc" ^ map([](auto c) { return static_cast<char>(toupper(c)); })) == "ABC");
+  CHECK(("XYZ" ^ map([](auto c) { return static_cast<char>(tolower(c)); })) == "xyz");
+  CHECK(("123" ^ map([](auto c) { return static_cast<char>(c + 1); })) == "234");
+  CHECK(("" ^ map([](auto c) { return static_cast<char>(toupper(c)); })) == "");
 
-  CHECK(("abc"_w ^ map([](auto c) { return toupper(c); })) == "ABC"_w);
+  CHECK(("abc"_w ^ map([](auto c) { return static_cast<char>(toupper(c)); })) == "ABC"_w);
 }
 #endif
 
@@ -67,7 +67,7 @@ TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
 TEST_CASE(TPE_NAME "_collect", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc123" ^ collect([](auto c) { return isalpha(c) ? optional<char>{c} : std::nullopt; })) == "abc");
   CHECK(("Hello, World!" ^ collect([](auto c) { return isdigit(c) ? optional<char>{c} : std::nullopt; })) == "");
-  CHECK(("a1b2c3" ^ collect([](auto c) { return isdigit(c) ? optional<char>{toupper(c)} : std::nullopt; })) == "123");
+  CHECK(("a1b2c3" ^ collect([](auto c) { return isdigit(c) ? optional{static_cast<char>(toupper(c))} : std::nullopt; })) == "123");
   CHECK(("" ^ collect([](auto c) { return optional<char>{c}; })) == "");
 
   CHECK(("abc123"_w ^ collect([](auto c) { return isalpha(c) ? optional<wchar_t>{c} : std::nullopt; })) == "abc"_w);
@@ -89,7 +89,7 @@ TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
 TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("123" ^ bind([](auto c) { return string(2, c); })) == "112233");
   CHECK(("123" ^ bind([](auto) { return ""; })) == "");
-  CHECK(("abc" ^ bind([](auto c) { return string(1, toupper(c)); })) == "ABC");
+  CHECK(("abc" ^ bind([](auto c) { return string(1, static_cast<char>(std::toupper(c))); })) == "ABC");
   CHECK(("" ^ bind([](auto c) { return string(2, c); })) == "");
 
   CHECK(("123"_w ^ bind([](auto c) { return wstring(2, c); })) == "112233"_w);
@@ -176,7 +176,7 @@ TEST_CASE(TPE_NAME "_find", "[" TPE_NAME "][" TPE_GROUP "]") {
 TEST_CASE(TPE_NAME "_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcd" ^ reduce([](auto a, auto b) { return std::min(a, b); })).value() == 'a');
   CHECK(("1234" ^ reduce([](auto a, auto b) { return std::max(a, b); })).value() == '4');
-  CHECK(("" ^ reduce([](auto a, auto b) { return a + b; })).has_value() == false);
+  CHECK(("" ^ reduce([](auto a, auto b) { return static_cast<char>(a + b); })).has_value() == false);
 
   CHECK(("abcd"_w ^ reduce([](auto a, auto b) { return std::min(a, b); })).value() == 'a');
 }

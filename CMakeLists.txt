@@ -33,7 +33,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
             URL_HASH SHA1=ce9613c9b25803a5b052fb75b71a6e14f1e95eb8
     )
     if (MSVC)
-        set(ASPARTAME_COMPILE_FLAGS /bigobj)
+        set(ASPARTAME_COMPILE_FLAGS /bigobj /W4)
     else ()
         set(ASPARTAME_COMPILE_FLAGS
                 #        -Wno-unused-parameter
