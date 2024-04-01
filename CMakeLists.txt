@@ -62,6 +62,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
                 test/test_view_collect.cpp
                 test/test_view_concat.cpp
                 test/test_view_ownership.cpp
+                test/test_view_factory.cpp
 
                 test/test_view_custom_ptr_iterator.cpp
 

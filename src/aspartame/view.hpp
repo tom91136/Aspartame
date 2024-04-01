@@ -105,25 +105,24 @@ template <typename T, typename F> auto iterate(T &&init, F &&next) { //
   return view<details::iterate_iterator<std::decay_t<T>, F>, non_owning>({init, next});
 }
 
-template <typename N> auto iota(N &&from_inclusive) { //
-  auto next = [](auto &&x) { return x + 1; };
+template <typename N> auto iota(const N &from_inclusive) { //
+  auto next = [](auto &x) { return x + 1; };
   return view<details::iterate_iterator<std::decay_t<N>, decltype(next)>, non_owning>({from_inclusive, next});
 }
 
-template <typename N> auto iota(N &&from_inclusive, N &&to_exclusive) { //
-  auto v = iota<N>(from_inclusive);
-  return v | view(v, details::slice_iterator(v.begin(), v.end(), 0, to_exclusive));
+template <typename N> auto iota(const N &from_inclusive, const N &to_exclusive) { //
+  return iota<N>(from_inclusive) | take(to_exclusive);
 }
 
-template <typename N> auto exclusive(N &&from_inclusive, N &&step, N &&to_exclusive) { //
-  auto next = [=](auto &&x) { return x + step; };
-  auto v = view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next});
-  return v | view(v, details::slice_iterator(v.begin(), v.end(), 0, to_exclusive));
-}
-
-template <typename N> auto inclusive(N &&from_inclusive, N &&step, N &&to_inclusive) { //
-  return exclusive(from_inclusive, step, to_inclusive + 1);
-}
+// TODO
+//template <typename N> auto exclusive(const N &from_inclusive, const N &step, const N &to_exclusive) { //
+//  auto next = [=](auto &x) { return x + step; };
+//  return view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next}) | take_while([&](auto x) { return x < to_exclusive; });
+//}
+//
+//template <typename N> auto inclusive(const N &from_inclusive, const N &step, const N &to_inclusive) { //
+//  return exclusive(from_inclusive, step, to_inclusive + 1);
+//}
 
 namespace details {
 template <typename> constexpr bool is_view_impl = false;
