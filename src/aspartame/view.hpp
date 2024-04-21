@@ -97,7 +97,7 @@ template <typename C, typename Storage, typename Iter> auto make_unique_view(vie
 }
 } // namespace details
 
-template <typename T, typename F> auto repeat(T &&t) { //
+template <typename T> auto repeat(T &&t) { //
   auto next = [](auto &&x) { return x; };
   return view<details::iterate_iterator<std::decay_t<T>, decltype(next)>, non_owning>({t, next});
 }
