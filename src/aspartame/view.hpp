@@ -106,24 +106,25 @@ template <typename T, typename F> auto iterate(T &&init, F &&next) { //
   return view<details::iterate_iterator<std::decay_t<T>, F>, non_owning>({init, next});
 }
 
-template <typename N> auto iota(const N &from_inclusive) { //
+template <typename N> auto iota(const N &origin) { //
   auto next = [](auto &x) { return x + 1; };
-  return view<details::iterate_iterator<std::decay_t<N>, decltype(next)>, non_owning>({from_inclusive, next});
+  return view<details::iterate_iterator<std::decay_t<N>, decltype(next)>, non_owning>({origin, next});
 }
 
-template <typename N> auto iota(const N &from_inclusive, const N &to_exclusive) { //
-  return iota<N>(from_inclusive) | take(to_exclusive);
+template <typename N> auto iota(const N &origin, const N &count) { //
+  return iota<N>(origin) | take(count);
 }
 
-// TODO
-//template <typename N> auto exclusive(const N &from_inclusive, const N &step, const N &to_exclusive) { //
-//  auto next = [=](auto &x) { return x + step; };
-//  return view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next}) | take_while([&](auto x) { return x < to_exclusive; });
-//}
-//
-//template <typename N> auto inclusive(const N &from_inclusive, const N &step, const N &to_inclusive) { //
-//  return exclusive(from_inclusive, step, to_inclusive + 1);
-//}
+template <typename N> auto exclusive(const N &from_inclusive, const N &to_exclusive, const N &step = 1) { //
+  if (step == N{}) details::raise<std::range_error>("step cannot be empty (0)");
+  auto next = [=](auto &&x) { return x + step; };
+  return view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next}) |
+         take_while(std::move([=](auto &&x) { return x < to_exclusive; }));
+}
+
+template <typename N> auto inclusive(const N &from_inclusive, const N &to_inclusive, const N &step = 1) { //
+  return exclusive(from_inclusive, to_inclusive + 1, step);
+}
 
 namespace details {
 template <typename> constexpr bool is_view_impl = false;
@@ -163,28 +164,28 @@ template <typename C, typename Storage, typename Container> //
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto map(view<C, Storage> &in, Function &&function, tag = {}) {
-  auto applied = [&](auto &&x) { return details::ap(function, x); };
+  auto applied = [function](auto &&x) { return details::ap(function, x); };
   return details::make_unique_view( //
       in, details::map_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto collect(view<C, Storage> &in, Function &&function, tag = {}) {
-  auto applied = [&](auto &&x) { return details::ap(function, x); };
+  auto applied = [function](auto &&x) { return details::ap(function, x); };
   return details::make_unique_view( //
       in, details::collect_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto filter(view<C, Storage> &in, Predicate &&predicate, tag = {}) {
-  auto applied = [&](auto &&x) { return details::ap(predicate, x); };
+  auto applied = [predicate](auto &&x) { return details::ap(predicate, x); };
   return details::make_unique_view( //
       in, details::filter_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto bind(view<C, Storage> &in, Function &&function, tag = {}) {
-  auto applied = [&](auto &&x) { return details::ap(function, x); };
+  auto applied = [function](auto &&x) { return details::ap(function, x); };
   return details::make_unique_view( //
       in, details::bind_iterator(in.begin(), in.end(), applied));
 }
@@ -198,7 +199,7 @@ template <typename C, typename Storage> //
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto distinct_by(view<C, Storage> &in, Function &&function, tag = {}) {
-  auto applied = [&](auto &&x) { return details::ap(function, x); };
+  auto applied = [function](auto &&x) { return details::ap(function, x); };
   return details::make_unique_view( //
       in, details::distinct_iterator(in.begin(), in.end(), applied));
 }
@@ -240,7 +241,7 @@ template <typename C, typename Storage, typename Function> //
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto tap_each(view<C, Storage> &in, Function &&function, tag = {}) {
-  auto applied = [&](auto &&x) { details::ap(function, x); };
+  auto applied = [function](auto &&x) { details::ap(function, x); };
   return details::make_unique_view( //
       in, details::tap_each_iterator(in.begin(), in.end(), applied));
 }
@@ -253,8 +254,8 @@ template <typename C, typename Storage, typename Function> //
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto partition(view<C, Storage> &in, Predicate &&predicate, tag = {}) {
   return details::use_shared(in.storage, [&](auto &&s) {
-    return std::pair{view(s, details::filter_iterator(in.begin(), in.end(), [&](auto &&x) { return details::ap(predicate, x); })),
-                     view(s, details::filter_iterator(in.begin(), in.end(), [&](auto &&x) { return !details::ap(predicate, x); }))};
+    return std::pair{view(s, details::filter_iterator(in.begin(), in.end(), [predicate](auto &&x) { return details::ap(predicate, x); })),
+                     view(s, details::filter_iterator(in.begin(), in.end(), [predicate](auto &&x) { return !details::ap(predicate, x); }))};
   });
 }
 
@@ -429,7 +430,7 @@ template <typename C, typename Storage> //
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto take_while(view<C, Storage> &in, Predicate &&predicate, tag = {}) {
-  auto applied = [&](auto &&x) { return details::ap(predicate, x); };
+  auto applied = [predicate](auto &&x) { return details::ap(predicate, x); };
   return details::make_unique_view( //
       in,
       details::drop_take_iterator<details::drop_take_iterator_mode::take_while_true, C, decltype(applied)>(in.begin(), in.end(), applied));
@@ -437,7 +438,7 @@ template <typename C, typename Storage, typename Predicate> //
 
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto drop_while(view<C, Storage> &in, Predicate &&predicate, tag = {}) {
-  auto applied = [&](auto &&x) { return details::ap(predicate, x); };
+  auto applied = [predicate](auto &&x) { return details::ap(predicate, x); };
   return details::make_unique_view( //
       in,
       details::drop_take_iterator<details::drop_take_iterator_mode::drop_while_true, C, decltype(applied)>(in.begin(), in.end(), applied));
@@ -477,7 +478,7 @@ template <typename C, typename Storage> //
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto map_keys(view<C, Storage> &in, Function &&function, tag = {}) {
   static_assert(is_pair<typename details::value_type_of_t<C>>, "map_keys operation requires a pair for the value type");
-  auto applied = [&](auto &&x) { return details::ap(function, x.first); };
+  auto applied = [function](auto &&x) { return details::ap(function, x.first); };
   return details::make_unique_view( //
       in, details::map_iterator(in.begin(), in.end(), applied));
 }
@@ -485,7 +486,7 @@ template <typename C, typename Storage, typename Function> //
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto map_values(view<C, Storage> &in, Function &&function, tag = {}) {
   static_assert(is_pair<typename details::value_type_of_t<C>>, "map_values operation requires a pair for the value type");
-  auto applied = [&](auto &&x) { return details::ap(function, x.second); };
+  auto applied = [function](auto &&x) { return details::ap(function, x.second); };
   return details::make_unique_view( //
       in, details::map_iterator(in.begin(), in.end(), applied));
 }

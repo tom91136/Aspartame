@@ -28,19 +28,18 @@ TEST_CASE("std::variant_fold_total_return_unique_ptr") {
   CHECK(*(v ^ fold_total([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); },
                          [](int x) { return std::make_unique<std::string>(std::to_string(x)); })) == "42");
 }
-
 TEST_CASE("std::variant_fold_partial_return_unique_ptr") {
   std::variant<std::unique_ptr<Foo>, int> v{1};
-  CHECK((v ^ fold_partial([](int x) { return std::make_unique<std::string>(std::to_string(x)); }) ^
-         map([](const auto &x) { return *x; })) == //
-        "1");
-  CHECK((v ^ fold_partial([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); })) == //
-        std::nullopt);
+  CHECK(((v ^ fold_partial([](int x) { return std::make_unique<std::string>(std::to_string(x)); }) ^
+          map([](const auto &x) { return *x; })) == //
+         "1"));
+  CHECK(((v ^ fold_partial([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); })) == //
+         std::nullopt));
 
   v = std::make_unique<Foo>(42);
-  CHECK((v ^ fold_partial([](int x) { return std::make_unique<std::string>(std::to_string(x)); })) == std::nullopt);
-  CHECK((v ^ fold_partial([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); }) ^
-         map([](const auto &x) { return *x; })) == "42");
+  CHECK(((v ^ fold_partial([](int x) { return std::make_unique<std::string>(std::to_string(x)); })) == std::nullopt));
+  CHECK(((v ^ fold_partial([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); }) ^
+          map([](const auto &x) { return *x; })) == "42"));
 }
 
 TEST_CASE("std::variant_fold_total_unique_ptr") {
@@ -52,13 +51,13 @@ TEST_CASE("std::variant_fold_total_unique_ptr") {
 
 TEST_CASE("std::variant_fold_total") {
   std::variant<Foo, int, std::string> v{1};
-  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s)  { return int(s.length()); })) ==
+  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s) { return int(s.length()); })) ==
         1);
   v = "aaa";
-  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s)  { return int(s.length()); })) ==
+  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s) { return int(s.length()); })) ==
         3);
   v = Foo{42};
-  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s)  { return int(s.length()); })) ==
+  CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const std::string &s) { return int(s.length()); })) ==
         42);
 }
 
