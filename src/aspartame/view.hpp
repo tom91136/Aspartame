@@ -280,6 +280,11 @@ template <typename C, typename Storage> //
   return std::vector<typename view<C, Storage>::value_type>{in.begin(), in.end()};
 }
 
+template <template <typename...> typename Cs, typename C, typename Storage> //
+[[nodiscard]] constexpr auto to(const view<C, Storage> &in, tag = {}) {
+  return Cs<typename view<C, Storage>::value_type>{in.begin(), in.end()};
+}
+
 // == sequence
 
 template <typename C, typename Storage, typename T> //

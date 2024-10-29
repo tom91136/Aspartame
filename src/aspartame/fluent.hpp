@@ -165,6 +165,11 @@ template <typename Function> //
 [[nodiscard]] constexpr auto to_vector() { //
   return [&](auto &&o) { return to_vector(o, tag{}); };
 }
+// Container<T>, C -> C<T>
+// Container<K, V> C -> C<K, V>
+template <template<  typename ...> typename C> [[nodiscard]] constexpr auto to() { //
+  return [&](auto &&o) { return to<C>(o, tag{}); };
+}
 
 // ====== [sequence only] ======
 

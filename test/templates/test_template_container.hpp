@@ -897,3 +897,22 @@ TEST_CASE(TPE_NAME "_to_vector", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(Foo, std::vector<Foo>, "", {}, {}, op);
 }
 #endif
+
+#ifndef DISABLE_TO
+TEST_CASE(TPE_NAME "_to", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ to<std::vector>(); };
+
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, std::vector<int>, "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}, op);
+  RUN_CHECK(string, std::vector<string>, "", {"banana", "cherry", "apple"}, {"banana", "cherry", "apple"}, op);
+  RUN_CHECK(Foo, std::vector<Foo>, "", {Foo(3), Foo(2), Foo(1)}, {Foo(3), Foo(2), Foo(1)}, op);
+  #endif
+
+  RUN_CHECK(int, std::vector<int>, "", {1}, {1}, op);
+  RUN_CHECK(int, std::vector<int>, "", {}, {}, op);
+  RUN_CHECK(string, std::vector<string>, "", {"apple"}, {"apple"}, op);
+  RUN_CHECK(string, std::vector<string>, "", {}, {}, op);
+  RUN_CHECK(Foo, std::vector<Foo>, "", {Foo(1)}, {Foo(1)}, op);
+  RUN_CHECK(Foo, std::vector<Foo>, "", {}, {}, op);
+}
+#endif

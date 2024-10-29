@@ -185,6 +185,11 @@ template <typename C> //
   return o ? std::vector<C>{*o} : std::vector<C>{};
 }
 
+template <template <typename...> typename Cs, typename C> //
+[[nodiscard]] constexpr auto to(const std::optional<C>  & o, tag = {}) {
+  return o ? Cs<C>{*o} : std::vector<C>{};
+}
+
 // =======
 
 template <typename C, typename T> //

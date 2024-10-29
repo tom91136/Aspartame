@@ -277,6 +277,15 @@ TEST_CASE(TPE_NAME "_to_vector", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+#ifndef DISABLE_TO
+TEST_CASE(TPE_NAME "_to", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("abcd" ^ to<std::list>()) == std::list<char>{'a', 'b', 'c', 'd'});
+  CHECK(("" ^ to<std::list>()) == std::list<char>{});
+
+  CHECK(("abcd"_w ^ to<std::list>()) == std::list<wchar_t>{'a', 'b', 'c', 'd'});
+}
+#endif
+
 // sequence...
 
 #ifndef DISABLE_PREPEND

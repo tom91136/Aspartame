@@ -44,6 +44,9 @@ template <typename T> constexpr bool is_hashable_impl<T, std::void_t<decltype(st
 template <typename T, typename = void> constexpr bool is_comparable_impl = false;
 template <typename T> constexpr bool is_comparable_impl<T, std::void_t<decltype(std::declval<T &>() == std::declval<T &>())>> = true;
 
+template <template <typename...> class, typename, typename = void> constexpr bool is_unary_instantiable = false;
+template <template <typename...> class C, typename T> constexpr bool is_unary_instantiable<C, T, std::void_t<C<T>>> = true;
+
 template <typename T> constexpr bool is_supported = false;
 
 } // namespace details
@@ -57,7 +60,10 @@ template <typename T> constexpr bool is_map_like = details::is_map_like_impl<std
 template <typename T> constexpr bool is_hashable = details::is_hashable_impl<std::decay_t<T>>;
 template <typename T> constexpr bool is_comparable = details::is_comparable_impl<std::decay_t<T>>;
 
-struct tag{};
+template <template <typename...> class C, typename T>
+constexpr bool is_unary_instantiable = details::is_unary_instantiable<C, std::decay_t<T>>;
+
+struct tag {};
 
 namespace details {
 

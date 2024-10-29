@@ -131,4 +131,10 @@ template <typename C> //
   else return std::vector<C>{in.begin(), in.end()};
 }
 
+template <template <typename...> typename Cs, typename C> //
+[[nodiscard]] constexpr auto to(const ASPARTAME_IN_TYPE1(C) & in, tag = {}) {
+  if constexpr (std::is_same_v<ASPARTAME_IN_TYPE1(C), std::decay_t<Cs<C>>>) return in;
+  else return Cs<C>{in.begin(), in.end()};
+}
+
 } // namespace aspartame

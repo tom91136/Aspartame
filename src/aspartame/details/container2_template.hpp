@@ -112,4 +112,17 @@ template <typename K, typename V> //
   return std::vector<std::pair<K, V>>{in.begin(), in.end()};
 }
 
+template <template <typename...> typename C, typename K, typename V> //
+[[nodiscard]] constexpr auto to(const ASPARTAME_IN_TYPE2(K, V) & in, tag = {}) {
+  if constexpr (std::is_same_v<ASPARTAME_IN_TYPE2(K, V), std::decay_t<C<K, V>>>) return in;
+  else {
+    using T = std::pair<K, V>;
+    if constexpr (is_unary_instantiable<C, T>) { // use std::pair if the principal arity is 1
+      return C<T>{in.begin(), in.end()};
+    } else {
+      return C<K, V>{in.begin(), in.end()};
+    }
+  }
+}
+
 } // namespace aspartame

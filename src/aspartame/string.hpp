@@ -7,7 +7,6 @@
 
 #include <string>
 
-
 namespace aspartame {
 namespace details {
 template <typename T> constexpr bool is_basic_string_impl = false;
@@ -158,6 +157,12 @@ template <typename C> //
 [[nodiscard]] /*constexpr*/ auto to_vector(const std::basic_string<C> &in, tag = {}) {
   if constexpr (is_vector<std::basic_string<C>>) return in;
   else return std::vector<C>{in.begin(), in.end()};
+}
+
+template <template <typename...> typename Cs, typename C> //
+[[nodiscard]] /*constexpr*/ auto to(const std::basic_string<C> &in, tag = {}) {
+  if constexpr (is_vector<std::basic_string<C>>) return in;
+  else return Cs<C>{in.begin(), in.end()};
 }
 
 // sequence
