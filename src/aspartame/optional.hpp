@@ -186,8 +186,13 @@ template <typename C> //
 }
 
 template <template <typename...> typename Cs, typename C> //
-[[nodiscard]] constexpr auto to(const std::optional<C>  & o, tag = {}) {
-  return o ? Cs<C>{*o} : std::vector<C>{};
+[[nodiscard]] constexpr auto to(const std::optional<C> &o, tag = {}) {
+  if constexpr (is_pair<C> && !is_unary_instantiable<Cs, C>) {
+    using Cs2 = Cs<typename C::first_type, typename C::second_type>;
+    return o ? Cs2{*o} : Cs2{};
+  } else {
+    return o ? Cs<C>{*o} : Cs<C>{};
+  }
 }
 
 // =======

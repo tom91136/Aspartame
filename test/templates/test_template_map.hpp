@@ -685,8 +685,8 @@ TEST_CASE(TPE_NAME "_to_vector", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
-#ifndef DISABLE_TO
-TEST_CASE(TPE_NAME "_to", "[" TPE_NAME "][" TPE_GROUP "]") {
+#ifndef DISABLE_TO_BINARY
+TEST_CASE(TPE_NAME "_to_binary", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto op = [](auto &&xs) { return xs OP_ to<std::map>(); };
 
   using IntM = std::map<int, int>;

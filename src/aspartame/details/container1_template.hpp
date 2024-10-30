@@ -133,8 +133,14 @@ template <typename C> //
 
 template <template <typename...> typename Cs, typename C> //
 [[nodiscard]] constexpr auto to(const ASPARTAME_IN_TYPE1(C) & in, tag = {}) {
-  if constexpr (std::is_same_v<ASPARTAME_IN_TYPE1(C), std::decay_t<Cs<C>>>) return in;
-  else return Cs<C>{in.begin(), in.end()};
+  if constexpr (is_unary_instantiable<Cs, C>) {
+    if constexpr (std::is_same_v<ASPARTAME_IN_TYPE1(C), std::decay_t<Cs<C>>>) return in;
+    else return Cs<C>{in.begin(), in.end()};
+  } else if constexpr (is_pair<C>) {
+    return Cs<typename C::first_type, typename C::second_type>{in.begin(), in.end()};
+  } else {
+    return Cs<C>{in.begin(), in.end()};
+  }
 }
 
 } // namespace aspartame

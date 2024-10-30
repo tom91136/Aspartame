@@ -282,7 +282,12 @@ template <typename C, typename Storage> //
 
 template <template <typename...> typename Cs, typename C, typename Storage> //
 [[nodiscard]] constexpr auto to(const view<C, Storage> &in, tag = {}) {
-  return Cs<typename view<C, Storage>::value_type>{in.begin(), in.end()};
+  using T = typename view<C, Storage>::value_type;
+  if constexpr (is_pair<T> && !is_unary_instantiable<Cs, T>) {
+    return Cs<typename T::first_type, typename T::second_type>{in.begin(), in.end()};
+  } else {
+    return Cs<T>{in.begin(), in.end()};
+  }
 }
 
 // == sequence

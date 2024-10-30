@@ -30,7 +30,7 @@ TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(Foo, string, "", {Foo(1)}, "Foo(1)", customOp);
   RUN_CHECK(Foo, string, "", {}, "", customOp);
 
-  auto customOp2 = [](auto &&xs) { return xs OP_ mk_string("[" ,", ", "]"); };
+  auto customOp2 = [](auto &&xs) { return xs OP_ mk_string("[", ", ", "]"); };
   RUN_CHECK(int, string, "", {4, 2, 3, 1, 5}, "[4, 2, 3, 1, 5]", customOp2);
   RUN_CHECK(int, string, "", {1}, "[1]", customOp2);
   RUN_CHECK(int, string, "", {}, "[]", customOp2);
@@ -898,8 +898,8 @@ TEST_CASE(TPE_NAME "_to_vector", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
-#ifndef DISABLE_TO
-TEST_CASE(TPE_NAME "_to", "[" TPE_NAME "][" TPE_GROUP "]") {
+#ifndef DISABLE_TO_UNARY
+TEST_CASE(TPE_NAME "_to_unary", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto op = [](auto &&xs) { return xs OP_ to<std::vector>(); };
 
   #ifdef TPE_MANY_INIT
@@ -914,5 +914,32 @@ TEST_CASE(TPE_NAME "_to", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(string, std::vector<string>, "", {}, {}, op);
   RUN_CHECK(Foo, std::vector<Foo>, "", {Foo(1)}, {Foo(1)}, op);
   RUN_CHECK(Foo, std::vector<Foo>, "", {}, {}, op);
+}
+#endif
+
+#ifndef DISABLE_TO_BINARY
+TEST_CASE(TPE_NAME "_to_binary", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ to<std::map>(); };
+
+  using IntP = std::pair<int, int>;
+  using StringP = std::pair<string, string>;
+  using StringFooP = std::pair<string, Foo>;
+
+  using IntM = std::map<int, int>;
+  using StringM = std::map<string, string>;
+  using StringFooM = std::map<string, Foo>;
+
+
+  RUN_CHECK(IntP, IntM, "", {{1, 4}, {2, 2}, {3, 3}}, {{1, 4}, {2, 2}, {3, 3}}, op);
+  RUN_CHECK(StringP, StringM, "", {{"banana", "B"}, {"cherry", "C"}, {"apple", "A"}}, {{"apple", "A"}, {"banana", "B"}, {"cherry", "C"}},
+            op);
+  RUN_CHECK(StringFooP, StringFooM, "", {{"apple", Foo(1)}, {"banana", Foo(2)}}, {{"apple", Foo(1)}, {"banana", Foo(2)}}, op);
+
+  RUN_CHECK(IntP, IntM, "", {{1, 1}}, {{1, 1}}, op);
+  RUN_CHECK(IntP, IntM, "", {}, {}, op);
+  RUN_CHECK(StringP, StringM, "", {{"apple", "A"}}, {{"apple", "A"}}, op);
+  RUN_CHECK(StringP, StringM, "", {}, {}, op);
+  RUN_CHECK(StringFooP, StringFooM, "", {{"apple", Foo(1)}}, {{"apple", Foo(1)}}, op);
+  RUN_CHECK(StringFooP, StringFooM, "", {}, {}, op);
 }
 #endif
