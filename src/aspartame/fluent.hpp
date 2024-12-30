@@ -60,6 +60,21 @@ template <typename Function> //
 [[nodiscard]] constexpr auto map(Function &&function) {
   return [&](auto &&o) { return map(o, function, tag{}); };
 }
+// Container<T>, U -> Container<U>
+// Container<K, V> U -> Container<K, U>
+template <typename U> [[nodiscard]] constexpr auto static_as() { //
+  return [&](auto &&o) { return map(o, [](auto &&x) { return static_cast<U>(x); }, tag{}); };
+}
+// Container<T>, U -> Container<U>
+// Container<K, V> U -> Container<K, U>
+template <typename U> [[nodiscard]] constexpr auto reinterpret_as() { //
+  return [&](auto &&o) { return map(o, [](auto &&x) { return reinterpret_cast<U>(x); }, tag{}); };
+}
+// Container<T>, U -> Container<U>
+// Container<K, V> U -> Container<K, U>
+template <typename U> [[nodiscard]] constexpr auto const_as() { //
+  return [&](auto &&o) { return map(o, [](auto &&x) { return const_cast<U>(x); }, tag{}); };
+}
 // OUT_MUT ITER
 // Container<T>, (T -> std::optional<U>) -> Container<U>
 // Map<K, V>, ((K, V) -> std::optional<std::pair<L, W>>) -> Map<L, W>
@@ -167,7 +182,7 @@ template <typename Function> //
 }
 // Container<T>, C -> C<T>
 // Container<K, V> C -> C<K, V>
-template <template<  typename ...> typename C> [[nodiscard]] constexpr auto to() { //
+template <template <typename...> typename C> [[nodiscard]] constexpr auto to() { //
   return [&](auto &&o) { return to<C>(o, tag{}); };
 }
 

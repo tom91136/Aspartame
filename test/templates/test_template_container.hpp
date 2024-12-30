@@ -1,6 +1,7 @@
 #include <functional>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "../test_base_container1.hpp"
@@ -143,6 +144,66 @@ TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
   };
   p3("spread", [](auto &&xs) { return xs OP_ map([](auto x0, auto x1, auto x2) { return x0 + x1 + x2; }); });
   p3("single", [](auto &&xs) { return xs OP_ map([](auto x) { return get<0>(x) + get<1>(x) + get<2>(x); }); });
+}
+#endif
+
+#ifndef DISABLE_STATIC_AS
+TEST_CASE(TPE_NAME "_static_as", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto intOp = [](auto &&xs) { return xs OP_ static_as<size_t>(); };
+  auto strOp = [](auto &&xs) { return xs OP_ static_as<MyString>(); };
+  auto fooOp = [](auto &&xs) { return xs OP_ static_as<MyFoo>(); };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, TPE_CTOR_OUT(size_t), "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}, intOp);
+  RUN_CHECK(string, TPE_CTOR_OUT(MyString), "", {"banana", "cherry", "apple"}, //
+            {MyString("banana"), MyString("cherry"), MyString("apple")}, strOp);
+  RUN_CHECK(Foo, TPE_CTOR_OUT(MyFoo), "", {Foo(3), Foo(2), Foo(1)}, {MyFoo(Foo{3}), MyFoo(Foo{2}), MyFoo(Foo{1})}, fooOp);
+  #endif
+
+  RUN_CHECK(int, TPE_CTOR_OUT(size_t), "", {1}, {1}, intOp);
+  RUN_CHECK(int, TPE_CTOR_OUT(size_t), "", {}, {}, intOp);
+  RUN_CHECK(string, TPE_CTOR_OUT(MyString), "", {"apple"}, {MyString("apple")}, strOp);
+  RUN_CHECK(string, TPE_CTOR_OUT(MyString), "", {}, {}, strOp);
+  RUN_CHECK(Foo, TPE_CTOR_OUT(MyFoo), "", {Foo(1)}, {MyFoo{Foo(1)}}, fooOp);
+  RUN_CHECK(Foo, TPE_CTOR_OUT(MyFoo), "", {}, {}, fooOp);
+}
+#endif
+
+#ifndef DISABLE_CONST_AS
+TEST_CASE(TPE_NAME "_const_as", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto intOp = [](auto &&xs) { return xs OP_ const_as<int *>(); };
+  auto strOp = [](auto &&xs) { return xs OP_ const_as<string *>(); };
+  auto fooOp = [](auto &&xs) { return xs OP_ const_as<Foo *>(); };
+
+  auto i = new int(4);
+  auto s = new string("a");
+  auto f = new Foo(42);
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(const int *, TPE_CTOR_OUT(int *), "", {i, i, i}, {i, i, i}, intOp);
+  RUN_CHECK(const string *, TPE_CTOR_OUT(string *), "", {s, s, s}, {s, s, s}, strOp);
+  RUN_CHECK(const Foo *, TPE_CTOR_OUT(Foo *), "", {f, f, f}, {f, f, f}, fooOp);
+  #endif
+
+  RUN_CHECK(const int *, TPE_CTOR_OUT(int *), "", {i}, {i}, intOp);
+  RUN_CHECK(const int *, TPE_CTOR_OUT(int *), "", {}, {}, intOp);
+  RUN_CHECK(const string *, TPE_CTOR_OUT(string *), "", {s}, {s}, strOp);
+  RUN_CHECK(const string *, TPE_CTOR_OUT(string *), "", {}, {}, strOp);
+  RUN_CHECK(const Foo *, TPE_CTOR_OUT(Foo *), "", {f}, {f}, fooOp);
+  RUN_CHECK(const Foo *, TPE_CTOR_OUT(Foo *), "", {}, {}, fooOp);
+  delete i;
+  delete s;
+  delete f;
+}
+#endif
+
+#ifndef DISABLE_CONST_AS
+TEST_CASE(TPE_NAME "_reinterpret_as", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ reinterpret_as<const char *>() OP_ static_as<string>(); };
+  auto i = new int('*' | ('\0' << 8));
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(int *, TPE_CTOR_OUT(string), "", {i, i, i}, {"*", "*", "*"}, op);
+  #endif
+  RUN_CHECK(int *, TPE_CTOR_OUT(string), "", {i}, {"*"}, op);
+  delete i;
 }
 #endif
 
@@ -928,7 +989,6 @@ TEST_CASE(TPE_NAME "_to_binary", "[" TPE_NAME "][" TPE_GROUP "]") {
   using IntM = std::map<int, int>;
   using StringM = std::map<string, string>;
   using StringFooM = std::map<string, Foo>;
-
 
   RUN_CHECK(IntP, IntM, "", {{1, 4}, {2, 2}, {3, 3}}, {{1, 4}, {2, 2}, {3, 3}}, op);
   RUN_CHECK(StringP, StringM, "", {{"banana", "B"}, {"cherry", "C"}, {"apple", "A"}}, {{"apple", "A"}, {"banana", "B"}, {"cherry", "C"}},

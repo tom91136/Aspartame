@@ -12,7 +12,6 @@
 #include <vector>
 
 using std::get, std::string, std::to_string;
-namespace {
 class Foo {
 public:
   explicit Foo(int x) : value(x) { static_assert(!std::is_default_constructible_v<Foo>); }
@@ -22,20 +21,50 @@ public:
   bool operator<(const Foo &rhs) const { return value < rhs.value; }
 };
 
-std::ostream &operator<<(std::ostream &os, const Foo &foo) {
+inline std::ostream &operator<<(std::ostream &os, const Foo &foo) {
   os << "Foo(" << foo.value << ")";
   return os;
 }
 
-} // namespace
+struct MyString {
+  std::string value;
+  MyString(std::string value) : value(std::move(value)) {} // NOLINT(*-explicit-constructor)
+  MyString() = delete;
+  bool operator==(const MyString &rhs) const { return value == rhs.value; }
+  bool operator<(const MyString &rhs) const { return value < rhs.value; }
+};
+
+inline std::ostream &operator<<(std::ostream &os, const MyString &foo) {
+  os << "MyString(" << foo.value << ")";
+  return os;
+}
+
+struct MyFoo {
+  Foo value;
+  MyFoo(const Foo &value) : value(value) {} // NOLINT(*-explicit-constructor)
+  MyFoo() = delete;
+  bool operator==(const MyFoo &rhs) const { return value == rhs.value; }
+  bool operator<(const MyFoo &rhs) const { return value < rhs.value; }
+};
+
+inline std::ostream &operator<<(std::ostream &os, const MyFoo &foo) {
+  os << "MyFoo(" << foo.value << ")";
+  return os;
+}
 
 namespace std {
 template <> struct hash<Foo> {
-  size_t operator()(const Foo &foo) const noexcept {
-    // Use std::hash to hash the member 'value'
-    return std::hash<int>()(foo.value);
-  }
+  size_t operator()(const Foo &foo) const noexcept { return std::hash<int>()(foo.value); }
 };
+
+template <> struct hash<MyString> {
+  size_t operator()(const MyString &foo) const noexcept { return std::hash<std::string>()(foo.value); }
+};
+
+template <> struct hash<MyFoo> {
+  size_t operator()(const MyFoo &foo) const noexcept { return std::hash<Foo>()(foo.value); }
+};
+
 template <class Tuple, std::size_t Index = std::tuple_size<Tuple>::value - 1> struct HashValueImpl {
   static void apply(size_t &seed, const Tuple &tuple) {
     HashValueImpl<Tuple, Index - 1>::apply(seed, tuple);
