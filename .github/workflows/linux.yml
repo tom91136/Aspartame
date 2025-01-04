@@ -102,6 +102,10 @@ jobs:
         working-directory: ${{runner.workspace}}
         run: cmake --build build --target all
 
-      - name: Run tests
+      - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}
-        run: ./build/test
+        run: ./build/test_20
+
+      - name: Run CXX17 tests
+        working-directory: ${{runner.workspace}}
+        run: ./build/test_17

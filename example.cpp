@@ -88,7 +88,7 @@ int main() {
 
   std::cout << xxx.has_value() <<"\n";
 
-  std::cout << (foo ^ get<int>()).value() <<"\n";
+  std::cout << (foo ^ get_maybe<int>()).value() <<"\n";
 
 
   foo ^ foreach_partial(  [](std::string s){
@@ -160,7 +160,7 @@ int main() {
   auto mm = std::unordered_map<int, int>{{2, 1}, {3, 2}};
   for (auto [k, v] : mm | map([](auto x, auto y) {
                        return std::pair{x + x, y + 1};
-                     }) | bind([](auto x) {
+                     }) | flat_map([](auto x) {
                        return std::vector{x, x};
                      }) | distinct_by([](auto x, auto ) { return x; })
 
