@@ -154,40 +154,31 @@ TEST_CASE(TPE_NAME "_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
 TEST_CASE(TPE_NAME "_index_of_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   #ifdef TPE_MANY_INIT
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 0, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){}); });
-  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 0, [](auto &&xs) {
-    return xs OP_ index_of_slice(TPE_CTOR_IN(int){4, 2});
-  });
-  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 2, [](auto &&xs) {
-    return xs OP_ index_of_slice(TPE_CTOR_IN(int){3, 1});
-  });
-  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, -1, [](auto &&xs) {
-    return xs OP_ index_of_slice(TPE_CTOR_IN(int){1, 2});
-  });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 0,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){4, 2}); });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, 2,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){3, 1}); });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, -1,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){1, 2}); });
   RUN_CHECK(int, std::make_signed_t<size_t>, "", {4, 2, 3, 1, 5}, -1, [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(int){6}); });
   RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, 0,
             [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){}); });
-  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, 0, [](auto &&xs) {
-    return xs OP_ index_of_slice(TPE_CTOR_IN(string){"banana", "cherry"});
-  });
-  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, 1, [](auto &&xs) {
-    return xs OP_ index_of_slice(TPE_CTOR_IN(string){"cherry", "apple"});
-  });
-  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, -1, [](auto &&xs) {
-    return xs OP_ index_of_slice(TPE_CTOR_IN(string){"apple", "banana"});
-  });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, 0,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"banana", "cherry"}); });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, 1,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"cherry", "apple"}); });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, -1,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"apple", "banana"}); });
   RUN_CHECK(string, std::make_signed_t<size_t>, "", {"banana", "cherry", "apple"}, -1,
             [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(string){"pear"}); });
   RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 0,
             [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){}); });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 0, [](auto &&xs) {
-    return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(3), Foo(2)});
-  });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 1, [](auto &&xs) {
-    return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(2), Foo(1)});
-  });
-  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, -1, [](auto &&xs) {
-    return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(1), Foo(3)});
-  });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 0,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(3), Foo(2)}); });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, 1,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(2), Foo(1)}); });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, -1,
+            [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(1), Foo(3)}); });
   RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(3), Foo(2), Foo(1)}, -1,
             [](auto &&xs) { return xs OP_ index_of_slice(TPE_CTOR_IN(Foo){Foo(4)}); });
   #endif
@@ -220,27 +211,21 @@ TEST_CASE(TPE_NAME "_contains_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(int, bool, "", {4, 2, 3, 1, 5}, false, [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(int){1, 2}); });
   RUN_CHECK(int, bool, "", {4, 2, 3, 1, 5}, false, [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(int){6}); });
   RUN_CHECK(string, bool, "", {"banana", "cherry", "apple"}, true, [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(string){}); });
-  RUN_CHECK(string, bool, "", {"banana", "cherry", "apple"}, true, [](auto &&xs) {
-    return xs OP_ contains_slice(TPE_CTOR_IN(string){"banana", "cherry"});
-  });
-  RUN_CHECK(string, bool, "", {"banana", "cherry", "apple"}, true, [](auto &&xs) {
-    return xs OP_ contains_slice(TPE_CTOR_IN(string){"cherry", "apple"});
-  });
-  RUN_CHECK(string, bool, "", {"banana", "cherry", "apple"}, false, [](auto &&xs) {
-    return xs OP_ contains_slice(TPE_CTOR_IN(string){"apple", "banana"});
-  });
+  RUN_CHECK(string, bool, "", {"banana", "cherry", "apple"}, true,
+            [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(string){"banana", "cherry"}); });
+  RUN_CHECK(string, bool, "", {"banana", "cherry", "apple"}, true,
+            [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(string){"cherry", "apple"}); });
+  RUN_CHECK(string, bool, "", {"banana", "cherry", "apple"}, false,
+            [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(string){"apple", "banana"}); });
   RUN_CHECK(string, bool, "", {"banana", "cherry", "apple"}, false,
             [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(string){"pear"}); });
   RUN_CHECK(Foo, bool, "", {Foo(3), Foo(2), Foo(1)}, true, [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(Foo){}); });
-  RUN_CHECK(Foo, bool, "", {Foo(3), Foo(2), Foo(1)}, true, [](auto &&xs) {
-    return xs OP_ contains_slice(TPE_CTOR_IN(Foo){Foo(3), Foo(2)});
-  });
-  RUN_CHECK(Foo, bool, "", {Foo(3), Foo(2), Foo(1)}, true, [](auto &&xs) {
-    return xs OP_ contains_slice(TPE_CTOR_IN(Foo){Foo(2), Foo(1)});
-  });
-  RUN_CHECK(Foo, bool, "", {Foo(3), Foo(2), Foo(1)}, false, [](auto &&xs) {
-    return xs OP_ contains_slice(TPE_CTOR_IN(Foo){Foo(1), Foo(3)});
-  });
+  RUN_CHECK(Foo, bool, "", {Foo(3), Foo(2), Foo(1)}, true,
+            [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(Foo){Foo(3), Foo(2)}); });
+  RUN_CHECK(Foo, bool, "", {Foo(3), Foo(2), Foo(1)}, true,
+            [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(Foo){Foo(2), Foo(1)}); });
+  RUN_CHECK(Foo, bool, "", {Foo(3), Foo(2), Foo(1)}, false,
+            [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(Foo){Foo(1), Foo(3)}); });
   RUN_CHECK(Foo, bool, "", {Foo(3), Foo(2), Foo(1)}, false, [](auto &&xs) { return xs OP_ contains_slice(TPE_CTOR_IN(Foo){Foo(4)}); });
   #endif
 
@@ -324,6 +309,81 @@ TEST_CASE(TPE_NAME "_find_last", "[" TPE_NAME "][" TPE_GROUP "]") {
   };
   p3("spread", [](auto &&xs) { return xs OP_ find_last([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
   p3("single", [](auto &&xs) { return xs OP_ find_last([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
+}
+#endif
+
+
+#ifndef DISABLE_COLLECT_FIRST
+TEST_CASE(TPE_NAME "_collect_first", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto intOp = [](auto &&xs) {
+    return xs OP_ collect_first([](auto x) -> std::optional<string> { //
+      return x % 2 != 0 ? std::nullopt : std::optional{to_string(x)};
+    });
+  };
+  auto strOp = [](auto &&xs) {
+    return xs OP_ collect_first([](auto x) -> std::optional<string> { //
+      return x == "cherry" ? std::optional{"a"} : std::nullopt;
+    });
+  };
+  auto fooOp = [](auto &&xs) {
+    return xs OP_ collect_first([](auto x) -> std::optional<string> { //
+      return x.value % 2 != 0 ? std::nullopt : std::optional{to_string(x.value)};
+    });
+  };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, std::optional<string>, "", {4, 2, 3, 1, 5}, {"4"}, intOp);
+  RUN_CHECK(string, std::optional<string>, "", {"banana", "cherry", "apple"}, {"a"}, strOp);
+  RUN_CHECK(Foo, std::optional<string>, "", {Foo(3), Foo(2), Foo(1)}, {"2"}, fooOp);
+  #endif
+
+  RUN_CHECK(int, std::optional<string>, "", {1}, {}, intOp);
+  RUN_CHECK(int, std::optional<string>, "", {}, {}, intOp);
+  RUN_CHECK(string, std::optional<string>, "", {"apple"}, {}, strOp);
+  RUN_CHECK(string, std::optional<string>, "", {}, {}, strOp);
+  RUN_CHECK(Foo, std::optional<string>, "", {Foo(1)}, {}, fooOp);
+  RUN_CHECK(Foo, std::optional<string>, "", {}, {}, fooOp);
+
+  auto p2 = [](auto name, auto f) {
+    using P2 = std::pair<int, int>;
+  #ifdef TPE_MANY_INIT
+    RUN_CHECK(P2, std::optional<string>, name, {{3, 1}, {2, 2}, {1, 3}}, {"4" }, f);
+  #endif
+    RUN_CHECK(P2, std::optional<string>, name, {{3, 1}}, {"4"}, f);
+    RUN_CHECK(P2, std::optional<string>, name, {}, {}, f);
+  };
+  p2("spread", [](auto &&xs) {
+    return xs OP_ collect_first([](auto x0, auto x1) {
+      int x = x0 + x1;
+      return x % 2 != 0 ? std::nullopt : std::optional{to_string(x)};
+    });
+  });
+  p2("single", [](auto &&xs) {
+    return xs OP_ collect_first([](auto x) {
+      int v = get<0>(x) + get<1>(x);
+      return v % 2 != 0 ? std::nullopt : std::optional{to_string(v)};
+    });
+  });
+
+  auto p3 = [](auto name, auto f) {
+    using P3 = std::tuple<int, int, int>;
+  #ifdef TPE_MANY_INIT
+    RUN_CHECK(P3, std::optional<string>, name, {{3, 1, 3}, {2, 2, 2}, {1, 3, 1}}, {"6"}, f);
+  #endif
+    RUN_CHECK(P3, std::optional<string>, name, {{3, 1, 3}}, {}, f);
+    RUN_CHECK(P3, std::optional<string>, name, {}, {}, f);
+  };
+  p3("spread", [](auto &&xs) {
+    return xs OP_ collect_first([](auto x0, auto x1, auto x2) {
+      int x = x0 + x1 + x2;
+      return x % 2 != 0 ? std::nullopt : std::optional{to_string(x)};
+    });
+  });
+  p3("single", [](auto &&xs) {
+    return xs OP_ collect_first([](auto x) {
+      int v = get<0>(x) + get<1>(x) + get<2>(x);
+      return v % 2 != 0 ? std::nullopt : std::optional{to_string(v)};
+    });
+  });
 }
 #endif
 
@@ -449,6 +509,29 @@ TEST_CASE(TPE_NAME "_transpose", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+#ifndef DISABLE_SEQUENCE
+TEST_CASE(TPE_NAME "_sequence", "[" TPE_NAME "][" TPE_GROUP "]") {
+
+  auto sequenceOp = [](auto &&xs) { return xs OP_ sequence(); };
+
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(TPE_CTOR_IN(int), TPE_CTOR_IN(TPE_CTOR_IN(int)), "", //
+            {{4, 2, 3}, {1, 5, 6}}, {{4,1},{4,5},{4,6},{2,1},{2,5},{2,6},{3,1},{3,5},{3,6}}, sequenceOp);
+  RUN_CHECK(TPE_CTOR_IN(string), TPE_CTOR_IN(TPE_CTOR_IN(string)), "", //
+            {{"banana", "cherry"}, {"apple", "mango"}}, {{"banana", "apple"},{"banana", "mango"},  {"cherry", "apple"},  {"cherry", "mango"}}, sequenceOp);
+  RUN_CHECK(TPE_CTOR_IN(Foo), TPE_CTOR_IN(TPE_CTOR_IN(Foo)), "", //
+            {{Foo(3), Foo(2)}, {Foo(1), Foo(4)}}, {{Foo(3), Foo(1)},{Foo(3), Foo(4)}, {Foo(2), Foo(1)},{Foo(2), Foo(4)}}, sequenceOp);
+  #endif
+
+  RUN_CHECK(TPE_CTOR_IN(int), TPE_CTOR_IN(TPE_CTOR_IN(int)), "", {{1}}, {{1}}, sequenceOp);
+  RUN_CHECK(TPE_CTOR_IN(int), TPE_CTOR_IN(TPE_CTOR_IN(int)), "", {}, {TPE_CTOR_IN(int){}}, sequenceOp);
+  RUN_CHECK(TPE_CTOR_IN(string), TPE_CTOR_IN(TPE_CTOR_IN(string)), "", {{"apple"}}, {{"apple"}}, sequenceOp);
+  RUN_CHECK(TPE_CTOR_IN(string), TPE_CTOR_IN(TPE_CTOR_IN(string)), "", {}, {TPE_CTOR_IN(string){}}, sequenceOp);
+  RUN_CHECK(TPE_CTOR_IN(Foo), TPE_CTOR_IN(TPE_CTOR_IN(Foo)), "", {{Foo(1)}}, {{Foo(1)}}, sequenceOp);
+  RUN_CHECK(TPE_CTOR_IN(Foo), TPE_CTOR_IN(TPE_CTOR_IN(Foo)), "", {}, {TPE_CTOR_IN(Foo){}}, sequenceOp);
+}
+#endif
+
 #ifndef DISABLE_REVERSE
 TEST_CASE(TPE_NAME "_reverse", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto reverseOp = [](auto &&xs) { return xs OP_ reverse(); };
@@ -515,7 +598,7 @@ TEST_CASE(TPE_NAME "_sort", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_SORT_BY
 TEST_CASE(TPE_NAME "_sort_by", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto sortByOp = sort_by([](auto s) { return s.size(); });
+  auto sortByOp =  [](auto &&xs) { return  xs OP_ sort_by([](auto s) { return s.size(); }) ;};
   #ifdef TPE_MANY_INIT
   RUN_CHECK_ID(string, "", {"b", "aa", "ccc"}, {"b", "aa", "ccc"}, sortByOp);
   #endif
@@ -523,7 +606,7 @@ TEST_CASE(TPE_NAME "_sort_by", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK_ID(string, "", {}, {}, sortByOp);
 
   using IntStringP = std::pair<int, string>;
-  auto sortIntStringOp = sort_by([](auto x, auto) { return x; });
+  auto sortIntStringOp =  [](auto &&xs) { return  xs OP_ sort_by([](auto x, auto) { return x; }) ;};
   #ifdef TPE_MANY_INIT
   RUN_CHECK_ID(IntStringP, "", {{3, "b"}, {2, "aa"}, {1, "ccc"}}, {{1, "ccc"}, {2, "aa"}, {3, "b"}}, sortIntStringOp);
   #endif
@@ -781,6 +864,57 @@ TEST_CASE(TPE_NAME "_drop_while", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+#ifndef DISABLE_SPAN
+TEST_CASE(TPE_NAME "_span", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto intTakeOp = [](auto &&xs) { return xs OP_ span([](auto x) { return x < 3; }); };
+  auto stringTakeOp = [](auto &&xs) { return xs OP_ span([](auto x) { return x.size() < 3; }); };
+  auto fooTakeOp = [](auto &&xs) { return xs OP_ span([](auto x) { return x.value < 3; }); };
+
+  using IntP = std::pair<TPE_CTOR_OUT(int), TPE_CTOR_OUT(int)>;
+  using StringP = std::pair<TPE_CTOR_OUT(string), TPE_CTOR_OUT(string)>;
+  using FooP = std::pair<TPE_CTOR_OUT(Foo), TPE_CTOR_OUT(Foo)>;
+
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, IntP, "", {1, 2, 3, 4, 5}, {{1, 2}, {3, 4, 5}}, intTakeOp);
+  RUN_CHECK(string, StringP, "", {"a", "ab", "abc", "abcd"}, {{"a", "ab"}, {"abc", "abcd"}}, stringTakeOp);
+  RUN_CHECK(Foo, FooP, "", {Foo(1), Foo(2), Foo(3), Foo(4)}, {{Foo(1), Foo(2)}, {Foo(3), Foo(4)}}, fooTakeOp);
+
+  #endif
+
+  RUN_CHECK(int, IntP, "", {4}, {{}, {4}}, intTakeOp);
+  RUN_CHECK(int, IntP, "", {}, {{}, {}}, intTakeOp);
+  RUN_CHECK(string, StringP, "", {"abc"}, {{}, {"abc"}}, stringTakeOp);
+  RUN_CHECK(string, StringP, "", {}, {{}, {}}, stringTakeOp);
+  RUN_CHECK(Foo, FooP, "", {Foo(4)}, {{}, {Foo(4)}}, fooTakeOp);
+  RUN_CHECK(Foo, FooP, "", {}, {{}, {}}, fooTakeOp);
+
+  auto p2 = [](auto name, auto f) {
+    using P2 = std::pair<int, int>;
+    using IntP2 = std::pair<TPE_CTOR_OUT(P2), TPE_CTOR_OUT(P2)>;
+  #ifdef TPE_MANY_INIT
+    RUN_CHECK(P2, IntP2, name, {{2, 2}, {3, 1}, {1, 3}}, {{{2, 2}}, {{3, 1}, {1, 3}}}, f);
+  #endif
+    RUN_CHECK(P2, IntP2, name, {{3, 1}}, {{}, {{3, 1}}}, f);
+    RUN_CHECK(P2, IntP2, name, {}, {{}, {}}, f);
+  };
+  p2("spread", [](auto &&xs) { return xs OP_ span([](auto x0, auto x1) { return x0 == x1; }); });
+  p2("single", [](auto &&xs) { return xs OP_ span([](auto x) { return get<0>(x) == get<1>(x); }); });
+
+  auto p3 = [](auto name, auto f) {
+    using P3 = std::tuple<int, int, int>;
+    using IntP3 = std::pair<TPE_CTOR_OUT(P3), TPE_CTOR_OUT(P3)>;
+
+  #ifdef TPE_MANY_INIT
+    RUN_CHECK(P3, IntP3, name, {{2, 2, 2}, {3, 1, 3}, {1, 3, 1}}, {{{2, 2, 2}}, {{3, 1, 3}, {1, 3, 1}}}, f);
+  #endif
+    RUN_CHECK(P3, IntP3, name, {{3, 1, 3}}, {{}, {{3, 1, 3}}}, f);
+    RUN_CHECK(P3, IntP3, name, {}, {{}, {}}, f);
+  };
+  p3("spread", [](auto &&xs) { return xs OP_ span([](auto x0, auto x1, auto x2) { return x0 == x1 && x1 == x2; }); });
+  p3("single", [](auto &&xs) { return xs OP_ span([](auto x) { return get<0>(x) == get<1>(x) && get<1>(x) == get<2>(x); }); });
+}
+#endif
+
 #ifndef DISABLE_FOLD_LEFT
 TEST_CASE(TPE_NAME "_fold_left", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto foldLeftOpInt = [](auto &&xs) {
@@ -879,27 +1013,27 @@ TEST_CASE(TPE_NAME "_sliding", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_GROUPED
 TEST_CASE(TPE_NAME "_grouped", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto slidingOpInt = [](size_t size) { return [=](auto &&xs) { return xs OP_ grouped(size); }; };
-  auto slidingOpString = [](size_t size) { return [=](auto &&xs) { return xs OP_ grouped(size); }; };
-  auto slidingOpFoo = [](size_t size) { return [=](auto &&xs) { return xs OP_ grouped(size); }; };
+  auto groupedOpInt = [](size_t size) { return [=](auto &&xs) { return xs OP_ grouped(size); }; };
+  auto groupedOpString = [](size_t size) { return [=](auto &&xs) { return xs OP_ grouped(size); }; };
+  auto groupedOpFoo = [](size_t size) { return [=](auto &&xs) { return xs OP_ grouped(size); }; };
 
   #ifdef TPE_MANY_INIT
-  RUN_CHECK(int, TPE_CTOR_OUT(TPE_CTOR_OUT(int)), "", {4, 2, 3, 1, 5}, {{4, 2}, {3, 1}, {5}}, slidingOpInt(2));
-  RUN_CHECK(int, TPE_CTOR_OUT(TPE_CTOR_OUT(int)), "", {4, 2, 3, 1, 5}, {{4, 2, 3, 1, 5}}, slidingOpInt(10));
+  RUN_CHECK(int, TPE_CTOR_OUT(TPE_CTOR_OUT(int)), "", {4, 2, 3, 1, 5}, {{4, 2}, {3, 1}, {5}}, groupedOpInt(2));
+  RUN_CHECK(int, TPE_CTOR_OUT(TPE_CTOR_OUT(int)), "", {4, 2, 3, 1, 5}, {{4, 2, 3, 1, 5}}, groupedOpInt(10));
 
   RUN_CHECK(string, TPE_CTOR_OUT(TPE_CTOR_OUT(string)), "", {"banana", "cherry", "apple"}, {{"banana", "cherry"}, {"apple"}},
-            slidingOpString(2));
+            groupedOpString(2));
   RUN_CHECK(string, TPE_CTOR_OUT(TPE_CTOR_OUT(string)), "", {"banana", "cherry", "apple"}, {{"banana", "cherry", "apple"}},
-            slidingOpString(10));
-  RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {Foo(3), Foo(2), Foo(1)}, {{Foo(3), Foo(2)}, {Foo(1)}}, slidingOpFoo(2));
-  RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {Foo(3), Foo(2), Foo(1)}, {{Foo(3), Foo(2), Foo(1)}}, slidingOpFoo(10));
+            groupedOpString(10));
+  RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {Foo(3), Foo(2), Foo(1)}, {{Foo(3), Foo(2)}, {Foo(1)}}, groupedOpFoo(2));
+  RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {Foo(3), Foo(2), Foo(1)}, {{Foo(3), Foo(2), Foo(1)}}, groupedOpFoo(10));
   #endif
 
-  RUN_CHECK(int, TPE_CTOR_OUT(TPE_CTOR_OUT(int)), "", {1}, {{1}}, slidingOpInt(1));
-  RUN_CHECK(int, TPE_CTOR_OUT(TPE_CTOR_OUT(int)), "", {}, {}, slidingOpInt(1));
-  RUN_CHECK(string, TPE_CTOR_OUT(TPE_CTOR_OUT(string)), "", {"apple"}, {{"apple"}}, slidingOpString(1));
-  RUN_CHECK(string, TPE_CTOR_OUT(TPE_CTOR_OUT(string)), "", {}, {}, slidingOpString(1));
-  RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {Foo(1)}, {{Foo(1)}}, slidingOpFoo(1));
-  RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {}, {}, slidingOpFoo(1));
+  RUN_CHECK(int, TPE_CTOR_OUT(TPE_CTOR_OUT(int)), "", {1}, {{1}}, groupedOpInt(1));
+  RUN_CHECK(int, TPE_CTOR_OUT(TPE_CTOR_OUT(int)), "", {}, {}, groupedOpInt(1));
+  RUN_CHECK(string, TPE_CTOR_OUT(TPE_CTOR_OUT(string)), "", {"apple"}, {{"apple"}}, groupedOpString(1));
+  RUN_CHECK(string, TPE_CTOR_OUT(TPE_CTOR_OUT(string)), "", {}, {}, groupedOpString(1));
+  RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {Foo(1)}, {{Foo(1)}}, groupedOpFoo(1));
+  RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {}, {}, groupedOpFoo(1));
 }
 #endif

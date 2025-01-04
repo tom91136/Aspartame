@@ -5,7 +5,7 @@
 #include "details/base.hpp"
 #include "details/container1_impl.hpp"
 #include "details/iterators/append_prepend.hpp"
-#include "details/iterators/bind.hpp"
+#include "details/iterators/flat_map.hpp"
 #include "details/iterators/collect.hpp"
 #include "details/iterators/concat.hpp"
 #include "details/iterators/distinct.hpp"
@@ -64,7 +64,13 @@ public:
   [[nodiscard]] constexpr bool operator==(const view &rhs) const { return begin_ == rhs.begin_ && end_ == rhs.end_; }
   [[nodiscard]] constexpr bool operator!=(const view &rhs) const { return !rhs.operator==(*this); }
 
-  template <typename Op> auto operator|(const Op &r) { return r(*this); }
+  template <typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+    requires std::invocable<Op, view &, tag>
+#endif
+  auto operator|(const Op &r) {
+    return r(*this, tag{});
+  }
 };
 
 template <typename Iterator> //
@@ -136,10 +142,10 @@ template <typename Iterable, //
           typename Op,       //
           typename = std::enable_if_t<is_iterable<Iterable> && !is_view<Iterable>>>
 auto operator|(Iterable &&l, const Op &r) {
-  if constexpr (!std::is_rvalue_reference_v<Iterable &&>) return r(view(l.begin(), l.end()));
+  if constexpr (!std::is_rvalue_reference_v<Iterable &&>) return r(view(l.begin(), l.end()), tag{});
   else if constexpr (details::has_const_iterator<Iterable>)
-    return r(view<typename Iterable::const_iterator, owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))));
-  else return r(view<decltype(l.begin()), owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))));
+    return r(view<typename Iterable::const_iterator, owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))), tag{});
+  else return r(view<decltype(l.begin()), owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))), tag{});
 }
 
 // == container
@@ -176,6 +182,13 @@ template <typename C, typename Storage, typename Function> //
       in, details::collect_iterator(in.begin(), in.end(), applied));
 }
 
+template <typename C, typename Storage, typename Function> //
+[[nodiscard]] constexpr auto collect_first(view<C, Storage> &in, Function &&function, tag = {}) {
+  auto applied = [function](auto &&x) { return details::ap(function, x); };
+  return details::make_unique_view( //
+      in, details::collect_iterator(in.begin(), in.end(), applied)) | head_maybe();
+}
+
 template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto filter(view<C, Storage> &in, Predicate &&predicate, tag = {}) {
   auto applied = [predicate](auto &&x) { return details::ap(predicate, x); };
@@ -184,17 +197,17 @@ template <typename C, typename Storage, typename Predicate> //
 }
 
 template <typename C, typename Storage, typename Function> //
-[[nodiscard]] constexpr auto bind(view<C, Storage> &in, Function &&function, tag = {}) {
+[[nodiscard]] constexpr auto flat_map(view<C, Storage> &in, Function &&function, tag = {}) {
   auto applied = [function](auto &&x) { return details::ap(function, x); };
   return details::make_unique_view( //
-      in, details::bind_iterator(in.begin(), in.end(), applied));
+      in, details::flat_map_iterator(in.begin(), in.end(), applied));
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto flatten(view<C, Storage> &in, tag = {}) {
   auto identity = [](auto &&x) { return x; };
   return details::make_unique_view( //
-      in, details::bind_iterator(in.begin(), in.end(), identity));
+      in, details::flat_map_iterator(in.begin(), in.end(), identity));
 }
 
 template <typename C, typename Storage, typename Function> //
@@ -377,6 +390,12 @@ template <typename C, typename Storage> //
 }
 
 template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto sequence(const view<C, Storage> &, tag = {}) {
+  static_assert(details::is_supported<C>,
+                "sequence cannot be implemented optimally and may not terminate, consider converting to a container first");
+}
+
+template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto reverse(const view<C, Storage> &, tag = {}) {
   static_assert(details::is_supported<C>,
                 "reverse cannot be implemented optimally and may not terminate, consider converting to a container first");
@@ -452,6 +471,17 @@ template <typename C, typename Storage, typename Predicate> //
   return details::make_unique_view( //
       in,
       details::drop_take_iterator<details::drop_take_iterator_mode::drop_while_true, C, decltype(applied)>(in.begin(), in.end(), applied));
+}
+
+template <typename C, typename Storage, typename Predicate> //
+[[nodiscard]] constexpr auto span(view<C, Storage> &in, Predicate &&predicate, tag = {}) {
+  auto applied = [predicate](auto &&x) { return details::ap(predicate, x); };
+  return std::pair{details::make_unique_view( //
+                       in, details::drop_take_iterator<details::drop_take_iterator_mode::take_while_true, C, decltype(applied)>(
+                               in.begin(), in.end(), applied)),
+                   details::make_unique_view( //
+                       in, details::drop_take_iterator<details::drop_take_iterator_mode::drop_while_true, C, decltype(applied)>(
+                               in.begin(), in.end(), applied))};
 }
 
 template <typename C, typename Storage, typename Accumulator, typename Function> //

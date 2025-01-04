@@ -36,13 +36,12 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
         set(ASPARTAME_COMPILE_FLAGS /bigobj /W4)
     else ()
         set(ASPARTAME_COMPILE_FLAGS
-                #        -Wno-unused-parameter
+                -Wno-unused-parameter
                 -Wall
                 -Wextra
                 $<$<CXX_COMPILER_ID:Clang,GNU>:-pedantic>
                 $<$<CXX_COMPILER_ID:PGI,NVHPC>:--pedantic>
-
-                $<$<CXX_COMPILER_ID:Clang,GNU>:-march=native>
+                $<$<CXX_COMPILER_ID:Clang,GNU,NVHPC>:-march=native>
         )
         if (ASPARTAME_ENABLE_SAN)
             list(APPEND ASPARTAME_COMPILE_FLAGS -fsanitize=address -fsanitize=undefined)
@@ -53,35 +52,41 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
 
 
     if (ASPARTAME_ENABLE_TEST)
-        add_executable(test
-                test/test_view_id.cpp
-                test/test_view_map.cpp
-                test/test_view_filter.cpp
-                test/test_view_bind.cpp
-                test/test_view_slice.cpp
-                test/test_view_collect.cpp
-                test/test_view_concat.cpp
-                test/test_view_ownership.cpp
-                test/test_view_factory.cpp
+        foreach (std 17 20)
+            add_executable(test_${std}
+                    test/test_view_id.cpp
+                    test/test_view_map.cpp
+                    test/test_view_filter.cpp
+                    test/test_view_flat_map.cpp
+                    test/test_view_slice.cpp
+                    test/test_view_collect.cpp
+                    test/test_view_concat.cpp
+                    test/test_view_ownership.cpp
+                    test/test_view_factory.cpp
 
-                test/test_view_custom_ptr_iterator.cpp
+                    test/test_view_custom_ptr_iterator.cpp
 
-                test/test_variant.cpp
-                test/test_vector.cpp
-                test/test_optional.cpp
-                test/test_list.cpp
-                test/test_deque.cpp
-                test/test_set.cpp
-                test/test_unordered_set.cpp
-                test/test_map.cpp
-                test/test_string.cpp
-                test/test_unordered_map.cpp
+                    test/test_variant.cpp
+                    test/test_vector.cpp
+                    test/test_optional.cpp
+                    test/test_list.cpp
+                    test/test_deque.cpp
+                    test/test_set.cpp
+                    test/test_unordered_set.cpp
+                    test/test_map.cpp
+                    test/test_unordered_map.cpp
 
-                #test/test_array.cpp
-        )
-        target_link_libraries(test PRIVATE Aspartame Catch2::Catch2WithMain)
-        target_compile_options(test PRIVATE ${ASPARTAME_COMPILE_FLAGS})
-        target_link_options(test PRIVATE ${ASPARTAME_LINK_FLAGS})
+                    test/test_string.cpp
+
+
+                    #test/test_array.cpp
+            )
+            target_compile_options(test_${std} PRIVATE ${ASPARTAME_COMPILE_FLAGS})
+            target_compile_features(test_${std} PRIVATE cxx_std_${std})
+            target_link_libraries(test_${std} PRIVATE Aspartame Catch2::Catch2WithMain)
+            target_link_options(test_${std} PRIVATE ${ASPARTAME_LINK_FLAGS})
+        endforeach ()
+
     endif ()
 
     if (ASPARTAME_ENABLE_BENCHMARK)

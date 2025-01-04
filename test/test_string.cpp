@@ -85,14 +85,14 @@ TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
-#ifndef DISABLE_BIND
-TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
-  CHECK(("123" ^ bind([](auto c) { return string(2, c); })) == "112233");
-  CHECK(("123" ^ bind([](auto) { return ""; })) == "");
-  CHECK(("abc" ^ bind([](auto c) { return string(1, static_cast<char>(std::toupper(c))); })) == "ABC");
-  CHECK(("" ^ bind([](auto c) { return string(2, c); })) == "");
+#ifndef DISABLE_FLAT_MAP
+TEST_CASE(TPE_NAME "_flat_map", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("123" ^ flat_map([](auto c) { return string(2, c); })) == "112233");
+  CHECK(("123" ^ flat_map([](auto) { return ""; })) == "");
+  CHECK(("abc" ^ flat_map([](auto c) { return string(1, static_cast<char>(std::toupper(c))); })) == "ABC");
+  CHECK(("" ^ flat_map([](auto c) { return string(2, c); })) == "");
 
-  CHECK(("123"_w ^ bind([](auto c) { return wstring(2, c); })) == "112233"_w);
+  CHECK(("123"_w ^ flat_map([](auto c) { return wstring(2, c); })) == "112233"_w);
 }
 #endif
 
@@ -346,15 +346,14 @@ TEST_CASE(TPE_NAME "_at_maybe", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_SLICE
 TEST_CASE(TPE_NAME "_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](size_t from, size_t to) { return [=](auto xs) { return xs ^ slice(from, to); }; };
-  CHECK(("hello" ^ op(1, 4)) == "ell");
-  CHECK(("hello" ^ op(0, 5)) == "hello");
-  CHECK(("hello" ^ op(4, 5)) == "o");
-  CHECK(("hello" ^ op(1, 1)) == "");
-  CHECK(("hello" ^ op(5, 5)) == "");
-  CHECK(("hello" ^ op(0, 0)) == "");
-  CHECK(("" ^ op(0, 0)) == "");
-  CHECK(("hello" ^ op(3, 2)) == "");
+  CHECK(("hello" ^ slice(1, 4)) == "ell");
+  CHECK(("hello" ^ slice(0, 5)) == "hello");
+  CHECK(("hello" ^ slice(4, 5)) == "o");
+  CHECK(("hello" ^ slice(1, 1)) == "");
+  CHECK(("hello" ^ slice(5, 5)) == "");
+  CHECK(("hello" ^ slice(0, 0)) == "");
+  CHECK(("" ^ slice(0, 0)) == "");
+  CHECK(("hello" ^ slice(3, 2)) == "");
 }
 #endif
 

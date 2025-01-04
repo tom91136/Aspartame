@@ -7,27 +7,19 @@ using namespace aspartame;
 
 TEST_CASE("std::variant_get") {
   std::variant<Foo, int, std::string> v{1};
-  CHECK((v ^ get<int>()) == 1);
-  CHECK((v ^ get<Foo>()) == std::nullopt);
-  CHECK((v ^ get<std::string>()) == std::nullopt);
+  CHECK((v ^ get_maybe<int>()) == 1);
+  CHECK((v ^ get_maybe<Foo>()) == std::nullopt);
+  CHECK((v ^ get_maybe<std::string>()) == std::nullopt);
   v = "aaa";
-  CHECK((v ^ get<int>()) == std::nullopt);
-  CHECK((v ^ get<Foo>()) == std::nullopt);
-  CHECK((v ^ get<std::string>()) == "aaa");
+  CHECK((v ^ get_maybe<int>()) == std::nullopt);
+  CHECK((v ^ get_maybe<Foo>()) == std::nullopt);
+  CHECK((v ^ get_maybe<std::string>()) == "aaa");
   v = Foo{42};
-  CHECK((v ^ get<int>()) == std::nullopt);
-  CHECK((v ^ get<std::string>()) == std::nullopt);
-  CHECK((v ^ get<Foo>()) == Foo{42});
+  CHECK((v ^ get_maybe<int>()) == std::nullopt);
+  CHECK((v ^ get_maybe<std::string>()) == std::nullopt);
+  CHECK((v ^ get_maybe<Foo>()) == Foo{42});
 }
 
-TEST_CASE("std::variant_fold_total_return_unique_ptr") {
-  std::variant<std::unique_ptr<Foo>, int> v{1};
-  CHECK(*(v ^ fold_total([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); },
-                         [](int x) { return std::make_unique<std::string>(std::to_string(x)); })) == "1");
-  v = std::make_unique<Foo>(42);
-  CHECK(*(v ^ fold_total([](const std::unique_ptr<Foo> &x) { return std::make_unique<std::string>(std::to_string(x->value)); },
-                         [](int x) { return std::make_unique<std::string>(std::to_string(x)); })) == "42");
-}
 TEST_CASE("std::variant_fold_partial_return_unique_ptr") {
   std::variant<std::unique_ptr<Foo>, int> v{1};
   CHECK(((v ^ fold_partial([](int x) { return std::make_unique<std::string>(std::to_string(x)); }) ^

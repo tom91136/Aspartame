@@ -12,7 +12,13 @@ template <typename T> constexpr bool is_deque_impl<std::deque<T>> = true;
 } // namespace details
 
 template <typename T> constexpr bool is_deque = details::is_deque_impl<std::decay_t<T>>;
-template <typename T, typename Op> auto operator^(const std::deque<T> &l, const Op &r) { return r(l); }
+template <typename T, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, const std::deque<T> &, tag>
+#endif
+auto operator^(const std::deque<T> &l, const Op &r) {
+  return r(l, tag{});
+}
 } // namespace aspartame
 
 #define ASPARTAME_IN_TYPE2(K, V) std::deque<std::pair<K, V>>

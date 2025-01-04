@@ -82,6 +82,7 @@ void runTest(const std::string &typeName,       //
 // #define DISABLE_ZIP_WITH_INDEX
 // #define DISABLE_ZIP
 #define DISABLE_TRANSPOSE
+#define DISABLE_SEQUENCE
 #define DISABLE_REVERSE
 #define DISABLE_SHUFFLE
 #define DISABLE_SORT

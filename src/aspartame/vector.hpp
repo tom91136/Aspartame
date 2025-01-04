@@ -5,9 +5,14 @@
 
 #include <vector>
 
-
 namespace aspartame {
-template <typename T, typename Op> auto operator^(const std::vector<T> &l, const Op &r) { return r(l); }
+template <typename T, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, const std::vector<T> &, tag>
+#endif
+auto operator^(const std::vector<T> &l, const Op &r) {
+  return r(l, tag{});
+}
 } // namespace aspartame
 
 #define ASPARTAME_IN_TYPE2(K, V) std::vector<std::pair<K, V>>

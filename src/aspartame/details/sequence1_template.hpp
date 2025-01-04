@@ -73,7 +73,12 @@ template <typename C, typename Predicate> //
   return details::sequence1::index_where<ASPARTAME_IN_TYPE1(C), Predicate>(in, predicate);
 }
 
-template < typename C, typename N> //
+template <typename C, typename Function> //
+[[nodiscard]] constexpr auto collect_first(const ASPARTAME_IN_TYPE1(C) & in, Function &&function,  tag = {}) {
+  return details::sequence1::collect_first<ASPARTAME_IN_TYPE1(C), Function>(in, function);
+}
+
+template <typename C, typename N> //
 [[nodiscard]] constexpr auto zip_with_index(const ASPARTAME_IN_TYPE1(C) & in, N from, tag = {}) {
   return details::sequence1::zip_with_index<ASPARTAME_IN_TYPE1(C), ASPARTAME_OUT_TYPE, N>(in, from);
 }
@@ -86,6 +91,11 @@ template <typename C, typename Container> //
 template <typename C> //
 [[nodiscard]] constexpr auto transpose(const ASPARTAME_IN_TYPE1(C) & in, tag = {}) {
   return details::sequence1::transpose<ASPARTAME_IN_TYPE1(C), ASPARTAME_OUT_TYPE>(in);
+}
+
+template <typename C> //
+[[nodiscard]] constexpr auto sequence(const ASPARTAME_IN_TYPE1(C) & in, tag = {}) {
+  return details::sequence1::sequence<ASPARTAME_IN_TYPE1(C), ASPARTAME_OUT_TYPE>(in);
 }
 
 template <typename C> //
@@ -146,6 +156,11 @@ template <typename C, typename Predicate> //
 template <typename C, typename Predicate> //
 [[nodiscard]] constexpr auto drop_while(const ASPARTAME_IN_TYPE1(C) & in, Predicate &&predicate, tag = {}) {
   return details::sequence1::drop_while<ASPARTAME_IN_TYPE1(C), Predicate, ASPARTAME_IN_TYPE1(C)>(in, predicate);
+}
+
+template <typename C, typename Predicate> //
+[[nodiscard]] constexpr auto span(const ASPARTAME_IN_TYPE1(C) & in, Predicate &&predicate, tag = {}) {
+  return details::sequence1::span<ASPARTAME_IN_TYPE1(C), Predicate, ASPARTAME_IN_TYPE1(C)>(in, predicate);
 }
 
 template <typename C, typename Accumulator, typename Function> //

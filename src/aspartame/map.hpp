@@ -1,8 +1,8 @@
 #pragma once
 
-#include "fluent.hpp"
 #include "details/base.hpp"
 #include "details/map_impl.hpp"
+#include "fluent.hpp"
 
 #include <map>
 #include <set>
@@ -13,8 +13,20 @@ template <typename> constexpr bool is_map_impl = false;
 template <typename K, typename V> constexpr bool is_map_impl<std::map<K, V>> = true;
 } // namespace details
 template <typename T> constexpr bool is_map = details::is_map_impl<std::decay_t<T>>;
-template <typename K, typename V, typename Op> auto operator^(const std::map<K, V> &l, const Op &r) { return r(l); }
-template <typename K, typename V, typename Op> auto operator^=(std::map<K, V> &l, const Op &r) { return r(l); }
+template <typename K, typename V, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, const std::map<K, V> &, tag>
+#endif
+auto operator^(const std::map<K, V> &l, const Op &r) {
+  return r(l, tag{});
+}
+template <typename K, typename V, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, std::map<K, V> &, tag>
+#endif
+auto operator^=(std::map<K, V> &l, const Op &r) {
+  return r(l, tag{});
+}
 
 } // namespace aspartame
 

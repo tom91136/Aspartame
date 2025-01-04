@@ -41,6 +41,11 @@ template <typename C, typename T> //
   if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, t)) {}
 }
 
+template <typename C, typename Function> //
+[[nodiscard]] constexpr auto collect_first(const ASPARTAME_IN_TYPE1(C) & in, Function &&function) {
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, function)) {}
+}
+
 template <typename C, typename Predicate> //
 [[nodiscard]] constexpr auto index_where(const ASPARTAME_IN_TYPE1(C) & in, Predicate &&predicate) {
   if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in, predicate)) {}

@@ -40,14 +40,19 @@ template <typename K, typename V, typename Function> //
   return details::container2::collect<ASPARTAME_IN_TYPE2(K, V), Function, ASPARTAME_OUT_TYPE>(in, function);
 }
 
+template <typename K, typename V, typename Function> //
+[[nodiscard]] constexpr auto collect_first(const ASPARTAME_IN_TYPE2(K, V) & in, Function &&function, tag = {}) {
+  return details::container2::collect_first<ASPARTAME_IN_TYPE2(K, V), Function>(in, function);
+}
+
 template <typename K, typename V, typename Predicate> //
 [[nodiscard]] constexpr auto filter(const ASPARTAME_IN_TYPE2(K, V) & in, Predicate &&predicate, tag = {}) {
   return details::container2::filter<ASPARTAME_IN_TYPE2(K, V), Predicate, ASPARTAME_OUT_TYPE>(in, predicate);
 }
 
 template <typename K, typename V, typename Function> //
-[[nodiscard]] constexpr auto bind(const ASPARTAME_IN_TYPE2(K, V) & in, Function &&function, tag = {}) {
-  return details::container2::bind<ASPARTAME_IN_TYPE2(K, V), Function, ASPARTAME_OUT_TYPE>(in, function);
+[[nodiscard]] constexpr auto flat_map(const ASPARTAME_IN_TYPE2(K, V) & in, Function &&function, tag = {}) {
+  return details::container2::flat_map<ASPARTAME_IN_TYPE2(K, V), Function, ASPARTAME_OUT_TYPE>(in, function);
 }
 
 template <typename K, typename V> //

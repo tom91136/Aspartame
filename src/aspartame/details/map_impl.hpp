@@ -58,7 +58,7 @@ template <typename In, typename Function, template <typename...> typename Out> /
 }
 
 template <typename In, typename Key> //
-[[nodiscard]] constexpr std::optional<typename In::mapped_type> get(const In &in, const Key &key) {
+[[nodiscard]] constexpr std::optional<typename In::mapped_type> get_maybe(const In &in, const Key &key) {
   if (auto it = in.find(key); it != in.end()) return {it->second};
   else return std::nullopt;
 }

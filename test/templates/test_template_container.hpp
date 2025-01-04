@@ -324,9 +324,9 @@ TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
-#ifndef DISABLE_BIND
-TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto bindOp = [](auto &&xs) { return xs OP_ bind([](auto x) { return TPE_CTOR_OUT(decltype(x)){x}; }); };
+#ifndef DISABLE_FLAT_MAP
+TEST_CASE(TPE_NAME "_flat_map", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto bindOp = [](auto &&xs) { return xs OP_ flat_map([](auto x) { return TPE_CTOR_OUT(decltype(x)){x}; }); };
   #ifdef TPE_MANY_INIT
   RUN_CHECK_ID(int, "", {4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}, bindOp);
   RUN_CHECK_ID(string, "", {"banana", "cherry", "apple"}, {"banana", "cherry", "apple"}, bindOp);
@@ -347,9 +347,9 @@ TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, TPE_CTOR_OUT(int), name, {{3, 1}}, {3 + 1}, f);
     RUN_CHECK(P2, TPE_CTOR_OUT(int), name, {}, {}, f);
   };
-  p2("spread", [](auto &&xs) { return xs OP_ bind([](auto x0, auto x1) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1}; }); });
+  p2("spread", [](auto &&xs) { return xs OP_ flat_map([](auto x0, auto x1) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1}; }); });
   p2("single",
-     [](auto &&xs) { return xs OP_ bind([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x)}; }); });
+     [](auto &&xs) { return xs OP_ flat_map([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x)}; }); });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -359,9 +359,9 @@ TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, TPE_CTOR_OUT(int), name, {{3, 1, 3}}, {3 + 1 + 3}, f);
     RUN_CHECK(P3, TPE_CTOR_OUT(int), name, {}, {}, f);
   };
-  p3("spread", [](auto &&xs) { return xs OP_ bind([](auto x0, auto x1, auto x2) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1 + x2}; }); });
+  p3("spread", [](auto &&xs) { return xs OP_ flat_map([](auto x0, auto x1, auto x2) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1 + x2}; }); });
   p3("single", [](auto &&xs) {
-    return xs OP_ bind([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x) + get<2>(x)}; });
+    return xs OP_ flat_map([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x) + get<2>(x)}; });
   });
 }
 #endif

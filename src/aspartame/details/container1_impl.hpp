@@ -88,8 +88,8 @@ template <typename In, typename Predicate, template <typename...> typename Out> 
 }
 
 template <typename In, typename Function, template <typename...> typename Out> //
-[[nodiscard]] constexpr auto bind(const In &in, Function f) {
-  static_assert(is_iterable<decltype(details::ap(f, *in.begin()))>, "bind function should return an iterable type");
+[[nodiscard]] constexpr auto flat_map(const In &in, Function f) {
+  static_assert(is_iterable<decltype(details::ap(f, *in.begin()))>, "flat_map function should return an iterable type");
   using T = typename decltype(details::ap(f, *in.begin()))::value_type;
   Out<T> ys;
   for (auto it = in.begin(), end = in.end(); it != end; ++it) {

@@ -130,6 +130,16 @@ template <typename In, typename Predicate> //
   return -1;
 }
 
+template <typename In, typename Function> //
+[[nodiscard]] constexpr auto collect_first(const In &in, Function f) {
+  using T = decltype(details::ap(f, *in.begin()));
+  static_assert(is_optional<T>, "collect function should return an optional");
+  for (auto it = in.begin(), end = in.end(); it != end; ++it) {
+    if (auto y = details::ap(f, *it); y) return std::optional<typename T::value_type>{*y};
+  }
+  return std::optional<typename T::value_type>{};
+}
+
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr auto find_last(const In &in, Predicate p) {
   using T = typename In::value_type;
@@ -201,7 +211,8 @@ template <typename In, template <typename...> typename Out> //
     if (it->size() != cols)
       details::raise<std::length_error>("cannot transposed a non-square (i.e all nested contains must share the same size) nested container"
                                         ": container at [" +
-                                        std::to_string(idx) + "] has size of " + std::to_string(it->size()) + " but [0] is " + std::to_string(cols));
+                                        std::to_string(idx) + "] has size of " + std::to_string(it->size()) + " but [0] is " +
+                                        std::to_string(cols));
   }
 
   Out<Out<T>> ys;
@@ -221,6 +232,24 @@ template <typename In, template <typename...> typename Out> //
     ys.push_back(std::move(row));
   }
   return ys;
+}
+
+template <typename In, template <typename...> typename Out> //
+[[nodiscard]] constexpr auto sequence(const In &in) {
+  static_assert(is_iterable<typename In::value_type>, "not a nested type that is iterable");
+  using T = typename In::value_type::value_type;
+  Out<Out<T>> s = {Out<T>{}};
+  for (const auto &u : in) {
+    Out<Out<T>> r;
+    for (const auto &x : s) {
+      for (const auto &y : u) {
+        r.push_back(x);
+        r.back().push_back(y);
+      }
+    }
+    s = std::move(r);
+  }
+  return s;
 }
 
 template <typename In, typename Out> //
@@ -317,8 +346,8 @@ template <typename In, typename Out> //
 #if __cplusplus >= 202002L
           || std::is_same_v<std::contiguous_iterator_tag, typename std::iterator_traits<typename In::const_iterator>::iterator_category>
 #endif
-                ,
-                "iterator does not meet a minimum of the BidirectionalIterator requirement");
+      ,
+      "iterator does not meet a minimum of the BidirectionalIterator requirement");
   if (n >= in.size()) return in;
   Out ys;
   if constexpr (has_reserve<Out>) ys.reserve(n);
@@ -336,8 +365,8 @@ template <typename In, typename Out> //
 #if __cplusplus >= 202002L
           || std::is_same_v<std::contiguous_iterator_tag, typename std::iterator_traits<typename In::const_iterator>::iterator_category>
 #endif
-                ,
-                "iterator does not meet a minimum of the BidirectionalIterator requirement");
+      ,
+      "iterator does not meet a minimum of the BidirectionalIterator requirement");
   if (n >= in.size()) return In{};
   Out ys;
   if constexpr (has_reserve<Out>) ys.reserve(in.size() - n);
@@ -351,10 +380,11 @@ template <typename In, typename Predicate, typename Out> //
 [[nodiscard]] constexpr Out take_while(const In &in, Predicate &&p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
   Out ys;
-  for (auto &&x : in) {
-    if (!details::ap(p, x)) break;
-    ys.insert(ys.end(), x);
-  }
+  auto it = in.begin();
+  while (it != in.end() && details::ap(p, *it))
+    ++it;
+  if constexpr (has_reserve<Out>) ys.reserve(std::distance(in.begin(), it));
+  std::copy(in.begin(), it, std::back_inserter(ys));
   return ys;
 }
 
@@ -368,6 +398,22 @@ template <typename In, typename Predicate, typename Out> //
   if constexpr (has_reserve<Out>) ys.reserve(std::distance(it, in.end()));
   std::copy(it, in.end(), std::back_inserter(ys));
   return ys;
+}
+
+template <typename In, typename Predicate, typename Out> //
+[[nodiscard]] constexpr std::pair<Out, Out> span(const In &in, Predicate &&p) {
+  if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
+  Out take, drop;
+  auto it = in.begin();
+  while (it != in.end() && details::ap(p, *it))
+    ++it;
+  if constexpr (has_reserve<Out>) {
+    take.reserve(std::distance(in.begin(), it));
+    drop.reserve(std::distance(it, in.end()));
+  }
+  std::copy(in.begin(), it, std::back_inserter(take));
+  std::copy(it, in.end(), std::back_inserter(drop));
+  return std::pair{take, drop};
 }
 
 template <typename In, typename Accumulator, typename Function>

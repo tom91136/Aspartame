@@ -1,8 +1,8 @@
 #pragma once
 
-#include "fluent.hpp"
 #include "details/base.hpp"
 #include "details/map_impl.hpp"
+#include "fluent.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -13,8 +13,20 @@ template <typename> constexpr bool is_unordered_map_impl = false;
 template <typename K, typename V> constexpr bool is_unordered_map_impl<std::unordered_map<K, V>> = true;
 } // namespace details
 template <typename T> constexpr bool is_unordered_map = details::is_unordered_map_impl<std::decay_t<T>>;
-template <typename K, typename V, typename Op> auto operator^(const std::unordered_map<K, V> &l, const Op &r) { return r(l); }
-template <typename K, typename V, typename Op> auto operator^=(std::unordered_map<K, V> &l, const Op &r) { return r(l); }
+template <typename K, typename V, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, const std::unordered_map<K, V> &, tag>
+#endif
+auto operator^(const std::unordered_map<K, V> &l, const Op &r) {
+  return r(l, tag{});
+}
+template <typename K, typename V, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, std::unordered_map<K, V> &, tag>
+#endif
+auto operator^=(std::unordered_map<K, V> &l, const Op &r) {
+  return r(l, tag{});
+}
 
 } // namespace aspartame
 

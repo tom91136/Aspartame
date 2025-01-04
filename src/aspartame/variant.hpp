@@ -4,14 +4,11 @@
 #include "fluent.hpp"
 
 #include <optional>
-#include <stdexcept>
-#include <string>
-#include <string_view>
 #include <variant>
 
 namespace aspartame {
 
-namespace {
+namespace details {
 template <typename... Ts> class alternatives {
   template <class T> struct id {
     using type = T;
@@ -39,27 +36,26 @@ template <typename F, typename R, typename A, typename... Ts> A arg1_impl(R (F::
 template <typename F, typename R, typename A, typename... Ts> A arg1_impl(R (F::*)(A, Ts...) const);
 template <typename F> using arg1_t = decltype(arg1_impl(&F::operator()));
 
-//template <typename F> struct arg1 {
-//  using type = decltype(arg1_impl(&F::operator()));
-//};
-//template <typename T> using arg1_t = typename arg1<T>::type;
+} // namespace details
 
-
-
-} // namespace
-
-template <typename... C, typename Op> auto operator^(const std::variant<C...> &l, const Op &r) { return r(l); }
+template <typename... T, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, const std::variant<T...> &, tag>
+#endif
+auto operator^(const std::variant<T...> &l, const Op &r) {
+  return r(l, tag{});
+}
 
 // ---
 
 template <typename T, typename... Cs> //
-[[nodiscard]] constexpr auto get(const std::variant<Cs...> &o, tag = {}) -> std::optional<T> {
-  static_assert(alternatives<Cs...>::template contains<T>, "one or more cases not part of the variant");
+[[nodiscard]] constexpr auto get_maybe(const std::variant<Cs...> &o, tag = {}) -> std::optional<T> {
+  static_assert(details::alternatives<Cs...>::template contains<T>, "one or more cases not part of the variant");
   if (std::holds_alternative<T>(o)) return std::get<T>(o);
   else return std::nullopt;
 }
 
-namespace {
+namespace details {
 template <bool total, typename... Cs, typename... Fs> //
 [[nodiscard]] constexpr auto fold_impl(const std::variant<Cs...> &o, Fs... f) {
   // partial cases return the same type (arg0)
@@ -82,21 +78,21 @@ template <bool total, typename... Cs, typename... Fs> //
     return false;
   }() || ...);
   if constexpr (total) return std::move(*r);
-  else return  (r);
+  else return (r);
 }
-} // namespace
+} // namespace details
 
 template <typename... Cs, typename... Fs> //
 [[nodiscard]] constexpr auto fold_total(tag, const std::variant<Cs...> &o, Fs... f) {
-  return fold_impl<true>(o, f...);
+  return details::fold_impl<true>(o, f...);
 }
 
 template <typename... Cs, typename... Fs> //
 [[nodiscard]] constexpr auto fold_partial(tag, const std::variant<Cs...> &o, Fs... f) {
-  return fold_impl<false>(o, f...);
+  return details::fold_impl<false>(o, f...);
 }
 
-namespace {
+namespace details {
 template <bool total, typename... Cs, typename... Fs> //
 constexpr auto foreach_impl(const std::variant<Cs...> &o, Fs... f) -> void {
   // total cases return void
@@ -117,16 +113,16 @@ constexpr auto foreach_impl(const std::variant<Cs...> &o, Fs... f) -> void {
     return false;
   }() || ...);
 }
-} // namespace
+} // namespace details
 
 template <typename... Cs, typename... Fs> //
 constexpr auto foreach_total(tag, const std::variant<Cs...> &o, Fs... f) -> void {
-  foreach_impl<true>(o, f...);
+  details::foreach_impl<true>(o, f...);
 }
 
 template <typename... Cs, typename... Fs> //
 constexpr auto foreach_partial(tag, const std::variant<Cs...> &o, Fs... f) -> void {
-  foreach_impl<false>(o, f...);
+  details::foreach_impl<false>(o, f...);
 }
 
 // #define ASPARTAME_IN_TYPE1(T) std::basic_string<T>

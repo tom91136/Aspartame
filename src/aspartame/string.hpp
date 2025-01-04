@@ -15,13 +15,22 @@ constexpr bool is_basic_string_impl<std::basic_string<CharT, Traits, Allocator>>
 } // namespace details
 template <typename T> inline constexpr bool is_basic_string = details::is_basic_string_impl<std::decay_t<T>>;
 
-template <typename Op> [[nodiscard]] auto operator^(const std::string &l, const Op &r) { return r(l); }
-template <typename Op> [[nodiscard]] auto operator^(const std::wstring &l, const Op &r) { return r(l); }
-template <typename Op> [[nodiscard]] auto operator^(const std::u16string &l, const Op &r) { return r(l); }
-template <typename Op> [[nodiscard]] auto operator^(const std::u32string &l, const Op &r) { return r(l); }
-#if __cplusplus >= 202002L
-template <typename Op> auto operator^(const std::u8string &l, const Op &r) { return r(l); }
+template <typename C, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, const std::basic_string<C> &, tag>
 #endif
+[[nodiscard]] auto operator^(const std::basic_string<C> &l, const Op &r) {
+  return r(l, tag{});
+}
+
+template <typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+// XXX Breaks ADL for get<size_t> in GCC
+// requires std::invocable<Op, const std::string &, tag>
+#endif
+[[nodiscard]] auto operator^(const char *l, const Op &r) {
+  return r(static_cast<const std::string &>(l), tag{});
+}
 
 } // namespace aspartame
 
@@ -67,15 +76,20 @@ template <typename C, typename Function> //
   return details::container1::collect<std::basic_string<C>, Function, ASPARTAME_OUT_TYPE>(in, function);
 }
 
+template <typename C, typename Function> //
+[[nodiscard]] /*constexpr*/ auto collect_first(const std::basic_string<C> &in, Function &&function, tag = {}) {
+  return details::sequence1::collect_first<std::basic_string<C>, Function>(in, function);
+}
+
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto filter(const std::basic_string<C> &in, Predicate &&predicate, tag = {}) {
   return details::container1::filter<std::basic_string<C>, Predicate, ASPARTAME_OUT_TYPE>(in, predicate);
 }
 
 template <typename C, typename Function> //
-[[nodiscard]] /*constexpr*/ auto bind(const std::basic_string<C> &in, Function &&function, tag = {}) {
+[[nodiscard]] /*constexpr*/ auto flat_map(const std::basic_string<C> &in, Function &&function, tag = {}) {
   using T = decltype(details::ap(function, *std::begin(in)));
-  static_assert(std::is_convertible_v<T, std::basic_string<C>>, "bind function should return an string type");
+  static_assert(std::is_convertible_v<T, std::basic_string<C>>, "flat_map function should return an string type");
   std::basic_string<C> ys;
   for (auto &&x : in)
     ys += details::ap(function, x);
@@ -251,6 +265,11 @@ template <typename C> //
 }
 
 template <typename C> //
+[[nodiscard]] /*constexpr*/ auto sequence(const std::basic_string<C> &in, tag = {}) {
+  if constexpr (details::unsupported<std::basic_string<C>>(in)) {}
+}
+
+template <typename C> //
 [[nodiscard]] /*constexpr*/ auto reverse(const std::basic_string<C> &in, tag = {}) {
   return details::sequence1::reverse<std::basic_string<C>, std::basic_string<C>>(in);
 }
@@ -308,6 +327,11 @@ template <typename C, typename Predicate> //
 template <typename C, typename Predicate> //
 [[nodiscard]] /*constexpr*/ auto drop_while(const std::basic_string<C> &in, Predicate &&predicate, tag = {}) {
   return details::sequence1::drop_while<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
+}
+
+template <typename C, typename Predicate> //
+[[nodiscard]] /*constexpr*/ auto span(const std::basic_string<C> &in, Predicate &&predicate, tag = {}) {
+  return details::sequence1::span<std::basic_string<C>, Predicate, std::basic_string<C>>(in, predicate);
 }
 
 template <typename C, typename Accumulator, typename Function> //

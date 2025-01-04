@@ -214,7 +214,7 @@ TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
 #ifndef DISABLE_BIND
 TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto bindOp = [](auto &&xs) {
-    return xs OP_ bind([](auto x) { return TPE_CTOR_OUT(std::remove_const_t<decltype(x.first)>, decltype(x.second)){x}; });
+    return xs OP_ flat_map([](auto x) { return TPE_CTOR_OUT(std::remove_const_t<decltype(x.first)>, decltype(x.second)){x}; });
   };
 
   RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {{4, 4}, {2, 2}, {3, 3}, {1, 1}, {5, 5}}, {{4, 4}, {2, 2}, {3, 3}, {1, 1}, {5, 5}},
@@ -237,10 +237,10 @@ TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), name, {}, {}, f);
   };
   p2("spread", [](auto &&xs) {
-    return xs OP_ bind([](auto x0, auto x1) { return TPE_CTOR_OUT(decltype(x0), decltype(x1)){{x0 + x1, x0 + x1}}; });
+    return xs OP_ flat_map([](auto x0, auto x1) { return TPE_CTOR_OUT(decltype(x0), decltype(x1)){{x0 + x1, x0 + x1}}; });
   });
   p2("single", [](auto &&xs) {
-    return xs OP_ bind([](auto x) {
+    return xs OP_ flat_map([](auto x) {
       return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>,
                           std::decay_t<decltype(get<1>(x))>){{get<0>(x) + get<1>(x), get<0>(x) + get<1>(x)}};
     });
@@ -819,9 +819,9 @@ TEST_CASE(TPE_NAME "_map_values", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
-#ifndef DISABLE_GET
-TEST_CASE(TPE_NAME "_get", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto op = [](auto k) { return [=](auto &&xs) { return xs OP_ get(k); }; };
+#ifndef DISABLE_GET_MAYBE
+TEST_CASE(TPE_NAME "_get_maybe", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto k) { return [=](auto &&xs) { return xs OP_ get_maybe(k); }; };
 
   RUN_CHECK(int, int, std::optional<int>, "", {{2, 2}, {3, 3}, {1, 1}}, {3}, op(3));
   RUN_CHECK(int, int, std::optional<int>, "", {{2, 2}, {3, 3}, {1, 1}}, {}, op(10));

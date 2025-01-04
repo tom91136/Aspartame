@@ -1,12 +1,18 @@
 #pragma once
 
-#include <algorithm>
-#include <cstdio>
+#if __cplusplus >= 202002L
+  #define ASPARTAME_USE_CONCEPTS
+#endif
+
 #include <functional>
 #include <optional>
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#ifdef ASPARTAME_USE_CONCEPTS
+  #include <concepts>
+#endif
 
 namespace aspartame {
 

@@ -32,6 +32,18 @@ template <typename In, typename Function, template <typename...> typename Out> /
   return ys;
 }
 
+template <typename In, typename Function> //
+[[nodiscard]] constexpr auto collect_first(const In &in, Function f) {
+  using T = decltype(details::ap(f, *in.begin()));
+  static_assert(is_optional<T>, "collect function should return an optional");
+  static_assert(is_pair<typename T::value_type>, "return type for mapping a map-like container must be a tuple");
+  using K = typename T::value_type::first_type;
+  using V = typename T::value_type::second_type;
+  for (auto &&x : in)
+    if (auto y = details::ap(f, x); y) std::optional<std::pair<K, V>>{{y->first, y->second}};
+  return std::optional<std::pair<K, V>>{};
+}
+
 template <typename In, typename Predicate, template <typename...> typename Out> //
 [[nodiscard]] constexpr auto filter(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *in.begin()))>()) {}
@@ -43,8 +55,8 @@ template <typename In, typename Predicate, template <typename...> typename Out> 
 }
 
 template <typename In, typename Function, template <typename...> typename Out> //
-[[nodiscard]] constexpr auto bind(const In &in, Function f) {
-  static_assert(is_map_like<decltype(details::ap(f, *in.begin()))>, "bind function should return a map-like type");
+[[nodiscard]] constexpr auto flat_map(const In &in, Function f) {
+  static_assert(is_map_like<decltype(details::ap(f, *in.begin()))>, "flat_map function should return a map-like type");
   using R = decltype(details::ap(f, *in.begin()));
   using K = typename R::key_type;
   using V = typename R::mapped_type;
