@@ -50,9 +50,24 @@ auto operator^(const std::variant<T...> &l, const Op &r) {
 
 template <typename T, typename... Cs> //
 [[nodiscard]] constexpr auto get_maybe(const std::variant<Cs...> &o, tag = {}) -> std::optional<T> {
-  static_assert(details::alternatives<Cs...>::template contains<T>, "one or more cases not part of the variant");
+  static_assert(details::alternatives<Cs...>::template contains<T>, "type is not part of the variant");
   if (std::holds_alternative<T>(o)) return std::get<T>(o);
   else return std::nullopt;
+}
+
+template <typename... T, typename... Cs> //
+[[nodiscard]] constexpr auto narrow(const std::variant<Cs...> &o, tag = {}) -> std::optional<std::variant<T...>> {
+  static_assert((details::alternatives<Cs...>::template contains<T> && ...),
+                "one or more types in target variant are not present in the source variant");
+  return std::visit(
+      []<typename T0>(T0 &&arg) -> std::optional<std::variant<T...>> {
+        using U = std::decay_t<T0>;
+        if constexpr ((std::is_same_v<U, T> || ...)) {
+          // Construct the new variant in-place.
+          return std::variant<T...>{std::in_place_type<U>, arg};
+        } else return std::nullopt;
+      },
+      o);
 }
 
 namespace details {

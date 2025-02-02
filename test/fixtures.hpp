@@ -198,3 +198,10 @@ template <typename... Args> std::ostream &operator<<(std::ostream &os, const std
   std::apply([&os](const Args &...tupleArgs) { ((os << tupleArgs << ", "), ...); }, xs);
   return os << "\b\b}"; // \b\b is used to remove the last comma and space
 }
+
+template <typename... Ts> std::ostream &operator<<(std::ostream &os, const std::variant<Ts...> &v) {
+  os << "std::variant{";
+  std::visit([&os](const auto &value) { os << value; }, v);
+  os << "}";
+  return os;
+}

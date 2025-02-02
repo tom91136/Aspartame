@@ -442,6 +442,12 @@ template <typename T> //
   return [&](auto &&o, tag) { return get_maybe<T>(o, tag{}); };
 }
 
+// std::variant<T...>, U... -> std::optional<std::variant<U...>>
+template <typename... T> //
+[[nodiscard]] constexpr auto narrow() {
+  return [&](auto &&o, tag) { return narrow<T...>(o, tag{}); };
+}
+
 // std::variant<T...>, ...(T -> U) -> U
 template <typename... Function> //
 [[nodiscard]] constexpr auto fold_total(Function &&...functions) {
