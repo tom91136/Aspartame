@@ -5,7 +5,7 @@
 
 using namespace aspartame;
 
-TEST_CASE("std::variant_get") {
+TEST_CASE("std::variant_get_maybe") {
   std::variant<Foo, int, string> v{1};
   CHECK((v ^ get_maybe<int>()) == 1);
   CHECK((v ^ get_maybe<Foo>()) == std::nullopt);
@@ -18,6 +18,45 @@ TEST_CASE("std::variant_get") {
   CHECK((v ^ get_maybe<int>()) == std::nullopt);
   CHECK((v ^ get_maybe<string>()) == std::nullopt);
   CHECK((v ^ get_maybe<Foo>()) == Foo{42});
+}
+
+TEST_CASE("std::variant_holds") {
+  std::variant<Foo, int, string> v{1};
+  CHECK((v ^ holds<int>()) == true);
+  CHECK((v ^ holds<Foo>()) == false);
+  CHECK((v ^ holds<string>()) == false);
+  v = "aaa";
+  CHECK((v ^ holds<string>()) == true);
+  CHECK((v ^ holds<int>()) == false);
+  CHECK((v ^ holds<Foo>()) == false);
+  v = Foo{42};
+  CHECK((v ^ holds<Foo>()) == true);
+  CHECK((v ^ holds<int>()) == false);
+  CHECK((v ^ holds<string>()) == false);
+}
+
+TEST_CASE("std::variant_holds_any") {
+  std::variant<Foo, int, string> v{1};
+  CHECK((v ^ holds_any<int>()) == true);
+  CHECK((v ^ holds_any<Foo>()) == false);
+  CHECK((v ^ holds_any<string>()) == false);
+  CHECK((v ^ holds_any<string, Foo>()) == false);
+  CHECK((v ^ holds_any<string, int, Foo>()) == true);
+  CHECK((v ^ holds_any<>()) == false);
+  v = "aaa";
+  CHECK((v ^ holds_any<string>()) == true);
+  CHECK((v ^ holds_any<int>()) == false);
+  CHECK((v ^ holds_any<Foo>()) == false);
+  CHECK((v ^ holds_any<int, Foo>()) == false);
+  CHECK((v ^ holds_any<string, int, Foo>()) == true);
+  CHECK((v ^ holds_any<>()) == false);
+  v = Foo{42};
+  CHECK((v ^ holds_any<string>()) == false);
+  CHECK((v ^ holds_any<int>()) == false);
+  CHECK((v ^ holds_any<Foo>()) == true);
+  CHECK((v ^ holds_any<string, int>()) == false);
+  CHECK((v ^ holds_any<string, int, Foo>()) == true);
+  CHECK((v ^ holds_any<>()) == false);
 }
 
 TEST_CASE("std::variant_narrow") {

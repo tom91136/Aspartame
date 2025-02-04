@@ -442,6 +442,18 @@ template <typename T> //
   return [&](auto &&o, tag) { return get_maybe<T>(o, tag{}); };
 }
 
+// std::variant<T...>, T -> bool
+template <typename T> //
+[[nodiscard]] constexpr auto holds() {
+  return [&](auto &&o, tag) { return holds<T>(o, tag{}); };
+}
+
+// std::variant<T...>, T... -> bool
+template <typename... T> //
+[[nodiscard]] constexpr auto holds_any() {
+  return [&](auto &&o, tag) { return holds_any<T...>(o, tag{}); };
+}
+
 // std::variant<T...>, U... -> std::optional<std::variant<U...>>
 template <typename... T> //
 [[nodiscard]] constexpr auto narrow() {

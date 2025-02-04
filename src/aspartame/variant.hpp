@@ -55,6 +55,18 @@ template <typename T, typename... Cs> //
   else return std::nullopt;
 }
 
+template <typename T, typename... Cs> //
+[[nodiscard]] constexpr auto holds(const std::variant<Cs...> &o, tag = {}) -> bool {
+  static_assert(details::alternatives<Cs...>::template contains<T>, "type is not part of the variant");
+  return std::holds_alternative<T>(o);
+}
+
+template <typename... T, typename... Cs> //
+[[nodiscard]] constexpr auto holds_any(const std::variant<Cs...> &o, tag = {}) -> bool {
+  static_assert((details::alternatives<Cs...>::template contains<T> && ...), "one or more types is not part of the variant");
+  return (std::holds_alternative<T>(o) || ...);
+}
+
 template <typename... T, typename... Cs> //
 [[nodiscard]] constexpr auto narrow(const std::variant<Cs...> &o, tag = {}) -> std::optional<std::variant<T...>> {
   static_assert((details::alternatives<Cs...>::template contains<T> && ...),
