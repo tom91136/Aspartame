@@ -72,10 +72,9 @@ template <typename... T, typename... Cs> //
   static_assert((details::alternatives<Cs...>::template contains<T> && ...),
                 "one or more types in target variant are not present in the source variant");
   return std::visit(
-      []<typename T0>(T0 &&arg) -> std::optional<std::variant<T...>> {
-        using U = std::decay_t<T0>;
+      [](auto &&arg) -> std::optional<std::variant<T...>> {
+        using U = std::decay_t<decltype(arg)>;
         if constexpr ((std::is_same_v<U, T> || ...)) {
-          // Construct the new variant in-place.
           return std::variant<T...>{std::in_place_type<U>, arg};
         } else return std::nullopt;
       },

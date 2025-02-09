@@ -406,15 +406,13 @@ template <typename C, typename Function, typename FunctionEmpty> //
 [[nodiscard]] constexpr auto fold(const std::optional<C> &o, Function f, FunctionEmpty empty, tag = {}) {
   using T = decltype(details::ap(f, *o));
   static_assert(std::is_convertible_v<decltype(empty()), T>, "f and empty does not unify");
-  if (o) return details::ap(f, *o);
-  else return static_cast<T>(empty());
+  return o ? details::ap(f, *o) : static_cast<T>(empty());
 }
 
 template <typename C, typename FunctionEmpty> //
 [[nodiscard]] constexpr auto fold(const std::optional<C> &o, FunctionEmpty empty, tag = {}) {
   static_assert(std::is_convertible_v<decltype(empty()), C>, "empty does not unify with value type");
-  if (o) return *o;
-  else return static_cast<C>(empty());
+  return o ? *o : static_cast<C>(empty());
 }
 
 template <typename C, typename T> //
@@ -423,13 +421,30 @@ template <typename C, typename T> //
   return o ? *o : static_cast<C>(default_value);
 }
 
+template <typename C> //
+[[nodiscard]] constexpr auto get_or_default(const C &o, tag = {}) {
+  static_assert(std::is_default_constructible_v<typename C::value_type>, "type is not default constructible");
+  return o ? *o : typename C::value_type{};
+}
+
 template <typename C, typename U> //
-[[nodiscard]] constexpr auto or_else(const std::optional<C> &o, const U &empty, tag = {}) -> std::optional<C> {
+[[nodiscard]] constexpr auto or_else_maybe(const std::optional<C> &o, const U &empty, tag = {}) -> std::optional<C> {
   static_assert(is_optional<U>, "other value is not an optional type");
   if constexpr (std::is_same_v<std::decay_t<U>, std::nullopt_t>) return o;
   else {
     static_assert(std::is_convertible_v<typename U::value_type, C>, "optional value type and other's value type does not unify");
     return o ? o : empty;
+  }
+}
+
+template <typename C, typename F> //
+[[nodiscard]] constexpr auto or_else(const std::optional<C> &o, const F &empty, tag = {}) -> std::optional<C> {
+  using R = std::decay_t<decltype(empty())>;
+  static_assert(is_optional<R>, "return type of other value functor is not an optional type");
+  if constexpr (std::is_same_v<R, std::nullopt_t>) return o;
+  else {
+    static_assert(std::is_convertible_v<typename R::value_type, C>, "optional value type and other's value type does not unify");
+    return o ? o : empty();
   }
 }
 

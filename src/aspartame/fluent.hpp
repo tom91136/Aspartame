@@ -501,10 +501,19 @@ template <typename T> //
 [[nodiscard]] constexpr auto get_or_else(const T &default_value) {
   return [&](auto &&o, tag) { return get_or_else(o, default_value, tag{}); };
 }
+// std::optional<T> -> T
+[[nodiscard]] constexpr auto get_or_default() {
+  return [&](auto &&o, tag) { return get_or_default(o, tag{}); };
+}
 // std::optional<T>, std::optional<T> -> std::optional<T>
 template <typename T> //
-[[nodiscard]] constexpr auto or_else(const T &that) {
-  return [&](auto &&o, tag) { return or_else(o, that, tag{}); };
+[[nodiscard]] constexpr auto or_else_maybe(const T &that) {
+  return [&](auto &&o, tag) { return or_else_maybe(o, that, tag{}); };
+}
+// std::optional<T>, () -> std::optional<T> -> std::optional<T>
+template <typename F> //
+[[nodiscard]] constexpr auto or_else(const F &f) {
+  return [&](auto &&o, tag) { return or_else(o, f, tag{}); };
 }
 
 // ====== [string only] ======
