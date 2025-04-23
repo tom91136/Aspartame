@@ -13,7 +13,7 @@ using std::optional;
 using std::string;
 using std::wstring;
 
-std::wstring operator"" _w(const char *str, std::size_t len) { return {str, str + len}; }
+std::wstring operator""_w(const char *str, std::size_t len) { return {str, str + len}; }
 
 #ifndef DISABLE_MK_STRING
 TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {

@@ -2,6 +2,8 @@
 
 #include "iterator_base.hpp"
 
+#include <cstdint>
+
 namespace aspartame::details {
 
 enum class append_prepend_iterator_mode : uint8_t { append, prepend };
