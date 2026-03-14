@@ -7,9 +7,9 @@
 #include "src/aspartame/string.hpp"
 #include "src/aspartame/unordered_map.hpp"
 #include "src/aspartame/unordered_set.hpp"
+#include "src/aspartame/variant.hpp"
 #include "src/aspartame/vector.hpp"
 #include "src/aspartame/view.hpp"
-#include "src/aspartame/variant.hpp"
 
 #include <iostream>
 #include <list>
@@ -40,10 +40,9 @@ int main() {
   using namespace aspartame;
 
   std::variant<std::unique_ptr<Foo2>, int> v{1};
-   (v ^ fold_total([](const std::unique_ptr<Foo2> &) { return "x->value"; }, [](int) { return "a"; })) ;
+  (v ^ fold_total([](const std::unique_ptr<Foo2> &) { return "x->value"; }, [](int) { return "a"; }));
   v = std::make_unique<Foo2>(1);
-   (v ^ fold_total([](const std::unique_ptr<Foo2> &) { return "x->value"; }, [](int) { return "a"; })) ;
-
+  (v ^ fold_total([](const std::unique_ptr<Foo2> &) { return "x->value"; }, [](int) { return "a"; }));
 
   auto csv = R"(
     SensorID,Day1,Day2,Day3
@@ -54,46 +53,44 @@ int main() {
   auto rows = (csv ^ lines()) //
               | collect([](auto l) { return l ^ is_blank() ? std::nullopt : std::optional{l ^ trim()}; });
   auto header = (rows | head_maybe()) ^ get_or_else("") ^ split(",");
-  auto data = (rows | tail()                                                             //
-               | map([](auto row) { return row ^ split(","); })                          //
-               | group_map_reduce(                                                       //
-                     [](auto &x) { return x[0]; },                                       //
-                     [&](auto &xs) { return header | zip(xs) | drop(1) | to_vector(); }, //
-                     [](auto l, auto r) { return l ^ concat(r); }))                      //
-              ^ map_values([](auto vvs) {
-                  return vvs | and_then([](auto xs) { return std::map<std::string, std::string>{xs.begin(), xs.end()}; });
-                });
+  auto data =
+      (rows | tail()                                                             //
+       | map([](auto row) { return row ^ split(","); })                          //
+       | group_map_reduce(                                                       //
+             [](auto &x) { return x[0]; },                                       //
+             [&](auto &xs) { return header | zip(xs) | drop(1) | to_vector(); }, //
+             [](auto l, auto r) { return l ^ concat(r); }))                      //
+      ^
+      map_values([](auto vvs) { return vvs | and_then([](auto xs) { return std::map<std::string, std::string>{xs.begin(), xs.end()}; }); });
 
   for (auto [row, values] : data) {
     std::cout << row << " = " << (values | mk_string(", ", [](auto k, auto v) { return k + ":" + v; })) << "\n";
   }
 
-
   std::variant<int, std::string> foo{"a"};
 
-  auto m = foo ^ fold_total([](int s){
-    std::cout << s<<"\n";
-    return 42;
-  }, [](std::string s){
-    std::cout << s<<"\n";
-    return 0;
-  } );
+  auto m = foo ^ fold_total(
+                     [](int s) {
+                       std::cout << s << "\n";
+                       return 42;
+                     },
+                     [](std::string s) {
+                       std::cout << s << "\n";
+                       return 0;
+                     });
 
-  auto xxx = foo ^ fold_partial(  [](std::string s){
-                     std::cout << s<<"\n";
-                     return 0;
-                   } );
+  auto xxx = foo ^ fold_partial([](std::string s) {
+               std::cout << s << "\n";
+               return 0;
+             });
 
-  std::cout << m <<"\n";
+  std::cout << m << "\n";
 
-  std::cout << xxx.has_value() <<"\n";
+  std::cout << xxx.has_value() << "\n";
 
-  std::cout << (foo ^ get_maybe<int>()).value() <<"\n";
+  std::cout << (foo ^ get_maybe<int>()).value() << "\n";
 
-
-  foo ^ foreach_partial(  [](std::string s){
-               std::cout << s<<"\n";
-             } );
+  foo ^ foreach_partial([](std::string s) { std::cout << s << "\n"; });
 
   return 0;
 
@@ -106,7 +103,6 @@ int main() {
   static_assert(std::is_same_v<decltype(xs.begin().operator*()), int &>);
 
   static_assert(is_iterable<decltype(xs)>, "a");
-
 
   auto vvv = xs | append(1) | concat(xs) | to_vector();
   for (auto &x : vvv) {

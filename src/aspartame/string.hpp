@@ -5,6 +5,8 @@
 #include "details/sequence1_impl.hpp"
 #include "fluent.hpp"
 
+#include <cctype>
+#include <cwctype>
 #include <string>
 
 namespace aspartame {
@@ -12,8 +14,18 @@ namespace details {
 template <typename T> constexpr bool is_basic_string_impl = false;
 template <typename CharT, typename Traits, typename Allocator>
 constexpr bool is_basic_string_impl<std::basic_string<CharT, Traits, Allocator>> = true;
+
+template <typename T>
+struct is_string_char_impl : std::bool_constant<std::is_same_v<std::decay_t<T>, char> || std::is_same_v<std::decay_t<T>, wchar_t> ||
+                                                std::is_same_v<std::decay_t<T>, char16_t> || std::is_same_v<std::decay_t<T>, char32_t>
+#if __cplusplus >= 202002L
+                                                || std::is_same_v<std::decay_t<T>, char8_t>
+#endif
+                                                > {
+};
 } // namespace details
 template <typename T> inline constexpr bool is_basic_string = details::is_basic_string_impl<std::decay_t<T>>;
+template <typename T> inline constexpr bool is_string_char = details::is_string_char_impl<std::decay_t<T>>::value;
 
 template <typename C, typename Op>
 #ifdef ASPARTAME_USE_CONCEPTS
@@ -23,13 +35,13 @@ template <typename C, typename Op>
   return r(l, tag{});
 }
 
-template <typename Op>
+template <typename C, typename Op, std::enable_if_t<is_string_char<C>, int> = 0>
 #ifdef ASPARTAME_USE_CONCEPTS
 // XXX Breaks ADL for get<size_t> in GCC
-// requires std::invocable<Op, const std::string &, tag>
+// requires std::invocable<Op, const std::basic_string<C> &, tag>
 #endif
-[[nodiscard]] auto operator^(const char *l, const Op &r) {
-  return r(static_cast<const std::string &>(l), tag{});
+[[nodiscard]] auto operator^(const C *l, const Op &r) {
+  return r(static_cast<const std::basic_string<C> &>(l), tag{});
 }
 
 } // namespace aspartame
@@ -37,6 +49,65 @@ template <typename Op>
 #define ASPARTAME_OUT_TYPE std::basic_string
 
 namespace aspartame {
+
+namespace details {
+template <typename C> struct string_char_ops {
+  static bool is_space(C c) {
+    return c == static_cast<C>(' ') || c == static_cast<C>('\t') || c == static_cast<C>('\n') || c == static_cast<C>('\r') ||
+           c == static_cast<C>('\f') || c == static_cast<C>('\v');
+  }
+
+  static C to_upper(C c) {
+    if (c >= static_cast<C>('a') && c <= static_cast<C>('z')) return static_cast<C>(c - static_cast<C>('a') + static_cast<C>('A'));
+    return c;
+  }
+
+  static C to_lower(C c) {
+    if (c >= static_cast<C>('A') && c <= static_cast<C>('Z')) return static_cast<C>(c - static_cast<C>('A') + static_cast<C>('a'));
+    return c;
+  }
+};
+
+template <> struct string_char_ops<char> {
+  static bool is_space(char c) { return std::isspace(static_cast<unsigned char>(c)) != 0; }
+  static char to_upper(char c) { return static_cast<char>(std::toupper(static_cast<unsigned char>(c))); }
+  static char to_lower(char c) { return static_cast<char>(std::tolower(static_cast<unsigned char>(c))); }
+};
+
+template <> struct string_char_ops<wchar_t> {
+  static bool is_space(wchar_t c) { return std::iswspace(c) != 0; }
+  static wchar_t to_upper(wchar_t c) { return static_cast<wchar_t>(std::towupper(c)); }
+  static wchar_t to_lower(wchar_t c) { return static_cast<wchar_t>(std::towlower(c)); }
+};
+
+template <> struct string_char_ops<unsigned char> {
+  static bool is_space(unsigned char c) { return std::isspace(c) != 0; }
+  static unsigned char to_upper(unsigned char c) { return static_cast<unsigned char>(std::toupper(c)); }
+  static unsigned char to_lower(unsigned char c) { return static_cast<unsigned char>(std::tolower(c)); }
+};
+
+template <> struct string_char_ops<signed char> {
+  static bool is_space(signed char c) { return string_char_ops<unsigned char>::is_space(static_cast<unsigned char>(c)); }
+  static signed char to_upper(signed char c) {
+    return static_cast<signed char>(string_char_ops<unsigned char>::to_upper(static_cast<unsigned char>(c)));
+  }
+  static signed char to_lower(signed char c) {
+    return static_cast<signed char>(string_char_ops<unsigned char>::to_lower(static_cast<unsigned char>(c)));
+  }
+};
+
+#if __cplusplus >= 202002L
+template <> struct string_char_ops<char8_t> {
+  static bool is_space(char8_t c) { return string_char_ops<unsigned char>::is_space(static_cast<unsigned char>(c)); }
+  static char8_t to_upper(char8_t c) {
+    return static_cast<char8_t>(string_char_ops<unsigned char>::to_upper(static_cast<unsigned char>(c)));
+  }
+  static char8_t to_lower(char8_t c) {
+    return static_cast<char8_t>(string_char_ops<unsigned char>::to_lower(static_cast<unsigned char>(c)));
+  }
+};
+#endif
+} // namespace details
 
 // container
 
@@ -361,39 +432,39 @@ template <typename C> //
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto trim_leading(const std::basic_string<C> &in, tag = {}) {
-  auto first_not_space = std::find_if_not(in.begin(), in.end(), isspace);
+  auto first_not_space = std::find_if_not(in.begin(), in.end(), [](auto c) { return details::string_char_ops<C>::is_space(c); });
   return std::basic_string<C>(first_not_space, in.end());
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto trim_trailing(const std::basic_string<C> &in, tag = {}) {
-  auto last_not_space = std::find_if_not(in.rbegin(), in.rend(), isspace).base();
+  auto last_not_space = std::find_if_not(in.rbegin(), in.rend(), [](auto c) { return details::string_char_ops<C>::is_space(c); }).base();
   return std::basic_string<C>(in.begin(), last_not_space);
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto trim(const std::basic_string<C> &in, tag = {}) {
-  auto first_not_space = std::find_if_not(in.begin(), in.end(), isspace);
-  auto last_not_space = std::find_if_not(in.rbegin(), in.rend(), isspace).base();
+  auto first_not_space = std::find_if_not(in.begin(), in.end(), [](auto c) { return details::string_char_ops<C>::is_space(c); });
+  auto last_not_space = std::find_if_not(in.rbegin(), in.rend(), [](auto c) { return details::string_char_ops<C>::is_space(c); }).base();
   return (first_not_space <= last_not_space) ? std::basic_string<C>(first_not_space, last_not_space) : std::basic_string<C>();
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ bool is_blank(const std::basic_string<C> &in, tag = {}) {
-  return std::all_of(in.begin(), in.end(), [](auto &&c) { return std::isspace(c); });
+  return std::all_of(in.begin(), in.end(), [](auto c) { return details::string_char_ops<C>::is_space(c); });
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto to_upper(const std::basic_string<C> &in, tag = {}) {
   std::basic_string<C> out(in.length(), char());
-  std::transform(in.begin(), in.end(), out.begin(), [](auto &&x) { return static_cast<C>(std::toupper(x)); });
+  std::transform(in.begin(), in.end(), out.begin(), [](auto x) { return details::string_char_ops<C>::to_upper(x); });
   return out;
 }
 
 template <typename C> //
 [[nodiscard]] /*constexpr*/ auto to_lower(const std::basic_string<C> &in, tag = {}) {
   std::basic_string<C> out(in.length(), char());
-  std::transform(in.begin(), in.end(), out.begin(), [](auto &&x) { return static_cast<C>(std::tolower(x)); });
+  std::transform(in.begin(), in.end(), out.begin(), [](auto x) { return details::string_char_ops<C>::to_lower(x); });
   return out;
 }
 
@@ -456,8 +527,8 @@ template <typename C, typename String> //
 template <typename C, typename String> //
 [[nodiscard]] /*constexpr*/ auto contains_ignore_case(const std::basic_string<C> &in, const String &that, tag = {}) {
   std::basic_string<C> in_lower = in, that_lower = static_cast<std::basic_string<C>>(that);
-  std::transform(in_lower.begin(), in_lower.end(), in_lower.begin(), [](auto &&x) { return static_cast<C>(std::tolower(x)); });
-  std::transform(that_lower.begin(), that_lower.end(), that_lower.begin(), [](auto &&x) { return static_cast<C>(std::tolower(x)); });
+  std::transform(in_lower.begin(), in_lower.end(), in_lower.begin(), [](auto x) { return details::string_char_ops<C>::to_lower(x); });
+  std::transform(that_lower.begin(), that_lower.end(), that_lower.begin(), [](auto x) { return details::string_char_ops<C>::to_lower(x); });
   return in_lower.find(that_lower) != std::basic_string<C>::npos;
 }
 
@@ -466,7 +537,7 @@ template <typename C, typename String> //
   auto that_ = static_cast<std::basic_string<C>>(that);
   if (in.size() != that_.size()) return false;
   for (size_t i = 0; i < in.size(); ++i) {
-    if (tolower(in[i]) != tolower(that_[i])) return false;
+    if (details::string_char_ops<C>::to_lower(in[i]) != details::string_char_ops<C>::to_lower(that_[i])) return false;
   }
   return true;
 }

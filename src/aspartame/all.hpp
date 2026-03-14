@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aspartame/array.hpp"
 #include "aspartame/deque.hpp"
 #include "aspartame/list.hpp"
 #include "aspartame/map.hpp"

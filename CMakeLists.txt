@@ -75,11 +75,9 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
                     test/test_unordered_set.cpp
                     test/test_map.cpp
                     test/test_unordered_map.cpp
-
+                    test/test_array.cpp
                     test/test_string.cpp
 
-
-                    #test/test_array.cpp
             )
             target_compile_options(test_${std} PRIVATE ${ASPARTAME_COMPILE_FLAGS})
             target_compile_features(test_${std} PRIVATE cxx_std_${std})

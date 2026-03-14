@@ -47,12 +47,12 @@ template <typename In, typename T = typename In::value_type> //
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out init(const In &in) {
-  return in.empty() ? Out(in) : Out{in.begin(), std::prev(in.end())};
+  return in.empty() ? Out{} : Out{in.begin(), std::prev(in.end())};
 }
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out tail(const In &in) {
-  return in.empty() ? Out(in) : Out{std::next(in.begin()), in.end()};
+  return in.empty() ? Out{} : Out{std::next(in.begin()), in.end()};
 }
 
 template <typename In, typename T = typename In::value_type> //
@@ -254,7 +254,7 @@ template <typename In, template <typename...> typename Out> //
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out reverse(const In &in) {
-  Out ys = in;
+  Out ys{in.begin(), in.end()};
   if constexpr (has_reverse<In>) ys.reverse();
   else std::reverse(ys.begin(), ys.end());
   return ys;
@@ -263,7 +263,7 @@ template <typename In, typename Out> //
 template <typename In, typename URBG, typename Out> //
 [[nodiscard]] constexpr Out shuffle(const In &in, URBG &&urbg) {
   if constexpr (std::is_same_v<typename std::iterator_traits<typename In::iterator>::iterator_category, std::random_access_iterator_tag>) {
-    Out ys = in;
+    Out ys{in.begin(), in.end()};
     std::shuffle(ys.begin(), ys.end(), std::forward<URBG &&>(urbg));
     return ys;
   } else {
@@ -275,7 +275,7 @@ template <typename In, typename URBG, typename Out> //
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out sort(const In &in) {
-  Out ys = in;
+  Out ys{in.begin(), in.end()};
   if constexpr (has_sort<In>) ys.sort();
   else std::sort(ys.begin(), ys.end());
   return ys;
@@ -283,7 +283,7 @@ template <typename In, typename Out> //
 
 template <typename In, typename Compare, typename Out> //
 [[nodiscard]] constexpr Out sort(const In &in, Compare &&c) {
-  Out ys = in;
+  Out ys{in.begin(), in.end()};
   if constexpr (has_sort<In>) ys.sort(c);
   else std::sort(ys.begin(), ys.end(), c);
   return ys;
@@ -291,7 +291,7 @@ template <typename In, typename Compare, typename Out> //
 
 template <typename In, typename Select, typename Out> //
 [[nodiscard]] constexpr Out sort_by(const In &in, Select &&s) {
-  Out ys = in;
+  Out ys{in.begin(), in.end()};
   const auto compare = [&](const auto &l, const auto &r) { return details::ap(s, l) < details::ap(s, r); };
   if constexpr (has_sort<In>) ys.sort(compare);
   else std::sort(ys.begin(), ys.end(), compare);
@@ -302,7 +302,7 @@ template <typename In, typename Out> //
 [[nodiscard]] constexpr std::pair<Out, Out> split_at(const In &in, size_t idx) {
   auto size = in.size();
   if (size == 0) return {Out{}, Out{}};
-  if (idx > size) return {in, Out{}};
+  if (idx > size) return {Out{in.begin(), in.end()}, Out{}};
 
   Out l;
   Out r;
@@ -320,7 +320,7 @@ template <typename In, typename Out> //
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out take(const In &in, size_t n) {
-  if (n >= in.size()) return in;
+  if (n >= in.size()) return Out{in.begin(), in.end()};
   Out ys;
   if constexpr (has_reserve<Out>) ys.reserve(n);
   std::copy_n(in.begin(), n, std::back_inserter(ys));
@@ -329,7 +329,7 @@ template <typename In, typename Out> //
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr Out drop(const In &in, size_t n) {
-  if (n >= in.size()) return In{};
+  if (n >= in.size()) return Out{};
   Out ys;
   if constexpr (has_reserve<Out>) ys.reserve(in.size() - n);
   auto it = in.begin();
@@ -348,7 +348,7 @@ template <typename In, typename Out> //
 #endif
       ,
       "iterator does not meet a minimum of the BidirectionalIterator requirement");
-  if (n >= in.size()) return in;
+  if (n >= in.size()) return Out{in.begin(), in.end()};
   Out ys;
   if constexpr (has_reserve<Out>) ys.reserve(n);
   auto it = in.end();
@@ -367,7 +367,7 @@ template <typename In, typename Out> //
 #endif
       ,
       "iterator does not meet a minimum of the BidirectionalIterator requirement");
-  if (n >= in.size()) return In{};
+  if (n >= in.size()) return Out{};
   Out ys;
   if constexpr (has_reserve<Out>) ys.reserve(in.size() - n);
   auto it = in.end();
@@ -442,7 +442,7 @@ template <typename In, template <typename...> typename Out> //
     details::raise<std::range_error>("cannot apply windowing with zero size or step, size=" + std::to_string(size) =
                                          " step=" + std::to_string(step));
   if (in.empty()) return Out<Out<T>>{};
-  if (in.size() <= size) return Out<Out<T>>{in};
+  if (in.size() <= size) return Out<Out<T>>{Out<T>{in.begin(), in.end()}};
 
   Out<Out<T>> ys;
   auto it = in.begin();
@@ -453,7 +453,7 @@ template <typename In, template <typename...> typename Out> //
     if constexpr (has_reserve<Out<T>>) window.reserve(window_size);
     std::copy_n(it, window_size, std::back_inserter(window));
     ys.push_back(window);
-    if (std::distance(it, in.end()) <= static_cast<typename decltype(it)::difference_type>(step)) break;
+    if (std::distance(it, in.end()) <= static_cast<typename std::iterator_traits<decltype(it)>::difference_type>(step)) break;
     std::advance(it, step);
   }
   return ys;

@@ -52,6 +52,23 @@ TEST_CASE(TPE_NAME "_concat", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+TEST_CASE(TPE_NAME "_literal_type_dispatch", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK((L"abc" ^ to_upper()) == L"ABC");
+  const wchar_t *wide_ptr = L"xyz";
+  CHECK((wide_ptr ^ to_upper()) == L"XYZ");
+
+  const auto u16 = u"abc" ^ to_upper();
+  CHECK((u16.size() == 3 && u16[0] == u'A' && u16[1] == u'B' && u16[2] == u'C'));
+
+  const auto u32 = U"abc" ^ to_upper();
+  CHECK((u32.size() == 3 && u32[0] == U'A' && u32[1] == U'B' && u32[2] == U'C'));
+
+#if __cplusplus >= 202002L
+  const auto u8 = u8"abc" ^ to_upper();
+  CHECK((u8.size() == 3 && u8[0] == u8'A' && u8[1] == u8'B' && u8[2] == u8'C'));
+#endif
+}
+
 #ifndef DISABLE_MAP
 TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ map([](auto c) { return static_cast<char>(toupper(c)); })) == "ABC");

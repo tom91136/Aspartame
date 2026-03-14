@@ -5,12 +5,13 @@
 #include "details/base.hpp"
 #include "details/container1_impl.hpp"
 #include "details/iterators/append_prepend.hpp"
-#include "details/iterators/flat_map.hpp"
 #include "details/iterators/collect.hpp"
 #include "details/iterators/concat.hpp"
 #include "details/iterators/distinct.hpp"
 #include "details/iterators/drop_take.hpp"
+#include "details/iterators/erased.hpp"
 #include "details/iterators/filter.hpp"
+#include "details/iterators/flat_map.hpp"
 #include "details/iterators/iterate.hpp"
 #include "details/iterators/map.hpp"
 #include "details/iterators/slice.hpp"
@@ -21,11 +22,21 @@
 
 #include <limits>
 
+#ifndef ASPARTAME_ERASE_VIEW_PIPE_TYPES
+  #ifndef NDEBUG
+    #define ASPARTAME_ERASE_VIEW_PIPE_TYPES 1
+  #else
+    #define ASPARTAME_ERASE_VIEW_PIPE_TYPES 0
+  #endif
+#endif
+
 namespace aspartame {
 
 template <typename T> using owning = std::unique_ptr<T>;
 template <typename T> using sharing = std::shared_ptr<T>;
 class non_owning {};
+
+template <typename Iterator, typename Storage> class view;
 
 namespace details {
 template <typename> constexpr bool is_owning = false;
@@ -33,6 +44,15 @@ template <typename T> constexpr bool is_owning<owning<T>> = true;
 template <typename> constexpr bool is_sharing = false;
 template <typename T> constexpr bool is_sharing<sharing<T>> = true;
 template <typename T> constexpr bool is_non_owning = std::is_same_v<T, non_owning>;
+
+template <typename Result> auto normalize_pipe_result(Result result) { return result; }
+
+template <typename Iterator, typename Storage> auto normalize_pipe_result(view<Iterator, Storage> result);
+
+template <typename F> auto invoke_pipe_step(F &&f) {
+  if constexpr (std::is_void_v<decltype(f())>) f();
+  else return normalize_pipe_result(f());
+}
 } // namespace details
 
 template <typename Iterator, typename Storage = non_owning> class view {
@@ -69,7 +89,7 @@ public:
     requires std::invocable<Op, view &, tag>
 #endif
   auto operator|(const Op &r) {
-    return r(*this, tag{});
+    return details::invoke_pipe_step([&]() { return r(*this, tag{}); });
   }
 };
 
@@ -100,6 +120,19 @@ template <typename C, typename Storage, typename Iter> auto make_unique_view(vie
   } else if constexpr (details::is_owning<S>) {
     return view(std::move(in.storage), std::forward<Iter &&>(it));
   } else static_assert(!sizeof(Storage), "unhandled ownership of storage, this is a bug");
+}
+
+template <typename Iterator, typename Storage> auto normalize_pipe_result(view<Iterator, Storage> result) {
+#if ASPARTAME_ERASE_VIEW_PIPE_TYPES
+  using erased = details::erased_iterator<typename view<Iterator, Storage>::value_type>;
+  auto begin = erased(result.begin(), result.end());
+  auto end = erased(result.end(), result.end());
+  using S = std::decay_t<Storage>;
+  if constexpr (details::is_owning<S>) return view<erased, Storage>(std::move(result.storage), std::move(begin), std::move(end));
+  else return view<erased, Storage>(result.storage, std::move(begin), std::move(end));
+#else
+  return result;
+#endif
 }
 } // namespace details
 
@@ -142,10 +175,15 @@ template <typename Iterable, //
           typename Op,       //
           typename = std::enable_if_t<is_iterable<Iterable> && !is_view<Iterable>>>
 auto operator|(Iterable &&l, const Op &r) {
-  if constexpr (!std::is_rvalue_reference_v<Iterable &&>) return r(view(l.begin(), l.end()), tag{});
+  if constexpr (!std::is_rvalue_reference_v<Iterable &&>)
+    return details::invoke_pipe_step([&]() { return r(view(l.begin(), l.end()), tag{}); });
   else if constexpr (details::has_const_iterator<Iterable>)
-    return r(view<typename Iterable::const_iterator, owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))), tag{});
-  else return r(view<decltype(l.begin()), owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))), tag{});
+    return details::invoke_pipe_step([&]() {
+      return r(view<typename Iterable::const_iterator, owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))), tag{});
+    });
+  else
+    return details::invoke_pipe_step(
+        [&]() { return r(view<decltype(l.begin()), owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))), tag{}); });
 }
 
 // == container
@@ -186,7 +224,8 @@ template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto collect_first(view<C, Storage> &in, Function &&function, tag = {}) {
   auto applied = [function](auto &&x) { return details::ap(function, x); };
   return details::make_unique_view( //
-      in, details::collect_iterator(in.begin(), in.end(), applied)) | head_maybe();
+             in, details::collect_iterator(in.begin(), in.end(), applied)) |
+         head_maybe();
 }
 
 template <typename C, typename Storage, typename Predicate> //
