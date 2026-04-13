@@ -31,7 +31,7 @@ template <typename C, typename Op>
 #ifdef ASPARTAME_USE_CONCEPTS
   requires std::invocable<Op, const std::basic_string<C> &, tag>
 #endif
-[[nodiscard]] auto operator^(const std::basic_string<C> &l, const Op &r) {
+[[nodiscard]] auto operator^(const std::basic_string<C> &l, const Op &r) -> decltype(r(l, tag{})) {
   return r(l, tag{});
 }
 
@@ -40,7 +40,7 @@ template <typename C, typename Op, std::enable_if_t<is_string_char<C>, int> = 0>
 // XXX Breaks ADL for get<size_t> in GCC
 // requires std::invocable<Op, const std::basic_string<C> &, tag>
 #endif
-[[nodiscard]] auto operator^(const C *l, const Op &r) {
+[[nodiscard]] auto operator^(const C *l, const Op &r) -> decltype(r(static_cast<const std::basic_string<C> &>(l), tag{})) {
   return r(static_cast<const std::basic_string<C> &>(l), tag{});
 }
 

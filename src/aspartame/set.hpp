@@ -15,7 +15,7 @@ template <typename T, typename Op>
 #ifdef ASPARTAME_USE_CONCEPTS
   requires std::invocable<Op, const std::set<T> &, tag>
 #endif
-auto operator^(const std::set<T> &l, const Op &r) {
+auto operator^(const std::set<T> &l, const Op &r) -> decltype(r(l, tag{})) {
   return r(l, tag{});
 }
 } // namespace aspartame

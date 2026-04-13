@@ -17,14 +17,14 @@ template <typename K, typename V, typename Op>
 #ifdef ASPARTAME_USE_CONCEPTS
   requires std::invocable<Op, const std::map<K, V> &, tag>
 #endif
-auto operator^(const std::map<K, V> &l, const Op &r) {
+auto operator^(const std::map<K, V> &l, const Op &r) -> decltype(r(l, tag{})) {
   return r(l, tag{});
 }
 template <typename K, typename V, typename Op>
 #ifdef ASPARTAME_USE_CONCEPTS
   requires std::invocable<Op, std::map<K, V> &, tag>
 #endif
-auto operator^=(std::map<K, V> &l, const Op &r) {
+auto operator^=(std::map<K, V> &l, const Op &r) -> decltype(r(l, tag{})) {
   return r(l, tag{});
 }
 

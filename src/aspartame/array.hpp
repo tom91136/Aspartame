@@ -18,7 +18,7 @@ template <typename T, size_t N, typename Op>
 #ifdef ASPARTAME_USE_CONCEPTS
   requires std::invocable<Op, const std::array<T, N> &, tag>
 #endif
-auto operator^(const std::array<T, N> &l, const Op &r) {
+auto operator^(const std::array<T, N> &l, const Op &r) -> decltype(r(l, tag{})) {
   return r(l, tag{});
 }
 } // namespace aspartame
