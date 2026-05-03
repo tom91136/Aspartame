@@ -18,6 +18,14 @@ template <typename T, typename Op>
 auto operator^(const std::unordered_set<T> &l, const Op &r) {
   return r(l, tag{});
 }
+template <typename T, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, std::unordered_set<T> &, tag>
+#endif
+auto &operator^=(std::unordered_set<T> &l, const Op &r) {
+  r(l, tag{});
+  return l;
+}
 } // namespace aspartame
 
 #define ASPARTAME_IN_TYPE2(K, V) std::unordered_set<std::pair<K, V>>

@@ -54,6 +54,18 @@ template <typename Container> //
 [[nodiscard]] constexpr auto concat(const Container &other) {
   return [&](auto &&o, tag) { return concat(o, other, tag{}); };
 }
+// MUT
+// Container<T> &, Container<T> -> Container<T> &
+// Map<K, V> &, Map<K, V> -> Map<K, V> &
+template <typename Container> //
+[[nodiscard]] constexpr auto concat_inplace(const Container &other) {
+  return [&](auto &o, tag) -> auto & {
+    using Self = std::decay_t<decltype(o)>;
+    if constexpr (details::has_associative_insert<Self>) o.insert(other.begin(), other.end());
+    else o.insert(o.end(), other.begin(), other.end());
+    return o;
+  };
+}
 // ITER
 // Container<T>, (T -> U) -> Container<U>
 // Map<K, V>, ((K, V) -> std::pair<L, W>) -> Map<L, W>

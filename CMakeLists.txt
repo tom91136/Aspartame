@@ -77,6 +77,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
                     test/test_unordered_map.cpp
                     test/test_array.cpp
                     test/test_string.cpp
+                    test/test_inplace.cpp
 
             )
             target_compile_options(test_${std} PRIVATE ${ASPARTAME_COMPILE_FLAGS})
