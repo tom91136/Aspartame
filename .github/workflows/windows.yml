@@ -23,9 +23,13 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Set up MSVC environment
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{matrix.arch}}
+        shell: cmd
+        env:
+          VCVARS_ARCH: ${{ matrix.arch == 'arm64' && 'arm64' || '64' }}
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set VSDIR=%%i
+          call "%VSDIR%\VC\Auxiliary\Build\vcvars%VCVARS_ARCH%.bat" || exit /b 1
+          set | findstr /R /V "^=" >> "%GITHUB_ENV%"
 
       - name: Report compiler version
         shell: cmd
@@ -64,7 +68,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Set up MSVC environment
-        uses: ilammy/msvc-dev-cmd@v1
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set VSDIR=%%i
+          call "%VSDIR%\VC\Auxiliary\Build\vcvars64.bat" || exit /b 1
+          set | findstr /R /V "^=" >> "%GITHUB_ENV%"
       - name: Configure example
         shell: cmd
         run: cmake -S example -B example/build -G Ninja

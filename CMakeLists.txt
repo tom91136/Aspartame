@@ -91,13 +91,35 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
     endif ()
 
     if (ASPARTAME_ENABLE_BENCHMARK)
-        add_executable(benchmark
-                benchmark/numeric.cpp
-        )
-        target_link_libraries(benchmark PRIVATE Aspartame Catch2::Catch2WithMain)
-        target_compile_features(benchmark PRIVATE cxx_std_20)
-        target_compile_options(benchmark PRIVATE ${ASPARTAME_COMPILE_FLAGS})
-        target_link_options(benchmark PRIVATE ${ASPARTAME_LINK_FLAGS})
+        include(CheckCXXSourceCompiles)
+        if (MSVC)
+            set(CMAKE_REQUIRED_FLAGS "/std:c++20")
+        else ()
+            set(CMAKE_REQUIRED_FLAGS "-std=c++20")
+        endif ()
+        check_cxx_source_compiles("
+            #include <ranges>
+            int main() {
+                for (auto x : std::ranges::iota_view{0, 10}
+                              | std::views::transform([](int v) { return v * 2; })
+                              | std::views::filter([](int v) { return v > 5; })
+                              | std::views::take(3)) { (void)x; }
+                return 0;
+            }
+        " ASPARTAME_HAS_CXX20_RANGES)
+        unset(CMAKE_REQUIRED_FLAGS)
+
+        if (ASPARTAME_HAS_CXX20_RANGES)
+            add_executable(benchmark
+                    benchmark/numeric.cpp
+            )
+            target_link_libraries(benchmark PRIVATE Aspartame Catch2::Catch2WithMain)
+            target_compile_features(benchmark PRIVATE cxx_std_20)
+            target_compile_options(benchmark PRIVATE ${ASPARTAME_COMPILE_FLAGS})
+            target_link_options(benchmark PRIVATE ${ASPARTAME_LINK_FLAGS})
+        else ()
+            message(STATUS "Skipping benchmark target: compiler/stdlib lacks C++20 std::ranges support")
+        endif ()
     endif ()
 
 endif ()
