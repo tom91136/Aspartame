@@ -33,7 +33,6 @@ jobs:
                 -DASPARTAME_ENABLE_SAN=ON \
                 -DASPARTAME_ENABLE_TEST=ON \
                 -DASPARTAME_ENABLE_BENCHMARK=ON \
-                -DASPARTAME_ENABLE_EXAMPLE=ON \
                 -G Ninja
 
       - name: Build tests + lib
@@ -47,3 +46,17 @@ jobs:
       - name: Run CXX17 tests
         working-directory: ${{runner.workspace}}
         run: ./build/test_17
+
+  example:
+    name: example FetchContent
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - name: Prepare environment
+        run: brew install ninja
+      - name: Configure example
+        run: cmake -S example -B example/build -G Ninja
+      - name: Build example
+        run: cmake --build example/build
+      - name: Run example
+        run: ./example/build/example

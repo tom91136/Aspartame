@@ -125,6 +125,20 @@ jobs:
         working-directory: ${{runner.workspace}}
         run: ./build/test_17
 
+  example:
+    name: example FetchContent
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Prepare environment
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Configure example
+        run: cmake -S example -B example/build -G Ninja
+      - name: Build example
+        run: cmake --build example/build
+      - name: Run example
+        run: ./example/build/example
+
   build-nvhpc:
     name: nvc++ ${{matrix.nvhpc_version}}, ${{matrix.build_type}}
     runs-on: ubuntu-22.04

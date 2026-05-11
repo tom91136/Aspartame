@@ -41,7 +41,6 @@ jobs:
                 -DCMAKE_CXX_EXTENSIONS=OFF ^
                 -DASPARTAME_ENABLE_TEST=ON ^
                 -DASPARTAME_ENABLE_BENCHMARK=ON ^
-                -DASPARTAME_ENABLE_EXAMPLE=ON ^
                 -G Ninja
 
       - name: Build tests + lib
@@ -58,3 +57,20 @@ jobs:
         working-directory: ${{runner.workspace}}
         shell: cmd
         run: build\test_17.exe
+
+  example:
+    name: example FetchContent
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Configure example
+        shell: cmd
+        run: cmake -S example -B example/build -G Ninja
+      - name: Build example
+        shell: cmd
+        run: cmake --build example/build
+      - name: Run example
+        shell: cmd
+        run: example\build\example.exe
