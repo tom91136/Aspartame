@@ -66,7 +66,7 @@ jobs:
 
       - name: Build tests + lib
         working-directory: ${{runner.workspace}}
-        run: cmake --build build --target all
+        run: cmake --build build --target all -j 2
 
       - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}
@@ -115,7 +115,7 @@ jobs:
 
       - name: Build tests + lib
         working-directory: ${{runner.workspace}}
-        run: cmake --build build --target all
+        run: cmake --build build --target all -j 2
 
       - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}

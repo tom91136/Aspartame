@@ -83,6 +83,10 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
             target_compile_features(test_${std} PRIVATE cxx_std_${std})
             target_link_libraries(test_${std} PRIVATE Aspartame Catch2::Catch2WithMain)
             target_link_options(test_${std} PRIVATE ${ASPARTAME_LINK_FLAGS})
+            target_precompile_headers(test_${std} PRIVATE
+                    "${CMAKE_CURRENT_SOURCE_DIR}/test/test_base_includes.hpp"
+                    <catch2/catch_test_macros.hpp>
+            )
         endforeach ()
 
     endif ()
