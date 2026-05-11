@@ -1,6 +1,7 @@
 #pragma once
 
 #include "details/base.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <sstream>
 #include <string_view>
@@ -63,6 +64,79 @@ template <typename Container> //
     using Self = std::decay_t<decltype(o)>;
     if constexpr (details::has_associative_insert<Self>) o.insert(other.begin(), other.end());
     else o.insert(o.end(), other.begin(), other.end());
+    return o;
+  };
+}
+// MUT
+// Container<T> & -> Container<T> &
+[[nodiscard]] constexpr auto sort_inplace() { //
+  return [&](auto &o, tag) -> auto & {
+    using Self = std::decay_t<decltype(o)>;
+    if constexpr (details::has_sort<Self>) o.sort();
+    else std::sort(o.begin(), o.end());
+    return o;
+  };
+}
+// MUT
+// Container<T> &, ((T, T) -> bool) -> Container<T> &
+template <typename Compare> //
+[[nodiscard]] constexpr auto sort_inplace(Compare &&compare) {
+  return [&](auto &o, tag) -> auto & {
+    using Self = std::decay_t<decltype(o)>;
+    if constexpr (details::has_sort<Self>) o.sort(compare);
+    else std::sort(o.begin(), o.end(), compare);
+    return o;
+  };
+}
+// MUT
+// Container<T> & -> Container<T> &
+[[nodiscard]] constexpr auto stable_sort_inplace() { //
+  return [&](auto &o, tag) -> auto & {
+    using Self = std::decay_t<decltype(o)>;
+    if constexpr (details::has_sort<Self>) o.sort();
+    else std::stable_sort(o.begin(), o.end());
+    return o;
+  };
+}
+// MUT
+// Container<T> &, ((T, T) -> bool) -> Container<T> &
+template <typename Compare> //
+[[nodiscard]] constexpr auto stable_sort_inplace(Compare &&compare) {
+  return [&](auto &o, tag) -> auto & {
+    using Self = std::decay_t<decltype(o)>;
+    if constexpr (details::has_sort<Self>) o.sort(compare);
+    else std::stable_sort(o.begin(), o.end(), compare);
+    return o;
+  };
+}
+// MUT
+// Container<T> &, (T -> U) -> Container<T> &
+template <typename Select> //
+[[nodiscard]] constexpr auto sort_by_inplace(Select &&select) {
+  return [&](auto &o, tag) -> auto & {
+    using Self = std::decay_t<decltype(o)>;
+    const auto compare = [&](const auto &l, const auto &r) { return details::ap(select, l) < details::ap(select, r); };
+    if constexpr (details::has_sort<Self>) o.sort(compare);
+    else std::sort(o.begin(), o.end(), compare);
+    return o;
+  };
+}
+// MUT
+// Container<T> & -> Container<T> &
+[[nodiscard]] constexpr auto reverse_inplace() { //
+  return [&](auto &o, tag) -> auto & {
+    using Self = std::decay_t<decltype(o)>;
+    if constexpr (details::has_reverse<Self>) o.reverse();
+    else std::reverse(o.begin(), o.end());
+    return o;
+  };
+}
+// MUT
+// Container<T> &, URBG -> Container<T> &
+template <typename URBG> //
+[[nodiscard]] constexpr auto shuffle_inplace(URBG &&urbg) {
+  return [&](auto &o, tag) -> auto & {
+    std::shuffle(o.begin(), o.end(), std::forward<URBG &&>(urbg));
     return o;
   };
 }

@@ -3,6 +3,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <random>
+
 using namespace aspartame;
 
 TEST_CASE("vector_concat_inplace_extends_in_place", "[inplace]") {
@@ -104,5 +106,134 @@ TEST_CASE("non_inplace_concat_still_returns_fresh_container", "[inplace]") {
   const auto ys = xs ^ concat(std::vector<int>{3, 4});
   REQUIRE(xs == std::vector<int>{1, 2});  // lhs unchanged
   REQUIRE(ys == std::vector<int>{1, 2, 3, 4});
+}
+
+TEST_CASE("vector_sort_inplace_default_comparator", "[inplace]") {
+  std::vector<int> xs{3, 1, 4, 1, 5, 9, 2, 6};
+  xs.reserve(16);
+  const auto *retained = xs.data();
+  xs ^= sort_inplace();
+  REQUIRE(xs == std::vector<int>{1, 1, 2, 3, 4, 5, 6, 9});
+  REQUIRE(xs.data() == retained);
+}
+
+TEST_CASE("vector_sort_inplace_with_comparator", "[inplace]") {
+  std::vector<int> xs{1, 4, 2, 8, 5};
+  xs ^= sort_inplace(std::greater<int>{});
+  REQUIRE(xs == std::vector<int>{8, 5, 4, 2, 1});
+}
+
+TEST_CASE("vector_sort_inplace_empty_is_noop", "[inplace]") {
+  std::vector<int> xs{};
+  xs ^= sort_inplace();
+  REQUIRE(xs.empty());
+}
+
+TEST_CASE("vector_sort_inplace_returns_lhs_for_chaining", "[inplace]") {
+  std::vector<int> xs{3, 1, 2};
+  auto &same = (xs ^= sort_inplace());
+  REQUIRE(&same == &xs);
+}
+
+TEST_CASE("list_sort_inplace_uses_member_sort", "[inplace]") {
+  std::list<int> xs{3, 1, 4, 1, 5};
+  xs ^= sort_inplace();
+  REQUIRE(xs == std::list<int>{1, 1, 3, 4, 5});
+}
+
+TEST_CASE("list_sort_inplace_with_comparator", "[inplace]") {
+  std::list<int> xs{3, 1, 4};
+  xs ^= sort_inplace(std::greater<int>{});
+  REQUIRE(xs == std::list<int>{4, 3, 1});
+}
+
+TEST_CASE("deque_sort_inplace", "[inplace]") {
+  std::deque<int> xs{3, 1, 4, 1, 5};
+  xs ^= sort_inplace();
+  REQUIRE(xs == std::deque<int>{1, 1, 3, 4, 5});
+}
+
+TEST_CASE("vector_stable_sort_inplace_preserves_relative_order", "[inplace]") {
+  // pair sorted by first only; second order must be preserved among equal keys
+  std::vector<std::pair<int, int>> xs{{1, 0}, {2, 0}, {1, 1}, {2, 1}, {1, 2}};
+  xs ^= stable_sort_inplace([](auto a, auto b) { return a.first < b.first; });
+  REQUIRE(xs == std::vector<std::pair<int, int>>{{1, 0}, {1, 1}, {1, 2}, {2, 0}, {2, 1}});
+}
+
+TEST_CASE("vector_stable_sort_inplace_default_comparator", "[inplace]") {
+  std::vector<int> xs{3, 1, 4, 1, 5};
+  xs ^= stable_sort_inplace();
+  REQUIRE(xs == std::vector<int>{1, 1, 3, 4, 5});
+}
+
+TEST_CASE("list_stable_sort_inplace_uses_stable_member_sort", "[inplace]") {
+  // std::list::sort is stable per the standard
+  std::list<std::pair<int, int>> xs{{1, 0}, {2, 0}, {1, 1}, {2, 1}};
+  xs ^= stable_sort_inplace([](auto a, auto b) { return a.first < b.first; });
+  REQUIRE(xs == std::list<std::pair<int, int>>{{1, 0}, {1, 1}, {2, 0}, {2, 1}});
+}
+
+TEST_CASE("vector_sort_by_inplace", "[inplace]") {
+  std::vector<std::pair<int, string>> xs{{3, "c"}, {1, "a"}, {2, "b"}};
+  xs ^= sort_by_inplace([](auto x) { return x.first; });
+  REQUIRE(xs == std::vector<std::pair<int, string>>{{1, "a"}, {2, "b"}, {3, "c"}});
+}
+
+TEST_CASE("vector_sort_by_inplace_with_foo", "[inplace]") {
+  std::vector<Foo> xs{Foo(3), Foo(1), Foo(2)};
+  xs ^= sort_by_inplace([](const Foo &x) { return x.value; });
+  REQUIRE(xs == std::vector<Foo>{Foo(1), Foo(2), Foo(3)});
+}
+
+TEST_CASE("list_sort_by_inplace", "[inplace]") {
+  std::list<std::pair<int, int>> xs{{3, 0}, {1, 0}, {2, 0}};
+  xs ^= sort_by_inplace([](auto x) { return x.first; });
+  REQUIRE(xs == std::list<std::pair<int, int>>{{1, 0}, {2, 0}, {3, 0}});
+}
+
+TEST_CASE("vector_reverse_inplace", "[inplace]") {
+  std::vector<int> xs{1, 2, 3, 4, 5};
+  xs ^= reverse_inplace();
+  REQUIRE(xs == std::vector<int>{5, 4, 3, 2, 1});
+}
+
+TEST_CASE("vector_reverse_inplace_empty_is_noop", "[inplace]") {
+  std::vector<int> xs{};
+  xs ^= reverse_inplace();
+  REQUIRE(xs.empty());
+}
+
+TEST_CASE("vector_reverse_inplace_returns_lhs_for_chaining", "[inplace]") {
+  std::vector<int> xs{1, 2, 3};
+  auto &same = (xs ^= reverse_inplace());
+  REQUIRE(&same == &xs);
+}
+
+TEST_CASE("list_reverse_inplace_uses_member_reverse", "[inplace]") {
+  std::list<int> xs{1, 2, 3};
+  xs ^= reverse_inplace();
+  REQUIRE(xs == std::list<int>{3, 2, 1});
+}
+
+TEST_CASE("deque_reverse_inplace", "[inplace]") {
+  std::deque<int> xs{1, 2, 3};
+  xs ^= reverse_inplace();
+  REQUIRE(xs == std::deque<int>{3, 2, 1});
+}
+
+TEST_CASE("vector_shuffle_inplace_preserves_elements", "[inplace]") {
+  std::vector<int> xs{1, 2, 3, 4, 5, 6, 7, 8};
+  std::mt19937 rng{0xC0FFEE};
+  xs ^= shuffle_inplace(rng);
+  REQUIRE(xs.size() == 8);
+  auto sorted = xs;
+  sorted ^= sort_inplace();
+  REQUIRE(sorted == std::vector<int>{1, 2, 3, 4, 5, 6, 7, 8});
+}
+
+TEST_CASE("vector_chained_inplace_ops", "[inplace]") {
+  std::vector<int> xs{3, 1, 4, 1, 5, 9, 2, 6};
+  (xs ^= sort_inplace()) ^= reverse_inplace();
+  REQUIRE(xs == std::vector<int>{9, 6, 5, 4, 3, 2, 1, 1});
 }
 

@@ -20,6 +20,14 @@ auto operator^(const std::optional<T> &l, const Op &r) {
   return r(l, tag{});
 }
 
+template <typename T, typename Op>
+#ifdef ASPARTAME_USE_CONCEPTS
+  requires std::invocable<Op, const std::optional<T> &, tag>
+#endif
+auto operator|(const std::optional<T> &l, const Op &r) {
+  return r(l, tag{});
+}
+
 // ---
 
 template <typename C, typename Function> //

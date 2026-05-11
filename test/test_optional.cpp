@@ -79,3 +79,37 @@ TEST_CASE(TPE_NAME "_or_else", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(Foo, optional<Foo>, "", {Foo(1)}, {Foo(1)}, [](auto xs) { return xs OP_ or_else([]() { return std::nullopt; }); });
   RUN_CHECK(Foo, optional<Foo>, "", {}, {}, [](auto xs) { return xs OP_ or_else([]() { return std::nullopt; }); });
 }
+
+TEST_CASE(TPE_NAME "_pipe_map", "[" TPE_NAME "][" TPE_GROUP "]") {
+  REQUIRE((optional<int>{2} | map([](auto x) { return x * 3; })) == optional<int>{6});
+  REQUIRE((optional<int>{} | map([](auto x) { return x * 3; })) == optional<int>{});
+}
+
+TEST_CASE(TPE_NAME "_pipe_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
+  REQUIRE((optional<int>{4} | filter([](auto x) { return x % 2 == 0; })) == optional<int>{4});
+  REQUIRE((optional<int>{3} | filter([](auto x) { return x % 2 == 0; })) == optional<int>{});
+  REQUIRE((optional<int>{} | filter([](auto x) { return x % 2 == 0; })) == optional<int>{});
+}
+
+TEST_CASE(TPE_NAME "_pipe_chained", "[" TPE_NAME "][" TPE_GROUP "]") {
+  const auto result = optional<int>{5} //
+                      | map([](auto x) { return x + 1; })
+                      | filter([](auto x) { return x > 3; })
+                      | get_or_else(0);
+  REQUIRE(result == 6);
+
+  const auto empty = optional<int>{1}                                  //
+                     | filter([](auto x) { return x > 10; })           //
+                     | map([](auto x) { return std::to_string(x); })   //
+                     | get_or_else(std::string{"none"});
+  REQUIRE(empty == "none");
+}
+
+TEST_CASE(TPE_NAME "_pipe_equals_caret", "[" TPE_NAME "][" TPE_GROUP "]") {
+  const optional<int> some{7};
+  const optional<int> none{};
+  REQUIRE((some | map([](auto x) { return x * 2; })) == (some ^ map([](auto x) { return x * 2; })));
+  REQUIRE((none | map([](auto x) { return x * 2; })) == (none ^ map([](auto x) { return x * 2; })));
+  REQUIRE((some | get_or_else(0)) == (some ^ get_or_else(0)));
+  REQUIRE((none | get_or_else(42)) == (none ^ get_or_else(42)));
+}

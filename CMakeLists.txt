@@ -100,6 +100,8 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
 
     if (ASPARTAME_ENABLE_EXAMPLE)
         add_executable(example example.cpp)
+        target_link_libraries(example PRIVATE Aspartame)
+        target_compile_features(example PRIVATE cxx_std_17)
         target_compile_options(example PRIVATE ${ASPARTAME_COMPILE_FLAGS})
         target_link_options(example PRIVATE ${ASPARTAME_LINK_FLAGS})
     endif ()
