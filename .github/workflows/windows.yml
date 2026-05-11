@@ -20,7 +20,7 @@ jobs:
             arch: arm64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up MSVC environment
         uses: ilammy/msvc-dev-cmd@v1

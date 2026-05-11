@@ -42,7 +42,7 @@ jobs:
           - { cxx: clang++-18, os: ubuntu-24.04, pkg: clang-18 }
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Prepare environment
         run: |
@@ -91,7 +91,7 @@ jobs:
           - { cxx: clang++-18, os: ubuntu-24.04-arm, pkg: clang-18 }
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Prepare environment
         run: |
@@ -137,7 +137,7 @@ jobs:
         nvhpc_version: [ '25.5', '25.3', '24.11' ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Prepare environment
         run: |
@@ -160,7 +160,8 @@ jobs:
 
       - name: Build tests + lib
         working-directory: ${{runner.workspace}}
-        run: cmake --build build --target all
+        # nvc++ template instantiation is memory-heavy, cap parallelism to avoid OOM on hosted runners (~7GB).
+        run: cmake --build build --target all -j 2
 
       - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}

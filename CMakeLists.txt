@@ -41,7 +41,6 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK OR ASPARTAME_ENABLE_EXAM
                 -Wextra
                 $<$<CXX_COMPILER_ID:Clang,GNU>:-pedantic>
                 $<$<CXX_COMPILER_ID:PGI,NVHPC>:--pedantic>
-                $<$<CXX_COMPILER_ID:Clang,GNU,NVHPC>:-march=native>
         )
         if (ASPARTAME_ENABLE_SAN)
             list(APPEND ASPARTAME_COMPILE_FLAGS -fsanitize=address -fsanitize=undefined)

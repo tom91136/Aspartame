@@ -9,13 +9,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-13, macos-15 ]
+        os: [ macos-26-intel, macos-15, macos-26 ]
         build_type: [ Debug, Release ]
         include:
           - cxx: clang++
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Prepare environment
         run: brew install ninja
