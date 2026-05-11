@@ -4,73 +4,42 @@ on: [ push, pull_request ]
 
 jobs:
   build:
-    name: ${{matrix.cxx}}, C++${{matrix.std}}, ${{matrix.build_type}}
-    runs-on: ubuntu-22.04
+    name: ${{matrix.os}}, ${{matrix.cxx}}, ${{matrix.build_type}}
+    runs-on: ${{matrix.os}}
     strategy:
+      fail-fast: false
       matrix:
-        #        cxx:
-        #          - g++-8
-        #          - g++-9
-        #          - g++-10
-        #          - clang++-6.0
-        #          - clang++-7
-        #          - clang++-8
-        #          - clang++-9
-        #          - clang++-10
-        #        build_type: [Debug, Release]
-        #        std: [17]
+        build_type: [ Debug, Release ]
+        cxx:
+          - g++-9
+          - g++-10
+          - g++-11
+          - g++-12
+          - g++-13
+          - g++-14
+          - clang++-11
+          - clang++-12
+          - clang++-13
+          - clang++-14
+          - clang++-15
+          - clang++-16
+          - clang++-17
+          - clang++-18
         include:
-          #          - cxx: g++-7
-          #            other_pkgs: g++-7
-          #          - cxx: g++-8
-          #            other_pkgs: g++-8
-          #          - cxx: g++-9
-          #            other_pkgs: g++-9
-          #          - cxx: g++-10
-          #            other_pkgs: g++-10
-          #          - cxx: clang++-6.0
-          #            other_pkgs: clang-6.0
-          #          - cxx: clang++-7
-          #            other_pkgs: clang-7
-          #          - cxx: clang++-8
-          #            other_pkgs: clang-8
-          #          - cxx: clang++-9
-          #            other_pkgs: clang-9
-          #          - cxx: clang++-10
-          #            other_pkgs: clang-10
-          #          # - cxx: clang++-6.0
-          #          #   build_type: Debug
-          #          #   std: 17
-          #          #   other_pkgs: clang-6.0
-          #          # - cxx: clang++-6.0
-          #          #   build_type: Release
-          #          #   std: 17
-          #          #   other_pkgs: clang-6.0
-          #          # Clang 10 + C++17
-          #          - cxx: clang++-10
-          #            build_type: Debug
-          #            std: 17
-          #            other_pkgs: clang-10
-          #          - cxx: clang++-10
-          #            build_type: Release
-          #            std: 17
-          #            other_pkgs: clang-10
-          #          - cxx: clang++-10
-          #            build_type: Debug
-          #            std: 20
-          #            other_pkgs: clang-10
-          #          - cxx: clang++-10
-          #            build_type: Release
-          #            std: 20
-          #            other_pkgs: clang-10
-          #          - cxx: g++-10
-          #            build_type: Debug
-          #            std: 20
-          #            other_pkgs: g++-10
-          - cxx: g++-11
-            build_type: Release
-            std: 20
-            other_pkgs: g++-11
+          - { cxx: g++-9,      os: ubuntu-22.04, pkg: g++-9 }
+          - { cxx: g++-10,     os: ubuntu-22.04, pkg: g++-10 }
+          - { cxx: g++-11,     os: ubuntu-22.04, pkg: g++-11 }
+          - { cxx: g++-12,     os: ubuntu-22.04, pkg: g++-12 }
+          - { cxx: g++-13,     os: ubuntu-24.04, pkg: g++-13 }
+          - { cxx: g++-14,     os: ubuntu-24.04, pkg: g++-14 }
+          - { cxx: clang++-11, os: ubuntu-22.04, pkg: clang-11 }
+          - { cxx: clang++-12, os: ubuntu-22.04, pkg: clang-12 }
+          - { cxx: clang++-13, os: ubuntu-22.04, pkg: clang-13 }
+          - { cxx: clang++-14, os: ubuntu-22.04, pkg: clang-14 }
+          - { cxx: clang++-15, os: ubuntu-22.04, pkg: clang-15 }
+          - { cxx: clang++-16, os: ubuntu-24.04, pkg: clang-16 }
+          - { cxx: clang++-17, os: ubuntu-24.04, pkg: clang-17 }
+          - { cxx: clang++-18, os: ubuntu-24.04, pkg: clang-18 }
 
     steps:
       - uses: actions/checkout@v4
@@ -78,21 +47,112 @@ jobs:
       - name: Prepare environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build ${{matrix.other_pkgs}}
+          sudo apt-get install -y ninja-build ${{matrix.pkg}}
 
       - name: Configure build
         working-directory: ${{runner.workspace}}
         env:
           CXX: ${{matrix.cxx}}
-          CXXFLAGS: ${{matrix.cxxflags}}
         run: |
-          ls -laht
           cmake -Bbuild -S $GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DCMAKE_CXX_STANDARD=${{matrix.std}} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
-                -DASPARTAME_SAN=ON \
+                -DASPARTAME_ENABLE_SAN=ON \
+                -DASPARTAME_ENABLE_TEST=ON \
+                -DASPARTAME_ENABLE_BENCHMARK=ON \
+                -DASPARTAME_ENABLE_EXAMPLE=ON \
+                -G Ninja
+
+      - name: Build tests + lib
+        working-directory: ${{runner.workspace}}
+        run: cmake --build build --target all
+
+      - name: Run CXX20 tests
+        working-directory: ${{runner.workspace}}
+        run: ./build/test_20
+
+      - name: Run CXX17 tests
+        working-directory: ${{runner.workspace}}
+        run: ./build/test_17
+
+  build-arm:
+    name: ${{matrix.os}}, ${{matrix.cxx}}, ${{matrix.build_type}}
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [ Debug, Release ]
+        cxx: [ g++-11, clang++-14, g++-13, clang++-18 ]
+        include:
+          - { cxx: g++-11,     os: ubuntu-22.04-arm, pkg: g++-11 }
+          - { cxx: clang++-14, os: ubuntu-22.04-arm, pkg: clang-14 }
+          - { cxx: g++-13,     os: ubuntu-24.04-arm, pkg: g++-13 }
+          - { cxx: clang++-18, os: ubuntu-24.04-arm, pkg: clang-18 }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build ${{matrix.pkg}}
+
+      - name: Configure build
+        working-directory: ${{runner.workspace}}
+        env:
+          CXX: ${{matrix.cxx}}
+        run: |
+          cmake -Bbuild -S $GITHUB_WORKSPACE \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+                -DCMAKE_CXX_EXTENSIONS=OFF \
+                -DASPARTAME_ENABLE_SAN=ON \
+                -DASPARTAME_ENABLE_TEST=ON \
+                -DASPARTAME_ENABLE_BENCHMARK=ON \
+                -DASPARTAME_ENABLE_EXAMPLE=ON \
+                -G Ninja
+
+      - name: Build tests + lib
+        working-directory: ${{runner.workspace}}
+        run: cmake --build build --target all
+
+      - name: Run CXX20 tests
+        working-directory: ${{runner.workspace}}
+        run: ./build/test_20
+
+      - name: Run CXX17 tests
+        working-directory: ${{runner.workspace}}
+        run: ./build/test_17
+
+  build-nvhpc:
+    name: nvc++ ${{matrix.nvhpc_version}}, ${{matrix.build_type}}
+    runs-on: ubuntu-22.04
+    container:
+      image: nvcr.io/nvidia/nvhpc:${{matrix.nvhpc_version}}-devel-cuda_multi-ubuntu22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [ Debug, Release ]
+        nvhpc_version: [ '25.5', '25.3', '24.11' ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare environment
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ninja-build cmake
+
+      - name: Configure build
+        working-directory: ${{runner.workspace}}
+        env:
+          CXX: nvc++
+        run: |
+          cmake -Bbuild -S $GITHUB_WORKSPACE \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+                -DCMAKE_CXX_EXTENSIONS=OFF \
                 -DASPARTAME_ENABLE_TEST=ON \
                 -DASPARTAME_ENABLE_BENCHMARK=ON \
                 -DASPARTAME_ENABLE_EXAMPLE=ON \

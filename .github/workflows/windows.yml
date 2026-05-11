@@ -1,0 +1,60 @@
+name: Windows
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    name: MSVC, ${{matrix.os}} (${{matrix.arch}}), ${{matrix.build_type}}
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-2022, windows-2025, windows-11-arm ]
+        build_type: [ Debug, Release ]
+        include:
+          - os: windows-2022
+            arch: x64
+          - os: windows-2025
+            arch: x64
+          - os: windows-11-arm
+            arch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{matrix.arch}}
+
+      - name: Report compiler version
+        shell: cmd
+        run: cl 2>&1 | findstr Version
+
+      - name: Configure build
+        working-directory: ${{runner.workspace}}
+        shell: cmd
+        run: |
+          cmake -Bbuild -S %GITHUB_WORKSPACE% ^
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} ^
+                -DCMAKE_CXX_STANDARD_REQUIRED=ON ^
+                -DCMAKE_CXX_EXTENSIONS=OFF ^
+                -DASPARTAME_ENABLE_TEST=ON ^
+                -DASPARTAME_ENABLE_BENCHMARK=ON ^
+                -DASPARTAME_ENABLE_EXAMPLE=ON ^
+                -G Ninja
+
+      - name: Build tests + lib
+        working-directory: ${{runner.workspace}}
+        shell: cmd
+        run: cmake --build build --target all
+
+      - name: Run CXX20 tests
+        working-directory: ${{runner.workspace}}
+        shell: cmd
+        run: build\test_20.exe
+
+      - name: Run CXX17 tests
+        working-directory: ${{runner.workspace}}
+        shell: cmd
+        run: build\test_17.exe

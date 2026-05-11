@@ -1,0 +1,49 @@
+name: macOS
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    name: ${{matrix.os}}, ${{matrix.cxx}}, ${{matrix.build_type}}
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-13, macos-15 ]
+        build_type: [ Debug, Release ]
+        include:
+          - cxx: clang++
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare environment
+        run: brew install ninja
+
+      - name: Configure build
+        working-directory: ${{runner.workspace}}
+        env:
+          CXX: ${{matrix.cxx}}
+          CXXFLAGS: ${{matrix.cxxflags}}
+        run: |
+          cmake -Bbuild -S $GITHUB_WORKSPACE \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+                -DCMAKE_CXX_EXTENSIONS=OFF \
+                -DASPARTAME_ENABLE_SAN=ON \
+                -DASPARTAME_ENABLE_TEST=ON \
+                -DASPARTAME_ENABLE_BENCHMARK=ON \
+                -DASPARTAME_ENABLE_EXAMPLE=ON \
+                -G Ninja
+
+      - name: Build tests + lib
+        working-directory: ${{runner.workspace}}
+        run: cmake --build build --target all
+
+      - name: Run CXX20 tests
+        working-directory: ${{runner.workspace}}
+        run: ./build/test_20
+
+      - name: Run CXX17 tests
+        working-directory: ${{runner.workspace}}
+        run: ./build/test_17
