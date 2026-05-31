@@ -1,10 +1,10 @@
-#include "catch2/catch_test_macros.hpp"
-#include "test_base_includes.hpp"
-
 #include <cwctype>
 #include <random>
 
-#define OP_ ^
+#include "catch2/catch_test_macros.hpp"
+
+#include "test_base_includes.hpp"
+
 #define TPE_GROUP "test_string"
 #define TPE_NAME "std::string"
 
@@ -15,7 +15,6 @@ using std::wstring;
 
 std::wstring operator""_w(const char *str, std::size_t len) { return {str, str + len}; }
 
-#ifndef DISABLE_MK_STRING
 TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("123" ^ mk_string()) == "123");
   CHECK(("abc" ^ mk_string(", ")) == "a, b, c");
@@ -28,9 +27,7 @@ TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("1" ^ mk_string("(", ",", ")")) == "(1)");
   CHECK(("single" ^ mk_string()) == "single");
 }
-#endif
 
-#ifndef DISABLE_APPEND
 TEST_CASE(TPE_NAME "_append", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("Hello" ^ append('!')) == "Hello!");
   CHECK(("123" ^ append('4')) == "1234");
@@ -39,9 +36,7 @@ TEST_CASE(TPE_NAME "_append", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("Hello"_w ^ append('!')) == "Hello!"_w);
 }
-#endif
 
-#ifndef DISABLE_CONCAT
 TEST_CASE(TPE_NAME "_concat", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("Hello" ^ concat(" World")) == "Hello World");
   CHECK(("123" ^ concat("456")) == "123456");
@@ -50,7 +45,6 @@ TEST_CASE(TPE_NAME "_concat", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("Hello"_w ^ concat(" World"_w)) == "Hello World"_w);
 }
-#endif
 
 TEST_CASE(TPE_NAME "_literal_type_dispatch", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK((L"abc" ^ to_upper()) == L"ABC");
@@ -69,7 +63,6 @@ TEST_CASE(TPE_NAME "_literal_type_dispatch", "[" TPE_NAME "][" TPE_GROUP "]") {
 #endif
 }
 
-#ifndef DISABLE_MAP
 TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ map([](auto c) { return static_cast<char>(toupper(c)); })) == "ABC");
   CHECK(("XYZ" ^ map([](auto c) { return static_cast<char>(tolower(c)); })) == "xyz");
@@ -78,9 +71,7 @@ TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abc"_w ^ map([](auto c) { return static_cast<char>(toupper(c)); })) == "ABC"_w);
 }
-#endif
 
-#ifndef DISABLE_COLLECT
 TEST_CASE(TPE_NAME "_collect", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc123" ^ collect([](auto c) { return isalpha(c) ? optional<char>{c} : std::nullopt; })) == "abc");
   CHECK(("Hello, World!" ^ collect([](auto c) { return isdigit(c) ? optional<char>{c} : std::nullopt; })) == "");
@@ -89,9 +80,7 @@ TEST_CASE(TPE_NAME "_collect", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abc123"_w ^ collect([](auto c) { return isalpha(c) ? optional<wchar_t>{c} : std::nullopt; })) == "abc"_w);
 }
-#endif
 
-#ifndef DISABLE_FILTER
 TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello" ^ filter([](auto c) { return c != 'e'; })) == "hllo");
   CHECK(("12345" ^ filter([](auto c) { return c > '2'; })) == "345");
@@ -100,9 +89,7 @@ TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("hello"_w ^ filter([](auto c) { return c != 'e'; })) == "hllo"_w);
 }
-#endif
 
-#ifndef DISABLE_FLAT_MAP
 TEST_CASE(TPE_NAME "_flat_map", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("123" ^ flat_map([](auto c) { return string(2, c); })) == "112233");
   CHECK(("123" ^ flat_map([](auto) { return ""; })) == "");
@@ -111,15 +98,7 @@ TEST_CASE(TPE_NAME "_flat_map", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("123"_w ^ flat_map([](auto c) { return wstring(2, c); })) == "112233"_w);
 }
-#endif
 
-#ifndef DISABLE_FLATTEN
-TEST_CASE(TPE_NAME "_flatten", "[" TPE_NAME "][" TPE_GROUP "]") {
-  // XXX no-op due to shape
-}
-#endif
-
-#ifndef DISABLE_DISTINCT
 TEST_CASE(TPE_NAME "_distinct", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aabcc" ^ distinct()) == "abc");
   CHECK(("" ^ distinct()) == "");
@@ -128,9 +107,7 @@ TEST_CASE(TPE_NAME "_distinct", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("aaaa"_w ^ distinct()) == "a"_w);
 }
-#endif
 
-#ifndef DISABLE_DISTINCT_BY
 TEST_CASE(TPE_NAME "_distinct_by", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aabcc" ^ distinct_by([](auto c) { return c; })) == "abc");
   CHECK(("" ^ distinct_by([](auto c) { return c; })) == "");
@@ -143,9 +120,7 @@ TEST_CASE(TPE_NAME "_distinct_by", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("AaAa"_w ^ distinct_by([](auto wc) { return std::towlower(wc); })) == "A"_w);
 }
-#endif
 
-#ifndef DISABLE_COUNT
 TEST_CASE(TPE_NAME "_count", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aabcc" ^ count([](auto c) { return c == 'a'; })) == 2);
   CHECK(("aabcc" ^ count([](auto c) { return c == 'b'; })) == 1);
@@ -153,9 +128,7 @@ TEST_CASE(TPE_NAME "_count", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aaaa" ^ count([](auto c) { return c == 'a'; })) == 4);
   CHECK(("abcde" ^ count([](auto c) { return c > 'c'; })) == 2);
 }
-#endif
 
-#ifndef DISABLE_EXISTS
 TEST_CASE(TPE_NAME "_exists", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("Hello World" ^ exists(::isspace)) == true);
   CHECK(("HelloWorld" ^ exists(::isspace)) == false);
@@ -164,9 +137,7 @@ TEST_CASE(TPE_NAME "_exists", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("Hello World"_w ^ exists(::isspace)) == true);
 }
-#endif
 
-#ifndef DISABLE_FORALL
 TEST_CASE(TPE_NAME "_forall", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("123" ^ forall(::isdigit)) == true);
   CHECK(("123a" ^ forall(::isdigit)) == false);
@@ -175,9 +146,7 @@ TEST_CASE(TPE_NAME "_forall", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("123"_w ^ forall(::isdigit)) == true);
 }
-#endif
 
-#ifndef DISABLE_FIND
 TEST_CASE(TPE_NAME "_find", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("" ^ find([](auto x) { return x == 'a'; })) == std::nullopt);
   CHECK(("hello" ^ find([](auto x) { return x == 'z'; })) == std::nullopt);
@@ -187,9 +156,7 @@ TEST_CASE(TPE_NAME "_find", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abc123xyz"_w ^ find([](auto x) { return std::isdigit(x); })) == std::optional{'1'});
 }
-#endif
 
-#ifndef DISABLE_REDUCE
 TEST_CASE(TPE_NAME "_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcd" ^ reduce([](auto a, auto b) { return std::min(a, b); })).value() == 'a');
   CHECK(("1234" ^ reduce([](auto a, auto b) { return std::max(a, b); })).value() == '4');
@@ -197,9 +164,7 @@ TEST_CASE(TPE_NAME "_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abcd"_w ^ reduce([](auto a, auto b) { return std::min(a, b); })).value() == 'a');
 }
-#endif
 
-#ifndef DISABLE_TAP_EACH
 TEST_CASE(TPE_NAME "_tap_each", "[" TPE_NAME "][" TPE_GROUP "]") {
   {
     string actual;
@@ -218,9 +183,7 @@ TEST_CASE(TPE_NAME "_tap_each", "[" TPE_NAME "][" TPE_GROUP "]") {
     CHECK(actual == "hello"_w);
   }
 }
-#endif
 
-#ifndef DISABLE_FOR_EACH
 TEST_CASE(TPE_NAME "_for_each", "[" TPE_NAME "][" TPE_GROUP "]") {
   {
     string actual;
@@ -239,9 +202,7 @@ TEST_CASE(TPE_NAME "_for_each", "[" TPE_NAME "][" TPE_GROUP "]") {
     CHECK(actual == "hello"_w);
   }
 }
-#endif
 
-#ifndef DISABLE_PARTITION
 TEST_CASE(TPE_NAME "_partition", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("135246" ^ partition([](auto c) { return (c - '0') % 2 == 0; })) == std::pair<string, string>{"246", "135"});
   CHECK(("111" ^ partition([](auto c) { return (c - '0') % 2 == 0; })) == std::pair<string, string>{"", "111"});
@@ -250,9 +211,7 @@ TEST_CASE(TPE_NAME "_partition", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("135246"_w ^ partition([](auto c) { return (c - '0') % 2 == 0; })) == std::pair<wstring, wstring>{"246"_w, "135"_w});
 }
-#endif
 
-#ifndef DISABLE_GROUP_MAP_REDUCE
 TEST_CASE(TPE_NAME "_group_map_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aaabbc" ^ group_map_reduce([](auto c) { return c; }, [](auto) { return 1; }, std::plus<>{})) ==
         std::unordered_map<char, int>{{'a', 3}, {'b', 2}, {'c', 1}});
@@ -261,9 +220,7 @@ TEST_CASE(TPE_NAME "_group_map_reduce", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aaabbc"_w ^ group_map_reduce([](auto c) { return c; }, [](auto) { return 1; }, std::plus<>{})) ==
         std::unordered_map<wchar_t, int>{{'a', 3}, {'b', 2}, {'c', 1}});
 }
-#endif
 
-#ifndef DISABLE_GROUP_MAP
 TEST_CASE(TPE_NAME "_group_map", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aaabbc" ^ group_map([](auto c) { return c; }, [](auto) { return 1; })) ==
         std::unordered_map<char, std::vector<int>>{{'a', {1, 1, 1}}, {'b', {1, 1}}, {'c', {1}}});
@@ -272,9 +229,7 @@ TEST_CASE(TPE_NAME "_group_map", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aaabbc"_w ^ group_map([](auto c) { return c; }, [](auto) { return 1; })) ==
         std::unordered_map<wchar_t, std::vector<int>>{{'a', {1, 1, 1}}, {'b', {1, 1}}, {'c', {1}}});
 }
-#endif
 
-#ifndef DISABLE_GROUP_BY
 TEST_CASE(TPE_NAME "_group_by", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aaabbc" ^ group_by([](auto c) { return c; })) ==
         std::unordered_map<char, std::vector<char>>{{'a', {'a', 'a', 'a'}}, {'b', {'b', 'b'}}, {'c', {'c'}}});
@@ -283,74 +238,56 @@ TEST_CASE(TPE_NAME "_group_by", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("aaabbc"_w ^ group_by([](auto c) { return c; })) ==
         std::unordered_map<wchar_t, std::vector<wchar_t>>{{'a', {'a', 'a', 'a'}}, {'b', {'b', 'b'}}, {'c', {'c'}}});
 }
-#endif
 
-#ifndef DISABLE_TO_VECTOR
 TEST_CASE(TPE_NAME "_to_vector", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcd" ^ to_vector()) == std::vector<char>{'a', 'b', 'c', 'd'});
   CHECK(("" ^ to_vector()) == std::vector<char>{});
 
   CHECK(("abcd"_w ^ to_vector()) == std::vector<wchar_t>{'a', 'b', 'c', 'd'});
 }
-#endif
 
-#ifndef DISABLE_TO
 TEST_CASE(TPE_NAME "_to", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcd" ^ to<std::list>()) == std::list<char>{'a', 'b', 'c', 'd'});
   CHECK(("" ^ to<std::list>()) == std::list<char>{});
 
   CHECK(("abcd"_w ^ to<std::list>()) == std::list<wchar_t>{'a', 'b', 'c', 'd'});
 }
-#endif
 
-// sequence...
-
-#ifndef DISABLE_PREPEND
 TEST_CASE(TPE_NAME "_prepend", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("xyz" ^ prepend('a')) == "axyz");
   CHECK(("" ^ prepend('a')) == "a");
 
   CHECK(("xyz"_w ^ prepend('a')) == "axyz"_w);
 }
-#endif
 
-#ifndef DISABLE_HEAD_MAYBE
 TEST_CASE(TPE_NAME "_head_maybe", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ head_maybe()) == optional<char>{'a'});
   CHECK(("" ^ head_maybe()) == std::nullopt);
 
   CHECK(("abc"_w ^ head_maybe()) == optional<wchar_t>{'a'});
 }
-#endif
 
-#ifndef DISABLE_LAST_MAYBE
 TEST_CASE(TPE_NAME "_last_maybe", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ last_maybe()) == optional<char>{'c'});
   CHECK(("" ^ last_maybe()) == std::nullopt);
 
   CHECK(("abc"_w ^ last_maybe()) == optional<wchar_t>{'c'});
 }
-#endif
 
-#ifndef DISABLE_INIT
 TEST_CASE(TPE_NAME "_init", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ init()) == "ab");
   CHECK(("a" ^ init()) == "");
 
   CHECK(("abc"_w ^ init()) == "ab"_w);
 }
-#endif
 
-#ifndef DISABLE_TAIL
 TEST_CASE(TPE_NAME "_tail", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ tail()) == "bc");
   CHECK(("a" ^ tail()) == "");
 
   CHECK(("abc"_w ^ tail()) == "bc"_w);
 }
-#endif
 
-#ifndef DISABLE_AT_MAYBE
 TEST_CASE(TPE_NAME "_at_maybe", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello" ^ at_maybe(0)) == optional<char>{'h'});
   CHECK(("hello" ^ at_maybe(4)) == optional<char>{'o'});
@@ -359,9 +296,7 @@ TEST_CASE(TPE_NAME "_at_maybe", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("hello"_w ^ at_maybe(0)) == optional<wchar_t>{'h'});
 }
-#endif
 
-#ifndef DISABLE_SLICE
 TEST_CASE(TPE_NAME "_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello" ^ slice(1, 4)) == "ell");
   CHECK(("hello" ^ slice(0, 5)) == "hello");
@@ -372,9 +307,7 @@ TEST_CASE(TPE_NAME "_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("" ^ slice(0, 0)) == "");
   CHECK(("hello" ^ slice(3, 2)) == "");
 }
-#endif
 
-#ifndef DISABLE_INDEX_OF_SLICE
 TEST_CASE(TPE_NAME "_index_of_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ index_of_slice("ab")) == 0);
   CHECK(("abcde" ^ index_of_slice("cde")) == 2);
@@ -388,9 +321,7 @@ TEST_CASE(TPE_NAME "_index_of_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde"_w ^ index_of_slice(""_w)) == 0);
   CHECK(("abcde"_w ^ index_of_slice("ab"_w)) == 0);
 }
-#endif
 
-#ifndef DISABLE_CONTAINS_SLICE
 TEST_CASE(TPE_NAME "_contains_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ contains_slice("ab")) == true);
   CHECK(("abcde" ^ contains_slice("cde")) == true);
@@ -404,9 +335,7 @@ TEST_CASE(TPE_NAME "_contains_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde"_w ^ contains_slice(""_w)) == true);
   CHECK(("abcde"_w ^ contains_slice("ab"_w)) == true);
 }
-#endif
 
-#ifndef DISABLE_INDEX_OF
 TEST_CASE(TPE_NAME "_index_of", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello" ^ index_of('h')) == 0);
   CHECK(("hello" ^ index_of('o')) == 4);
@@ -415,9 +344,7 @@ TEST_CASE(TPE_NAME "_index_of", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("hello"_w ^ index_of('h')) == 0);
 }
-#endif
 
-#ifndef DISABLE_CONTAINS
 TEST_CASE(TPE_NAME "_contains", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello" ^ contains('h')) == true);
   CHECK(("hello" ^ contains('o')) == true);
@@ -426,9 +353,7 @@ TEST_CASE(TPE_NAME "_contains", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("hello"_w ^ contains('h')) == true);
 }
-#endif
 
-#ifndef DISABLE_FIND_LAST
 TEST_CASE(TPE_NAME "_find_last", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("" ^ find_last([](auto x) { return x == 'a'; })) == std::nullopt);
   CHECK(("hello" ^ find_last([](auto x) { return x == 'z'; })) == std::nullopt);
@@ -438,9 +363,7 @@ TEST_CASE(TPE_NAME "_find_last", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abc123xyz"_w ^ find_last([](auto x) { return std::isdigit(x); })) == std::optional{'3'});
 }
-#endif
 
-#ifndef DISABLE_INDEX_WHERE
 TEST_CASE(TPE_NAME "_index_where", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello" ^ index_where([](auto c) { return c == 'h'; })) == 0);
   CHECK(("hello" ^ index_where([](auto c) { return c == 'o'; })) == 4);
@@ -449,16 +372,12 @@ TEST_CASE(TPE_NAME "_index_where", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("hello"_w ^ index_where([](auto c) { return c == 'h'; })) == 0);
 }
-#endif
 
-#ifndef DISABLE_ZIP_WITH_INDEX
 TEST_CASE(TPE_NAME "_zip_with_index", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ zip_with_index()) == std::vector<std::pair<char, size_t>>{std::pair{'a', 0}, std::pair{'b', 1}, std::pair{'c', 2}});
   CHECK(("" ^ zip_with_index()) == std::vector<std::pair<char, size_t>>{});
 }
-#endif
 
-#ifndef DISABLE_ZIP
 TEST_CASE(TPE_NAME "_zip", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ zip("123")) == std::vector{std::pair{'a', '1'}, std::pair{'b', '2'}, std::pair{'c', '3'}});
   CHECK(("ab" ^ zip("123")) == std::vector{std::pair{'a', '1'}, std::pair{'b', '2'}});
@@ -467,24 +386,14 @@ TEST_CASE(TPE_NAME "_zip", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("ab"_w ^ zip("123"_w)) == std::vector{std::pair<wchar_t, wchar_t>{'a', '1'}, std::pair<wchar_t, wchar_t>{'b', '2'}});
 }
-#endif
 
-#ifndef DISABLE_TRANSPOSE
-TEST_CASE(TPE_NAME "_transpose", "[" TPE_NAME "][" TPE_GROUP "]") {
-  // XXX no-op due to shape
-}
-#endif
-
-#ifndef DISABLE_REVERSE
 TEST_CASE(TPE_NAME "_reverse", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ reverse()) == "cba");
   CHECK(("" ^ reverse()) == "");
 
   CHECK(("abc"_w ^ reverse()) == "cba"_w);
 }
-#endif
 
-#ifndef DISABLE_SHUFFLE
 TEST_CASE(TPE_NAME "_shuffle", "[" TPE_NAME "][" TPE_GROUP "]") {
   std::mt19937 rng(42); // NOLINT(*-msc51-cpp)
   CHECK(("abcdefgh" ^ shuffle(rng)) != "abcdefgh");
@@ -492,12 +401,9 @@ TEST_CASE(TPE_NAME "_shuffle", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abcdefgh"_w ^ shuffle(rng)) != "abcdefgh"_w);
 
-  // XXX technically not part of spec
   CHECK(("abcdefgh" ^ shuffle(std::mt19937(42))) == ("abcdefgh" ^ shuffle(std::mt19937(42)))); // NOLINT(*-msc51-cpp)
 }
-#endif
 
-#ifndef DISABLE_SORT
 TEST_CASE(TPE_NAME "_sort", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("cba" ^ sort()) == "abc");
   CHECK(("cbaA" ^ sort()) == "Aabc");
@@ -509,18 +415,14 @@ TEST_CASE(TPE_NAME "_sort", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("" ^ sort([](auto l, auto r) { return l > r; })) == "");
   CHECK(("cba"_w ^ sort([](auto l, auto r) { return l > r; })) == "cba"_w);
 }
-#endif
 
-#ifndef DISABLE_SORT_BY
 TEST_CASE(TPE_NAME "_sort_by", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("cbaA" ^ sort_by([](auto x) { return std::tolower(x); })) == "aAbc");
   CHECK(("" ^ sort_by([](auto x) { return std::tolower(x); })) == "");
 
   CHECK(("cbaA"_w ^ sort_by([](auto x) { return std::tolower(x); })) == "aAbc"_w);
 }
-#endif
 
-#ifndef DISABLE_SPLIT_AT
 TEST_CASE(TPE_NAME "_split_at", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ split_at(1)) == std::pair<string, string>{"a", "bc"});
   CHECK(("abc" ^ split_at(0)) == std::pair<string, string>{"", "abc"});
@@ -529,9 +431,7 @@ TEST_CASE(TPE_NAME "_split_at", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abc"_w ^ split_at(1)) == std::pair<wstring, wstring>{"a"_w, "bc"_w});
 }
-#endif
 
-#ifndef DISABLE_TAKE
 TEST_CASE(TPE_NAME "_take", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ take(2)) == "ab");
   CHECK(("abc" ^ take(0)) == "");
@@ -542,9 +442,7 @@ TEST_CASE(TPE_NAME "_take", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc"_w ^ take(2)) == "ab"_w);
   CHECK(("abc"_w ^ take(0)) == ""_w);
 }
-#endif
 
-#ifndef DISABLE_DROP
 TEST_CASE(TPE_NAME "_drop", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ drop(0)) == "abcde");
   CHECK(("abcde" ^ drop(2)) == "cde");
@@ -556,9 +454,7 @@ TEST_CASE(TPE_NAME "_drop", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde"_w ^ drop(2)) == "cde"_w);
   CHECK(("abcde"_w ^ drop(6)) == ""_w);
 }
-#endif
 
-#ifndef DISABLE_TAKE_RIGHT
 TEST_CASE(TPE_NAME "_take_right", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ take_right(2)) == "de");
   CHECK(("abcde" ^ take_right(0)) == "");
@@ -568,9 +464,7 @@ TEST_CASE(TPE_NAME "_take_right", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde"_w ^ take_right(2)) == "de"_w);
   CHECK(("abcde"_w ^ take_right(0)) == ""_w);
 }
-#endif
 
-#ifndef DISABLE_DROP_RIGHT
 TEST_CASE(TPE_NAME "_drop_right", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ drop_right(2)) == "abc");
   CHECK(("abcde" ^ drop_right(0)) == "abcde");
@@ -580,9 +474,7 @@ TEST_CASE(TPE_NAME "_drop_right", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde"_w ^ drop_right(2)) == "abc"_w);
   CHECK(("abcde"_w ^ drop_right(6)) == ""_w);
 }
-#endif
 
-#ifndef DISABLE_TAKE_WHILE
 TEST_CASE(TPE_NAME "_take_while", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ take_while([](auto c) { return c < 'd'; })) == "abc");
   CHECK(("abcde" ^ take_while([](auto) { return false; })) == "");
@@ -590,9 +482,7 @@ TEST_CASE(TPE_NAME "_take_while", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abcde"_w ^ take_while([](auto c) { return c < 'd'; })) == "abc"_w);
 }
-#endif
 
-#ifndef DISABLE_DROP_WHILE
 TEST_CASE(TPE_NAME "_drop_while", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ drop_while([](auto c) { return c < 'd'; })) == "de");
   CHECK(("abcde" ^ drop_while([](auto) { return true; })) == "");
@@ -600,9 +490,7 @@ TEST_CASE(TPE_NAME "_drop_while", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abcde"_w ^ drop_while([](auto c) { return c < 'd'; })) == "de"_w);
 }
-#endif
 
-#ifndef DISABLE_FOLD_LEFT
 TEST_CASE(TPE_NAME "_fold_left", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ fold_left(string(""), [](auto acc, auto c) { return acc + c; })) == "abc");
   CHECK(("" ^ fold_left(string("init"), [](auto acc, auto c) { return acc + c; })) == "init");
@@ -613,9 +501,7 @@ TEST_CASE(TPE_NAME "_fold_left", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abc"_w ^ fold_left(""_w, [](auto acc, auto c) { return acc + c; })) == "abc"_w);
 }
-#endif
 
-#ifndef DISABLE_FOLD_RIGHT
 TEST_CASE(TPE_NAME "_fold_right", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abc" ^ fold_right(string(""), [](auto c, auto acc) { return acc + c; })) == "cba");
   CHECK(("" ^ fold_right(string("init"), [](auto c, auto acc) { return acc + c; })) == "init");
@@ -626,9 +512,7 @@ TEST_CASE(TPE_NAME "_fold_right", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abc"_w ^ fold_right(""_w, [](auto c, auto acc) { return acc + c; })) == "cba"_w);
 }
-#endif
 
-#ifndef DISABLE_SLIDING
 TEST_CASE(TPE_NAME "_sliding", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ sliding(1, 1)) == std::vector<string>{"a", "b", "c", "d", "e"});
   CHECK(("abcde" ^ sliding(2, 1)) == std::vector<string>{"ab", "bc", "cd", "de"});
@@ -644,20 +528,14 @@ TEST_CASE(TPE_NAME "_sliding", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ sliding(10, 1)) == std::vector<string>{"abcde"});
   CHECK(("abc" ^ sliding(4, 1)) == std::vector<string>{"abc"});
 }
-#endif
 
-#ifndef DISABLE_GROUPED
 TEST_CASE(TPE_NAME "_grouped", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ grouped(1)) == std::vector<string>{"a", "b", "c", "d", "e"});
   CHECK(("abcde" ^ grouped(2)) == std::vector<string>{"ab", "cd", "e"});
   CHECK(("abcde" ^ grouped(3)) == std::vector<string>{"abc", "de"});
   CHECK(("" ^ grouped(2)) == std::vector<string>{});
 }
-#endif
 
-// =============
-
-#ifndef DISABLE_TRIM_LEADING
 TEST_CASE(TPE_NAME "_trim_leading", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("    abcde" ^ trim_leading()) == "abcde");
   CHECK(("abcde     " ^ trim_leading()) == "abcde     ");
@@ -667,9 +545,7 @@ TEST_CASE(TPE_NAME "_trim_leading", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("    abcde"_w ^ trim_leading()) == "abcde"_w);
 }
-#endif
 
-#ifndef DISABLE_TRIM_TRAILING
 TEST_CASE(TPE_NAME "_trim_trailing", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("    abcde" ^ trim_trailing()) == "    abcde");
   CHECK(("abcde     " ^ trim_trailing()) == "abcde");
@@ -679,9 +555,7 @@ TEST_CASE(TPE_NAME "_trim_trailing", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("    abcde"_w ^ trim_trailing()) == "    abcde"_w);
 }
-#endif
 
-#ifndef DISABLE_TRIM
 TEST_CASE(TPE_NAME "_trim", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("    abcde   " ^ trim()) == "abcde");
   CHECK(("abcde" ^ trim()) == "abcde");
@@ -691,9 +565,7 @@ TEST_CASE(TPE_NAME "_trim", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("    abcde   "_w ^ trim()) == "abcde"_w);
 }
-#endif
 
-#ifndef DISABLE_IS_BLANK
 TEST_CASE(TPE_NAME "_is_blank", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("" ^ is_blank()) == true);
   CHECK(("     " ^ is_blank()) == true);
@@ -702,9 +574,7 @@ TEST_CASE(TPE_NAME "_is_blank", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK((""_w ^ is_blank()) == true);
 }
-#endif
 
-#ifndef DISABLE_INDENT
 TEST_CASE(TPE_NAME "_indent", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ indent(3)) == "   abcde");
   CHECK(("abcde" ^ indent(0)) == "abcde");
@@ -746,9 +616,7 @@ TEST_CASE(TPE_NAME "_indent", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("\r\nabc\r\nxyz\r\n"_w ^ indent(3, "\r\n"_w)) == "   \r\n   abc\r\n   xyz\r\n"_w);
 }
-#endif
 
-#ifndef DISABLE_STARTS_WITH
 TEST_CASE(TPE_NAME "_starts_with", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ starts_with("abcde")) == true);
   CHECK(("abcde" ^ starts_with("ab")) == true);
@@ -761,9 +629,7 @@ TEST_CASE(TPE_NAME "_starts_with", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abcde"_w ^ starts_with("a"_w)) == true);
 }
-#endif
 
-#ifndef DISABLE_ENDS_WITH
 TEST_CASE(TPE_NAME "_ends_with", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ ends_with("abcde")) == true);
   CHECK(("abcde" ^ ends_with("ab")) == false);
@@ -776,9 +642,7 @@ TEST_CASE(TPE_NAME "_ends_with", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abcde"_w ^ ends_with("a"_w)) == false);
 }
-#endif
 
-#ifndef DISABLE_TO_UPPER
 TEST_CASE(TPE_NAME "_to_upper", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("abcde" ^ to_upper()) == "ABCDE");
   CHECK(("ABCDE" ^ to_upper()) == "ABCDE");
@@ -788,9 +652,7 @@ TEST_CASE(TPE_NAME "_to_upper", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("AbCdE"_w ^ to_upper()) == "ABCDE"_w);
 }
-#endif
 
-#ifndef DISABLE_TO_LOWER
 TEST_CASE(TPE_NAME "_to_lower", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("ABCDE" ^ to_lower()) == "abcde");
   CHECK(("abcde" ^ to_lower()) == "abcde");
@@ -800,9 +662,7 @@ TEST_CASE(TPE_NAME "_to_lower", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("AbCdE"_w ^ to_lower()) == "abcde"_w);
 }
-#endif
 
-#ifndef DISABLE_REPLACE_ALL
 TEST_CASE(TPE_NAME "_replace_all", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello world" ^ replace_all("world", "there")) == "hello there");
   CHECK(("hello world world" ^ replace_all("world", "there")) == "hello there there");
@@ -813,9 +673,7 @@ TEST_CASE(TPE_NAME "_replace_all", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("hello world"_w ^ replace_all("world"_w, "there"_w)) == "hello there"_w);
 }
-#endif
 
-#ifndef DISABLE_CONTAINS_IGNORE_CASE
 TEST_CASE(TPE_NAME "_contains_ignore_case", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("Hello World" ^ contains_ignore_case("world")) == true);
   CHECK(("Hello World" ^ contains_ignore_case("WORLD")) == true);
@@ -826,9 +684,7 @@ TEST_CASE(TPE_NAME "_contains_ignore_case", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("Hello World"_w ^ contains_ignore_case("world"_w)) == true);
 }
-#endif
 
-#ifndef DISABLE_EQUALS_IGNORE_CASE
 TEST_CASE(TPE_NAME "_equals_ignore_case", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("Hello World" ^ equals_ignore_case("hello world")) == true);
   CHECK(("HELLO WORLD" ^ equals_ignore_case("hello world")) == true);
@@ -839,9 +695,7 @@ TEST_CASE(TPE_NAME "_equals_ignore_case", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("Hello World"_w ^ equals_ignore_case("hello world"_w)) == true);
 }
-#endif
 
-#ifndef DISABLE_SPLIT
 TEST_CASE(TPE_NAME "_split", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello,world,here" ^ split(',')) == std::vector<string>{"hello", "world", "here"});
   CHECK(("hello world here" ^ split(' ')) == std::vector<string>{"hello", "world", "here"});
@@ -853,9 +707,7 @@ TEST_CASE(TPE_NAME "_split", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello"_w ^ split(wchar_t('o'))) == std::vector<wstring>{"hell"_w, ""_w});
   CHECK(("hello"_w ^ split("lo"_w)) == std::vector<wstring>{"hel"_w, ""_w});
 }
-#endif
 
-#ifndef DISABLE_LINES
 TEST_CASE(TPE_NAME "_lines", "[" TPE_NAME "][" TPE_GROUP "]") {
   CHECK(("hello\nworld" ^ lines()) == std::vector<string>{"hello", "world"});
   CHECK(("hello\nworld\n" ^ lines()) == std::vector<string>{"hello", "world"});
@@ -865,4 +717,119 @@ TEST_CASE(TPE_NAME "_lines", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("hello\nworld\n"_w ^ lines()) == std::vector<wstring>{"hello"_w, "world"_w});
 }
-#endif
+
+TEST_CASE(TPE_NAME "_min", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("banana" ^ min()).value() == 'a');
+  CHECK(("dcba" ^ max()).value() == 'd');
+  CHECK(("x" ^ min()).value() == 'x');
+  CHECK(("" ^ min()).has_value() == false);
+  CHECK(("" ^ max()).has_value() == false);
+  CHECK(("banana"_w ^ min()).value() == 'a');
+}
+
+TEST_CASE(TPE_NAME "_min_by", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("abc" ^ min_by([](auto c) { return -c; })).value() == 'c');
+  CHECK(("abc" ^ max_by([](auto c) { return -c; })).value() == 'a');
+  CHECK(("" ^ min_by([](auto c) { return c; })).has_value() == false);
+}
+
+TEST_CASE(TPE_NAME "_sum_by", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("aXaaX" ^ sum_by([](auto c) { return c == 'a' ? 1 : 0; })) == 3);
+  CHECK(("" ^ sum_by([](auto c) { return c == 'a' ? 1 : 0; })) == 0);
+}
+
+TEST_CASE(TPE_NAME "_none_match", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("abc" ^ none_match([](auto c) { return c == 'z'; })) == true);
+  CHECK(("abc" ^ none_match([](auto c) { return c == 'b'; })) == false);
+  CHECK(("" ^ none_match([](auto c) { return c == 'b'; })) == true);
+}
+
+TEST_CASE(TPE_NAME "_intersect", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("aabbc" ^ intersect("abc")) == "abc");
+  CHECK(("aabbc" ^ intersect("aab")) == "aab");
+  CHECK(("abc" ^ intersect("")) == "");
+  CHECK(("aabbc"_w ^ intersect("aab"_w)) == "aab"_w);
+}
+
+TEST_CASE(TPE_NAME "_diff", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("aabbc" ^ diff("ab")) == "abc");
+  CHECK(("abc" ^ diff("")) == "abc");
+  CHECK(("abc" ^ diff("abc")) == "");
+}
+
+TEST_CASE(TPE_NAME "_scan_left", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("123" ^ scan_left(0, [](int acc, char c) { return acc + (c - '0'); })) == std::vector<int>{0, 1, 3, 6});
+  CHECK(("" ^ scan_left(42, [](int acc, char c) { return acc + c; })) == std::vector<int>{42});
+}
+
+TEST_CASE(TPE_NAME "_scan_right", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("123" ^ scan_right(0, [](char c, int acc) { return (c - '0') + acc; })) == std::vector<int>{6, 5, 3, 0});
+}
+
+TEST_CASE(TPE_NAME "_last_index_of_and_where", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("banana" ^ last_index_of('a')) == 5);
+  CHECK(("banana" ^ last_index_of('z')) == -1);
+  CHECK(("banana" ^ last_index_where([](auto c) { return c == 'n'; })) == 4);
+  CHECK(("banana" ^ last_index_where([](auto c) { return c == 'z'; })) == -1);
+}
+
+TEST_CASE(TPE_NAME "_strip", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("foobar" ^ strip_prefix("foo")) == "bar");
+  CHECK(("foobar" ^ strip_prefix("xyz")) == "foobar");
+  CHECK(("foobar" ^ strip_suffix("bar")) == "foo");
+  CHECK(("foobar" ^ strip_suffix("xyz")) == "foobar");
+  CHECK(("" ^ strip_prefix("x")) == "");
+  CHECK(("foobar"_w ^ strip_prefix("foo"_w)) == "bar"_w);
+}
+
+TEST_CASE(TPE_NAME "_capitalize", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("hello" ^ capitalize()) == "Hello");
+  CHECK(("" ^ capitalize()) == "");
+  CHECK(("Hello" ^ uncapitalize()) == "hello");
+  CHECK(("hello"_w ^ capitalize()) == "Hello"_w);
+}
+
+TEST_CASE(TPE_NAME "_replace_first", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("a-b-a" ^ replace_first("a", "X")) == "X-b-a");
+  CHECK(("a-b-a" ^ replace_first("z", "X")) == "a-b-a");
+  CHECK(("a-b-a" ^ replace_first("", "X")) == "a-b-a");
+}
+
+TEST_CASE(TPE_NAME "_repeated", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("ab" ^ repeated(3)) == "ababab");
+  CHECK(("ab" ^ repeated(1)) == "ab");
+  CHECK(("ab" ^ repeated(0)) == "");
+}
+
+TEST_CASE(TPE_NAME "_pad", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("42" ^ pad_left(5)) == "   42");
+  CHECK(("42" ^ pad_left(5, '0')) == "00042");
+  CHECK(("42" ^ pad_right(5, '.')) == "42...");
+  CHECK(("42" ^ pad_left(1)) == "42");
+  CHECK(("42" ^ pad_right(1)) == "42");
+}
+
+TEST_CASE(TPE_NAME "_words", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("  the  quick brown  " ^ words()) == std::vector<string>{"the", "quick", "brown"});
+  CHECK(("single" ^ words()) == std::vector<string>{"single"});
+  CHECK(("   " ^ words()) == std::vector<string>{});
+  CHECK(("" ^ words()) == std::vector<string>{});
+}
+
+TEST_CASE(TPE_NAME "_combinations", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("abc" ^ combinations(2)) == std::vector<string>{"ab", "ac", "bc"});
+  CHECK(("abcd" ^ combinations(3)) == std::vector<string>{"abc", "abd", "acd", "bcd"});
+  CHECK(("abc" ^ combinations(1)) == std::vector<string>{"a", "b", "c"});
+  CHECK(("abc" ^ combinations(0)) == std::vector<string>{""});
+  CHECK(("abc" ^ combinations(4)).empty());
+  CHECK(("" ^ combinations(0)) == std::vector<string>{""});
+  CHECK(("abc"_w ^ combinations(2)) == std::vector<wstring>{L"ab", L"ac", L"bc"});
+}
+
+TEST_CASE(TPE_NAME "_permutations", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(("abc" ^ permutations()) == std::vector<string>{"abc", "acb", "bac", "bca", "cab", "cba"});
+  CHECK(("ab" ^ permutations()) == std::vector<string>{"ab", "ba"});
+  CHECK(("a" ^ permutations()) == std::vector<string>{"a"});
+  CHECK(("" ^ permutations()) == std::vector<string>{""});
+  CHECK(("ab"_w ^ permutations()) == std::vector<wstring>{L"ab", L"ba"});
+}

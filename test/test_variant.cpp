@@ -1,11 +1,11 @@
-#include "test_base_includes.hpp"
-
 #include "catch2/catch_test_macros.hpp"
+
 #include "fixtures.hpp"
+#include "test_base_includes.hpp"
 
 using namespace aspartame;
 
-TEST_CASE("std::variant_get_maybe") {
+TEST_CASE("std::variant_get_maybe", "[std::variant][test_variant]") {
   std::variant<Foo, int, string> v{1};
   CHECK((v ^ get_maybe<int>()) == 1);
   CHECK((v ^ get_maybe<Foo>()) == std::nullopt);
@@ -20,7 +20,7 @@ TEST_CASE("std::variant_get_maybe") {
   CHECK((v ^ get_maybe<Foo>()) == Foo{42});
 }
 
-TEST_CASE("std::variant_holds") {
+TEST_CASE("std::variant_holds", "[std::variant][test_variant]") {
   std::variant<Foo, int, string> v{1};
   CHECK((v ^ holds<int>()) == true);
   CHECK((v ^ holds<Foo>()) == false);
@@ -35,7 +35,7 @@ TEST_CASE("std::variant_holds") {
   CHECK((v ^ holds<string>()) == false);
 }
 
-TEST_CASE("std::variant_holds_any") {
+TEST_CASE("std::variant_holds_any", "[std::variant][test_variant]") {
   std::variant<Foo, int, string> v{1};
   CHECK((v ^ holds_any<int>()) == true);
   CHECK((v ^ holds_any<Foo>()) == false);
@@ -59,17 +59,17 @@ TEST_CASE("std::variant_holds_any") {
   CHECK((v ^ holds_any<>()) == false);
 }
 
-TEST_CASE("std::variant_narrow") {
+TEST_CASE("std::variant_narrow", "[std::variant][test_variant]") {
   std::variant<Foo, int, string> v{1};
   CHECK((v ^ narrow<Foo, int, string>()) == std::optional<std::variant<Foo, int, string>>{1});
   CHECK((v ^ narrow<Foo, int>()) == std::optional<std::variant<Foo, int>>{{1}});
   CHECK((v ^ narrow<int, Foo>()) == std::optional<std::variant<int, Foo>>{{1}});
-  CHECK((v ^ narrow<Foo>()) == std::optional<std::variant<Foo>>{});
+  CHECK((v ^ narrow<Foo>()) == std::nullopt);
   v = "aaa";
   CHECK((v ^ narrow<Foo, int, string>()) == std::optional<std::variant<Foo, int, string>>{"aaa"});
-  CHECK((v ^ narrow<Foo, int>()) == std::optional<std::variant<Foo, int>>{});
-  CHECK((v ^ narrow<int, Foo>()) == std::optional<std::variant<int, Foo>>{});
-  CHECK((v ^ narrow<Foo>()) == std::optional<std::variant<Foo>>{});
+  CHECK((v ^ narrow<Foo, int>()) == std::nullopt);
+  CHECK((v ^ narrow<int, Foo>()) == std::nullopt);
+  CHECK((v ^ narrow<Foo>()) == std::nullopt);
   v = Foo{42};
   CHECK((v ^ narrow<Foo, int, string>()) == std::optional<std::variant<Foo, int, string>>{Foo{42}});
   CHECK((v ^ narrow<Foo, int>()) == std::optional<std::variant<Foo, int>>{Foo{42}});
@@ -77,7 +77,7 @@ TEST_CASE("std::variant_narrow") {
   CHECK((v ^ narrow<Foo>()) == std::optional<std::variant<Foo>>{Foo{42}});
 }
 
-TEST_CASE("std::variant_fold_partial_return_unique_ptr") {
+TEST_CASE("std::variant_fold_partial_return_unique_ptr", "[std::variant][test_variant]") {
   std::variant<std::unique_ptr<Foo>, int> v{1};
   CHECK(((v ^ fold_partial([](int x) { return std::make_unique<string>(std::to_string(x)); }) ^ map([](const auto &x) { return *x; })) == //
          "1"));
@@ -90,14 +90,14 @@ TEST_CASE("std::variant_fold_partial_return_unique_ptr") {
           map([](const auto &x) { return *x; })) == "42"));
 }
 
-TEST_CASE("std::variant_fold_total_unique_ptr") {
+TEST_CASE("std::variant_fold_total_unique_ptr", "[std::variant][test_variant]") {
   std::variant<std::unique_ptr<Foo>, int> v{1};
   CHECK((v ^ fold_total([](const std::unique_ptr<Foo> &x) { return x->value; }, [](int x) { return x; })) == 1);
   v = std::make_unique<Foo>(42);
   CHECK((v ^ fold_total([](const std::unique_ptr<Foo> &x) { return x->value; }, [](int x) { return x; })) == 42);
 }
 
-TEST_CASE("std::variant_fold_total") {
+TEST_CASE("std::variant_fold_total", "[std::variant][test_variant]") {
   std::variant<Foo, int, string> v{1};
   CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const string &s) { return int(s.length()); })) == 1);
   v = "aaa";
@@ -106,7 +106,7 @@ TEST_CASE("std::variant_fold_total") {
   CHECK((v ^ fold_total([](Foo x) { return x.value; }, [](int x) { return x; }, [](const string &s) { return int(s.length()); })) == 42);
 }
 
-TEST_CASE("std::variant_fold_partial") {
+TEST_CASE("std::variant_fold_partial", "[std::variant][test_variant]") {
   std::variant<Foo, int, string> v{1};
   CHECK((v ^ fold_partial([](Foo x) { return x.value; }, [](int x) { return x; },
                           [](const string &s) { return static_cast<int>(s.length()); })) == 1);
@@ -125,7 +125,7 @@ TEST_CASE("std::variant_fold_partial") {
   CHECK((v ^ fold_partial([](Foo x) { return x.value; })) == 42);
 }
 
-TEST_CASE("std::variant_foreach_total") {
+TEST_CASE("std::variant_foreach_total", "[std::variant][test_variant]") {
   std::variant<Foo, int, string> v{1};
   v ^ foreach_total([](Foo) { FAIL(); }, [](int x) { CHECK(x == 1); }, [](const string &) { FAIL(); });
   v = "aaa";
@@ -134,7 +134,7 @@ TEST_CASE("std::variant_foreach_total") {
   v ^ foreach_total([](Foo x) { CHECK(x == Foo{42}); }, [](int) { FAIL(); }, [](const string &) { FAIL(); });
 }
 
-TEST_CASE("std::variant_foreach_partial") {
+TEST_CASE("std::variant_foreach_partial", "[std::variant][test_variant]") {
   std::variant<Foo, int, string> v{1};
   v ^ foreach_partial([](Foo) { FAIL(); }, [](int x) { CHECK(x == 1); }, [](const string &) { FAIL(); });
   v = "aaa";

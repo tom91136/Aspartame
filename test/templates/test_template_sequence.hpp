@@ -4,8 +4,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../test_base_container1.hpp"
 #include "catch2/catch_test_macros.hpp"
+
+#include "../test_base_container1.hpp"
 
 #ifndef DISABLE_PREPEND
 TEST_CASE(TPE_NAME "_prepend", "[" TPE_NAME "][" TPE_GROUP "]") {
@@ -312,7 +313,6 @@ TEST_CASE(TPE_NAME "_find_last", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
-
 #ifndef DISABLE_COLLECT_FIRST
 TEST_CASE(TPE_NAME "_collect_first", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto intOp = [](auto &&xs) {
@@ -346,7 +346,7 @@ TEST_CASE(TPE_NAME "_collect_first", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto p2 = [](auto name, auto f) {
     using P2 = std::pair<int, int>;
   #ifdef TPE_MANY_INIT
-    RUN_CHECK(P2, std::optional<string>, name, {{3, 1}, {2, 2}, {1, 3}}, {"4" }, f);
+    RUN_CHECK(P2, std::optional<string>, name, {{3, 1}, {2, 2}, {1, 3}}, {"4"}, f);
   #endif
     RUN_CHECK(P2, std::optional<string>, name, {{3, 1}}, {"4"}, f);
     RUN_CHECK(P2, std::optional<string>, name, {}, {}, f);
@@ -509,18 +509,19 @@ TEST_CASE(TPE_NAME "_transpose", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
-#ifndef DISABLE_SEQUENCE
-TEST_CASE(TPE_NAME "_sequence", "[" TPE_NAME "][" TPE_GROUP "]") {
+#ifndef DISABLE_CARTESIAN_PRODUCT
+TEST_CASE(TPE_NAME "_cartesian_product", "[" TPE_NAME "][" TPE_GROUP "]") {
 
-  auto sequenceOp = [](auto &&xs) { return xs OP_ sequence(); };
+  auto sequenceOp = [](auto &&xs) { return xs OP_ cartesian_product(); };
 
   #ifdef TPE_MANY_INIT
   RUN_CHECK(TPE_CTOR_IN(int), TPE_CTOR_IN(TPE_CTOR_IN(int)), "", //
-            {{4, 2, 3}, {1, 5, 6}}, {{4,1},{4,5},{4,6},{2,1},{2,5},{2,6},{3,1},{3,5},{3,6}}, sequenceOp);
+            {{4, 2, 3}, {1, 5, 6}}, {{4, 1}, {4, 5}, {4, 6}, {2, 1}, {2, 5}, {2, 6}, {3, 1}, {3, 5}, {3, 6}}, sequenceOp);
   RUN_CHECK(TPE_CTOR_IN(string), TPE_CTOR_IN(TPE_CTOR_IN(string)), "", //
-            {{"banana", "cherry"}, {"apple", "mango"}}, {{"banana", "apple"},{"banana", "mango"},  {"cherry", "apple"},  {"cherry", "mango"}}, sequenceOp);
+            {{"banana", "cherry"}, {"apple", "mango"}},
+            {{"banana", "apple"}, {"banana", "mango"}, {"cherry", "apple"}, {"cherry", "mango"}}, sequenceOp);
   RUN_CHECK(TPE_CTOR_IN(Foo), TPE_CTOR_IN(TPE_CTOR_IN(Foo)), "", //
-            {{Foo(3), Foo(2)}, {Foo(1), Foo(4)}}, {{Foo(3), Foo(1)},{Foo(3), Foo(4)}, {Foo(2), Foo(1)},{Foo(2), Foo(4)}}, sequenceOp);
+            {{Foo(3), Foo(2)}, {Foo(1), Foo(4)}}, {{Foo(3), Foo(1)}, {Foo(3), Foo(4)}, {Foo(2), Foo(1)}, {Foo(2), Foo(4)}}, sequenceOp);
   #endif
 
   RUN_CHECK(TPE_CTOR_IN(int), TPE_CTOR_IN(TPE_CTOR_IN(int)), "", {{1}}, {{1}}, sequenceOp);
@@ -598,7 +599,7 @@ TEST_CASE(TPE_NAME "_sort", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_SORT_BY
 TEST_CASE(TPE_NAME "_sort_by", "[" TPE_NAME "][" TPE_GROUP "]") {
-  auto sortByOp =  [](auto &&xs) { return  xs OP_ sort_by([](auto s) { return s.size(); }) ;};
+  auto sortByOp = [](auto &&xs) { return xs OP_ sort_by([](auto s) { return s.size(); }); };
   #ifdef TPE_MANY_INIT
   RUN_CHECK_ID(string, "", {"b", "aa", "ccc"}, {"b", "aa", "ccc"}, sortByOp);
   #endif
@@ -606,7 +607,7 @@ TEST_CASE(TPE_NAME "_sort_by", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK_ID(string, "", {}, {}, sortByOp);
 
   using IntStringP = std::pair<int, string>;
-  auto sortIntStringOp =  [](auto &&xs) { return  xs OP_ sort_by([](auto x, auto) { return x; }) ;};
+  auto sortIntStringOp = [](auto &&xs) { return xs OP_ sort_by([](auto x, auto) { return x; }); };
   #ifdef TPE_MANY_INIT
   RUN_CHECK_ID(IntStringP, "", {{3, "b"}, {2, "aa"}, {1, "ccc"}}, {{1, "ccc"}, {2, "aa"}, {3, "b"}}, sortIntStringOp);
   #endif
@@ -1035,5 +1036,223 @@ TEST_CASE(TPE_NAME "_grouped", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(string, TPE_CTOR_OUT(TPE_CTOR_OUT(string)), "", {}, {}, groupedOpString(1));
   RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {Foo(1)}, {{Foo(1)}}, groupedOpFoo(1));
   RUN_CHECK(Foo, TPE_CTOR_OUT(TPE_CTOR_OUT(Foo)), "", {}, {}, groupedOpFoo(1));
+}
+#endif
+#ifndef DISABLE_LAST_INDEX_OF
+TEST_CASE(TPE_NAME "_last_index_of", "[" TPE_NAME "][" TPE_GROUP "]") {
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {1, 2, 3, 2, 1}, 3, [](auto &&xs) { return xs OP_ last_index_of(2); });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {1, 2, 3, 2, 1}, 4, [](auto &&xs) { return xs OP_ last_index_of(1); });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {1, 2, 3}, -1, [](auto &&xs) { return xs OP_ last_index_of(9); });
+  RUN_CHECK(int, std::make_signed_t<size_t>, "", {}, -1, [](auto &&xs) { return xs OP_ last_index_of(1); });
+  RUN_CHECK(string, std::make_signed_t<size_t>, "", {"a", "b", "a"}, 2, [](auto &&xs) { return xs OP_ last_index_of("a"); });
+  RUN_CHECK(Foo, std::make_signed_t<size_t>, "", {Foo(1), Foo(2), Foo(1)}, 2, [](auto &&xs) { return xs OP_ last_index_of(Foo(1)); });
+}
+#endif
+
+#ifndef DISABLE_LAST_INDEX_WHERE
+TEST_CASE(TPE_NAME "_last_index_where", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using Sz = std::make_signed_t<size_t>;
+  RUN_CHECK(int, Sz, "", {1, 2, 3, 2, 1}, 4, [](auto &&xs) { return xs OP_ last_index_where([](auto x) { return x < 3; }); });
+  RUN_CHECK(int, Sz, "", {1, 2, 3, 4}, 3, [](auto &&xs) { return xs OP_ last_index_where([](auto x) { return x % 2 == 0; }); });
+  RUN_CHECK(int, Sz, "", {1, 2, 3}, -1, [](auto &&xs) { return xs OP_ last_index_where([](auto x) { return x > 5; }); });
+  RUN_CHECK(int, Sz, "", {}, -1, [](auto &&xs) { return xs OP_ last_index_where([](auto x) { return x > 0; }); });
+}
+#endif
+
+#ifndef DISABLE_SCAN_LEFT
+TEST_CASE(TPE_NAME "_scan_left", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ scan_left(0, [](auto acc, auto x) { return acc + x; }); };
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {0, 1, 3, 6}, op);
+  RUN_CHECK_ID(int, "", {5}, {0, 5}, op);
+  RUN_CHECK_ID(int, "", {}, {0}, op);
+  RUN_CHECK(int, TPE_CTOR_OUT(string), "", {1, 2, 3}, {"", "1", "12", "123"},
+            [](auto &&xs) { return xs OP_ scan_left(string{}, [](auto acc, auto x) { return acc + std::to_string(x); }); });
+}
+#endif
+
+#ifndef DISABLE_SCAN_RIGHT
+TEST_CASE(TPE_NAME "_scan_right", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ scan_right(0, [](auto x, auto acc) { return x + acc; }); };
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {6, 5, 3, 0}, op);
+  RUN_CHECK_ID(int, "", {5}, {5, 0}, op);
+  RUN_CHECK_ID(int, "", {}, {0}, op);
+}
+#endif
+
+#ifndef DISABLE_UNZIP
+TEST_CASE(TPE_NAME "_unzip", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using P2 = std::pair<int, string>;
+  using Expected = std::pair<TPE_CTOR_OUT(int), TPE_CTOR_OUT(string)>;
+  auto op = [](auto &&xs) { return xs OP_ unzip(); };
+  RUN_CHECK(P2, Expected, "", {{1, "a"}, {2, "b"}, {3, "c"}}, {{1, 2, 3}, {"a", "b", "c"}}, op);
+  RUN_CHECK(P2, Expected, "", {{1, "a"}}, {{1}, {"a"}}, op);
+  RUN_CHECK(P2, Expected, "", {}, {{}, {}}, op);
+}
+#endif
+
+#ifndef DISABLE_INTERSECT
+TEST_CASE(TPE_NAME "_intersect", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&ys) { return [&](auto &&xs) { return xs OP_ intersect(ys); }; };
+  RUN_CHECK_ID(int, "", {1, 2, 2, 3, 4}, {2, 2, 4}, op(TPE_CTOR_OUT(int){2, 2, 4, 5}));
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {}, op(TPE_CTOR_OUT(int){}));
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {1, 2, 3}, op(TPE_CTOR_OUT(int){1, 2, 3, 4}));
+  RUN_CHECK_ID(string, "", {"a", "b", "b", "c"}, {"b", "c"}, op(TPE_CTOR_OUT(string){"b", "c", "d"}));
+  RUN_CHECK_ID(Foo, "", {Foo(1), Foo(2), Foo(3)}, {Foo(2), Foo(3)}, op(TPE_CTOR_OUT(Foo){Foo(2), Foo(3), Foo(4)}));
+  RUN_CHECK_ID(int, "", {}, {}, op(TPE_CTOR_OUT(int){1, 2}));
+}
+#endif
+
+#ifndef DISABLE_DIFF
+TEST_CASE(TPE_NAME "_diff", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&ys) { return [&](auto &&xs) { return xs OP_ diff(ys); }; };
+  RUN_CHECK_ID(int, "", {1, 2, 2, 3, 4}, {1, 3}, op(TPE_CTOR_OUT(int){2, 2, 4, 5}));
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {1, 2, 3}, op(TPE_CTOR_OUT(int){}));
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {}, op(TPE_CTOR_OUT(int){1, 2, 3, 4}));
+  RUN_CHECK_ID(string, "", {"a", "b", "b", "c"}, {"a", "b"}, op(TPE_CTOR_OUT(string){"b", "c", "d"}));
+  RUN_CHECK_ID(Foo, "", {Foo(1), Foo(2), Foo(3)}, {Foo(1)}, op(TPE_CTOR_OUT(Foo){Foo(2), Foo(3), Foo(4)}));
+  RUN_CHECK_ID(int, "", {}, {}, op(TPE_CTOR_OUT(int){1, 2}));
+}
+#endif
+
+#ifndef DISABLE_CROSS
+TEST_CASE(TPE_NAME "_cross", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using P = std::pair<int, int>;
+  auto op = [](auto &&ys) { return [&](auto &&xs) { return xs OP_ cross(ys); }; };
+  RUN_CHECK(int, TPE_CTOR_OUT(P), "", {1, 2, 3}, {{1, 10}, {1, 20}, {2, 10}, {2, 20}, {3, 10}, {3, 20}}, op(TPE_CTOR_OUT(int){10, 20}));
+  RUN_CHECK(int, TPE_CTOR_OUT(P), "", {1, 2}, {}, op(TPE_CTOR_OUT(int){}));
+  RUN_CHECK(int, TPE_CTOR_OUT(P), "", {}, {}, op(TPE_CTOR_OUT(int){1, 2}));
+  RUN_CHECK(int, TPE_CTOR_OUT(P), "", {1}, {{1, 5}}, op(TPE_CTOR_OUT(int){5}));
+}
+#endif
+
+#ifndef DISABLE_COMBINATIONS
+TEST_CASE(TPE_NAME "_combinations", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using Nested = TPE_CTOR_OUT(TPE_CTOR_OUT(int));
+  auto op = [](size_t k) { return [k](auto &&xs) { return xs OP_ combinations(k); }; };
+  RUN_CHECK(int, Nested, "", {1, 2, 3, 4}, {{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 4}}, op(2));
+  RUN_CHECK(int, Nested, "", {1, 2, 3}, {{1}, {2}, {3}}, op(1));
+  RUN_CHECK(int, Nested, "", {1, 2, 3}, {{}}, op(0));
+  RUN_CHECK(int, Nested, "", {1, 2, 3}, {}, op(5));
+  RUN_CHECK(int, Nested, "", {}, {{}}, op(0));
+  RUN_CHECK(int, Nested, "", {}, {}, op(1));
+}
+#endif
+
+#ifndef DISABLE_PERMUTATIONS
+TEST_CASE(TPE_NAME "_permutations", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using Nested = TPE_CTOR_OUT(TPE_CTOR_OUT(int));
+  auto op = [](auto &&xs) { return xs OP_ permutations(); };
+  RUN_CHECK(int, Nested, "", {1, 2, 3}, {{1, 2, 3}, {1, 3, 2}, {2, 1, 3}, {2, 3, 1}, {3, 1, 2}, {3, 2, 1}}, op);
+  RUN_CHECK(int, Nested, "", {1, 2}, {{1, 2}, {2, 1}}, op);
+  RUN_CHECK(int, Nested, "", {1}, {{1}}, op);
+  RUN_CHECK(int, Nested, "", {}, {{}}, op);
+}
+#endif
+
+#ifndef DISABLE_STRIDE
+TEST_CASE(TPE_NAME "_stride", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](size_t n) { return [n](auto &&xs) { return xs OP_ stride(n); }; };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK_ID(int, "", {1, 2, 3, 4, 5, 6, 7}, {1, 3, 5, 7}, op(2));
+  RUN_CHECK_ID(int, "", {1, 2, 3, 4, 5, 6, 7}, {1, 4, 7}, op(3));
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {1, 2, 3}, op(1));
+  #endif
+  RUN_CHECK_ID(int, "", {}, {}, op(2));
+}
+#endif
+
+#ifndef DISABLE_PAIRWISE
+TEST_CASE(TPE_NAME "_pairwise", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using P = std::pair<int, int>;
+  auto op = [](auto &&xs) { return xs OP_ pairwise(); };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, TPE_CTOR_OUT(P), "", {1, 2, 3, 4}, {{1, 2}, {2, 3}, {3, 4}}, op);
+  RUN_CHECK(int, TPE_CTOR_OUT(P), "", {5, 6}, {{5, 6}}, op);
+  #endif
+  RUN_CHECK(int, TPE_CTOR_OUT(P), "", {1}, {}, op);
+  RUN_CHECK(int, TPE_CTOR_OUT(P), "", {}, {}, op);
+}
+#endif
+
+#ifndef DISABLE_CHUNK_BY
+TEST_CASE(TPE_NAME "_chunk_by", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using Nested = TPE_CTOR_OUT(TPE_CTOR_OUT(int));
+  auto op = [](auto &&xs) { return xs OP_ chunk_by([](int a, int b) { return a == b; }); };
+  RUN_CHECK(int, Nested, "", {1, 1, 2, 3, 3, 4}, {{1, 1}, {2}, {3, 3}, {4}}, op);
+  RUN_CHECK(int, Nested, "", {7}, {{7}}, op);
+  RUN_CHECK(int, Nested, "", {}, {}, op);
+
+  auto monotonic = [](auto &&xs) { return xs OP_ chunk_by([](int a, int b) { return a <= b; }); };
+  RUN_CHECK(int, Nested, "", {1, 2, 3, 2, 4, 5, 1}, {{1, 2, 3}, {2, 4, 5}, {1}}, monotonic);
+}
+#endif
+
+#ifndef DISABLE_IS_SORTED
+TEST_CASE(TPE_NAME "_is_sorted", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ is_sorted(); };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, bool, "", {1, 2, 3, 4}, true, op);
+  RUN_CHECK(int, bool, "", {1, 3, 2}, false, op);
+  RUN_CHECK(string, bool, "", {"a", "b", "c"}, true, op);
+  #endif
+  RUN_CHECK(int, bool, "", {5}, true, op);
+  RUN_CHECK(int, bool, "", {}, true, op);
+}
+#endif
+
+#ifndef DISABLE_IS_SORTED_BY
+TEST_CASE(TPE_NAME "_is_sorted_by", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ is_sorted_by([](auto x) { return -x; }); };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, bool, "", {3, 2, 1}, true, op);
+  RUN_CHECK(int, bool, "", {1, 2, 3}, false, op);
+  #endif
+  RUN_CHECK(int, bool, "", {}, true, op);
+}
+#endif
+
+#ifndef DISABLE_TOP_K
+TEST_CASE(TPE_NAME "_top_k", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](size_t k) { return [k](auto &&xs) { return xs OP_ top_k(k); }; };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK_ID(int, "", {5, 2, 8, 1, 9, 3, 7}, {9, 8, 7}, op(3));
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {3, 2, 1}, op(10));
+  #endif
+  RUN_CHECK_ID(int, "", {7}, {7}, op(1));
+  RUN_CHECK_ID(int, "", {}, {}, op(3));
+}
+#endif
+
+#ifndef DISABLE_BOTTOM_K
+TEST_CASE(TPE_NAME "_bottom_k", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](size_t k) { return [k](auto &&xs) { return xs OP_ bottom_k(k); }; };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK_ID(int, "", {5, 2, 8, 1, 9, 3, 7}, {1, 2, 3}, op(3));
+  RUN_CHECK_ID(int, "", {3, 2, 1}, {1, 2, 3}, op(10));
+  #endif
+  RUN_CHECK_ID(int, "", {7}, {7}, op(1));
+  RUN_CHECK_ID(int, "", {}, {}, op(3));
+}
+#endif
+
+#ifndef DISABLE_SYMMETRIC_DIFFERENCE
+TEST_CASE(TPE_NAME "_symmetric_difference", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&ys) { return [&](auto &&xs) { return xs OP_ symmetric_difference(ys); }; };
+  RUN_CHECK_ID(int, "", {1, 2, 2, 3}, {1, 2, 4}, op(TPE_CTOR_OUT(int){2, 3, 4}));
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {1, 2, 3}, op(TPE_CTOR_OUT(int){}));
+  RUN_CHECK_ID(int, "", {}, {1, 2}, op(TPE_CTOR_OUT(int){1, 2}));
+  RUN_CHECK_ID(int, "", {1, 2, 3}, {}, op(TPE_CTOR_OUT(int){1, 2, 3}));
+}
+#endif
+
+#ifndef DISABLE_JOIN_WITH
+TEST_CASE(TPE_NAME "_join_with", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op_single = [](auto &&xs) { return xs OP_ join_with(0); };
+  RUN_CHECK(TPE_CTOR_OUT(int), TPE_CTOR_OUT(int), "", {{1, 2}, {3, 4}, {5}}, {1, 2, 0, 3, 4, 0, 5}, op_single);
+  RUN_CHECK(TPE_CTOR_OUT(int), TPE_CTOR_OUT(int), "", {{7}}, {7}, op_single);
+  RUN_CHECK(TPE_CTOR_OUT(int), TPE_CTOR_OUT(int), "", {}, {}, op_single);
+
+  auto op_seq = [](auto &&xs) { return xs OP_ join_with(TPE_CTOR_OUT(int){-1, -2}); };
+  RUN_CHECK(TPE_CTOR_OUT(int), TPE_CTOR_OUT(int), "", {{1, 2}, {3, 4}}, {1, 2, -1, -2, 3, 4}, op_seq);
 }
 #endif

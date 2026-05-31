@@ -4,12 +4,12 @@
 
 namespace aspartame::details {
 
-template <typename Iter1,                           //
-          typename Iter2,                           //
+template <typename Iter1,                                         //
+          typename Iter2,                                         //
           typename I1 = typename details::value_type_of_t<Iter1>, //
           typename I2 = typename details::value_type_of_t<Iter2>, //
           typename T = std::pair<I1, I2>>
-class zip_iterator : public fwd_iterator<zip_iterator<Iter1, Iter2, I1, I2, T>, T> {
+class zip_iterator : public fwd_iterator<zip_iterator<Iter1, Iter2, I1, I2, T>, T, std::input_iterator_tag> {
   Iter1 it1, end1;
   Iter2 it2, end2;
   std::optional<T> current;

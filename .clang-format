@@ -1,4 +1,11 @@
 ﻿---
+Language: Cpp
+Standard: c++20
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+BreakBeforeBraces: Attach
+PointerAlignment: Right
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: All
@@ -9,4 +16,20 @@ ColumnLimit: 140
 CompactNamespaces: true
 FixNamespaceComments: true
 IndentPPDirectives: BeforeHash
+BinPackArguments: true
+BinPackParameters: true
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeIsMainRegex: '(_test)?$'
+IncludeCategories:
+  - Regex:    '^[<"]aspartame/'
+    Priority: 4
+  - Regex:    '^[<"](llvm|absl|boost|tsl|tl|phmap|parallel_hashmap|catch2|fmt|nlohmann)/|^<(Q[A-Z][A-Za-z]+)>$'
+    Priority: 3
+  - Regex:    '^<[a-z_]+\.h>$'
+    Priority: 2
+  - Regex:    '^<[a-z_]+>$'
+    Priority: 1
+  - Regex:    '.*'
+    Priority: 5
 ...

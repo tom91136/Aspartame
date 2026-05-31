@@ -8,11 +8,11 @@ namespace aspartame::details {
 template <typename InputIterator, //
           typename Function,      //
           typename T = typename details::value_type_of_t<InputIterator>>
-class tap_each_iterator : public fwd_iterator<tap_each_iterator<InputIterator, Function, T>, T> {
+class tap_each_iterator : public fwd_iterator<tap_each_iterator<InputIterator, Function, T>, T, std::input_iterator_tag> {
   InputIterator it, end;
   ca_optional<Function> f;
   std::optional<T> current;
-  [[nodiscard]] constexpr bool has_next() const { return it != end; }
+  [[nodiscard]] constexpr bool has_next() const { return f && it != end; }
 
 public:
   constexpr tap_each_iterator() = default;

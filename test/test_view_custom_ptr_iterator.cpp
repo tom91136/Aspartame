@@ -2,7 +2,6 @@
 #include <iterator>
 #include <vector>
 
-// Taken from LLVM ArrayRef
 template <typename T> struct ArrayRef {
   using value_type = T;
   using pointer = value_type *;
@@ -37,4 +36,23 @@ private:
 
 #define TPE_TEST_CHAIN(xs) (ArrayRef(xs))
 
+#include "catch2/catch_test_macros.hpp"
+
+#include <aspartame/all.hpp>
+
 #include "templates/test_template_view.hpp"
+#include "test_base_includes.hpp"
+
+TEST_CASE("ArrayRef_begin_end_ctor", "[view+custom_ptr_iterator]") {
+  using namespace aspartame;
+  const int data[] = {1, 2, 3, 4};
+  auto v = ArrayRef<int>(std::begin(data), std::end(data)) | to_vector();
+  REQUIRE(v == std::vector<int>{1, 2, 3, 4});
+}
+
+TEST_CASE("ArrayRef_empty_pair", "[view+custom_ptr_iterator]") {
+  using namespace aspartame;
+  const int *p = nullptr;
+  auto v = ArrayRef<int>(p, p) | to_vector();
+  REQUIRE(v == std::vector<int>{});
+}

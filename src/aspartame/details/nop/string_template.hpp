@@ -7,7 +7,7 @@
 namespace aspartame {
 template <typename C> //
 [[nodiscard]] constexpr auto trim_leading(const ASPARTAME_IN_TYPE1(C) & in) {
-  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {};
+  if constexpr (details::unsupported<ASPARTAME_IN_TYPE1(C)>(in)) {}
 }
 template <typename C> //
 [[nodiscard]] constexpr auto trim_trailing(const ASPARTAME_IN_TYPE1(C) & in) {

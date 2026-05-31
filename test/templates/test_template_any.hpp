@@ -4,10 +4,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../test_base_container1.hpp"
 #include "catch2/catch_test_macros.hpp"
 
-#ifndef DISABLE_AND_THEN
+#include "../test_base_container1.hpp"
+
 TEST_CASE(TPE_NAME "_and_then", "[" TPE_NAME "][" TPE_GROUP "]") {
   using IntP = std::pair<TPE_CTOR_IN(int), TPE_CTOR_IN(int)>;
   using StringP = std::pair<TPE_CTOR_IN(string), TPE_CTOR_IN(string)>;
@@ -15,11 +15,11 @@ TEST_CASE(TPE_NAME "_and_then", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   auto op = [](auto &&xs) { return xs ^ and_then([](auto x) { return std::pair{x, x}; }); };
 
-  #ifdef TPE_MANY_INIT
+#ifdef TPE_MANY_INIT
   RUN_CHECK(int, IntP, "", {4, 2, 3, 1, 5}, {{4, 2, 3, 1, 5}, {4, 2, 3, 1, 5}}, op);
   RUN_CHECK(string, StringP, "", {"banana", "cherry", "apple"}, {{{"banana", "cherry", "apple"}}, {{"banana", "cherry", "apple"}}}, op);
   RUN_CHECK(Foo, FooP, "", {Foo(3), Foo(2), Foo(1)}, {{Foo(3), Foo(2), Foo(1)}, {Foo(3), Foo(2), Foo(1)}}, op);
-  #endif
+#endif
 
   RUN_CHECK(int, IntP, "", {1}, {{1}, {1}}, op);
   RUN_CHECK(int, IntP, "", {}, {{}, {}}, op);
@@ -28,7 +28,6 @@ TEST_CASE(TPE_NAME "_and_then", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(Foo, FooP, "", {Foo(1)}, {{Foo(1)}, {Foo(1)}}, op);
   RUN_CHECK(Foo, FooP, "", {}, {}, op);
 }
-#endif
 
 #ifndef DISABLE_TAP
 TEST_CASE(TPE_NAME "_tap", "[" TPE_NAME "][" TPE_GROUP "]") {

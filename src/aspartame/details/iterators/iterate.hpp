@@ -7,7 +7,7 @@ namespace aspartame::details {
 
 template <typename T, //
           typename Function>
-class iterate_iterator : public fwd_iterator<iterate_iterator<T, Function>, T> {
+class iterate_iterator : public fwd_iterator<iterate_iterator<T, Function>, T, std::input_iterator_tag> {
   ca_optional<Function> f;
   std::optional<T> current;
   [[nodiscard]] constexpr bool has_next() const { return static_cast<bool>(f); }

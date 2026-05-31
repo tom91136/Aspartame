@@ -4,8 +4,9 @@
 #include <utility>
 #include <vector>
 
-#include "../test_base_container1.hpp"
 #include "catch2/catch_test_macros.hpp"
+
+#include "../test_base_container1.hpp"
 
 #ifndef DISABLE_MK_STRING
 TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
@@ -174,9 +175,12 @@ TEST_CASE(TPE_NAME "_const_as", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto strOp = [](auto &&xs) { return xs OP_ const_as<string *>(); };
   auto fooOp = [](auto &&xs) { return xs OP_ const_as<Foo *>(); };
 
-  auto i = new int(4);
-  auto s = new string("a");
-  auto f = new Foo(42);
+  int i_val{4};
+  string s_val{"a"};
+  Foo f_val{42};
+  int *i = &i_val;
+  string *s = &s_val;
+  Foo *f = &f_val;
   #ifdef TPE_MANY_INIT
   RUN_CHECK(const int *, TPE_CTOR_OUT(int *), "", {i, i, i}, {i, i, i}, intOp);
   RUN_CHECK(const string *, TPE_CTOR_OUT(string *), "", {s, s, s}, {s, s, s}, strOp);
@@ -189,21 +193,18 @@ TEST_CASE(TPE_NAME "_const_as", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(const string *, TPE_CTOR_OUT(string *), "", {}, {}, strOp);
   RUN_CHECK(const Foo *, TPE_CTOR_OUT(Foo *), "", {f}, {f}, fooOp);
   RUN_CHECK(const Foo *, TPE_CTOR_OUT(Foo *), "", {}, {}, fooOp);
-  delete i;
-  delete s;
-  delete f;
 }
 #endif
 
-#ifndef DISABLE_CONST_AS
+#ifndef DISABLE_REINTERPRET_AS
 TEST_CASE(TPE_NAME "_reinterpret_as", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto op = [](auto &&xs) { return xs OP_ reinterpret_as<const char *>() OP_ static_as<string>(); };
-  auto i = new int('*' | ('\0' << 8));
+  int i_val{'*' | ('\0' << 8)};
+  int *i = &i_val;
   #ifdef TPE_MANY_INIT
   RUN_CHECK(int *, TPE_CTOR_OUT(string), "", {i, i, i}, {"*", "*", "*"}, op);
   #endif
   RUN_CHECK(int *, TPE_CTOR_OUT(string), "", {i}, {"*"}, op);
-  delete i;
 }
 #endif
 
@@ -348,8 +349,9 @@ TEST_CASE(TPE_NAME "_flat_map", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P2, TPE_CTOR_OUT(int), name, {}, {}, f);
   };
   p2("spread", [](auto &&xs) { return xs OP_ flat_map([](auto x0, auto x1) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1}; }); });
-  p2("single",
-     [](auto &&xs) { return xs OP_ flat_map([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x)}; }); });
+  p2("single", [](auto &&xs) {
+    return xs OP_ flat_map([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x)}; });
+  });
 
   auto p3 = [](auto name, auto f) {
     using P3 = std::tuple<int, int, int>;
@@ -359,7 +361,8 @@ TEST_CASE(TPE_NAME "_flat_map", "[" TPE_NAME "][" TPE_GROUP "]") {
     RUN_CHECK(P3, TPE_CTOR_OUT(int), name, {{3, 1, 3}}, {3 + 1 + 3}, f);
     RUN_CHECK(P3, TPE_CTOR_OUT(int), name, {}, {}, f);
   };
-  p3("spread", [](auto &&xs) { return xs OP_ flat_map([](auto x0, auto x1, auto x2) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1 + x2}; }); });
+  p3("spread",
+     [](auto &&xs) { return xs OP_ flat_map([](auto x0, auto x1, auto x2) { return TPE_CTOR_OUT(decltype(x0)){x0 + x1 + x2}; }); });
   p3("single", [](auto &&xs) {
     return xs OP_ flat_map([](auto x) { return TPE_CTOR_OUT(std::decay_t<decltype(get<0>(x))>){get<0>(x) + get<1>(x) + get<2>(x)}; });
   });
@@ -1002,4 +1005,280 @@ TEST_CASE(TPE_NAME "_to_binary", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(StringFooP, StringFooM, "", {{"apple", Foo(1)}}, {{"apple", Foo(1)}}, op);
   RUN_CHECK(StringFooP, StringFooM, "", {}, {}, op);
 }
+#endif
+
+#ifndef DISABLE_MIN
+TEST_CASE(TPE_NAME "_min", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ min(); };
+  RUN_CHECK(int, std::optional<int>, "", {4, 2, 3, 1, 5}, std::optional<int>{1}, op);
+  RUN_CHECK(string, std::optional<string>, "", {"banana", "cherry", "apple"}, std::optional<string>{"apple"}, op);
+  RUN_CHECK(Foo, std::optional<Foo>, "", {Foo(3), Foo(2), Foo(1)}, std::optional<Foo>{Foo(1)}, op);
+  RUN_CHECK(int, std::optional<int>, "", {7}, std::optional<int>{7}, op);
+  RUN_CHECK(int, std::optional<int>, "", {}, std::nullopt, op);
+  RUN_CHECK(string, std::optional<string>, "", {}, std::nullopt, op);
+  RUN_CHECK(Foo, std::optional<Foo>, "", {}, std::nullopt, op);
+}
+#endif
+
+#ifndef DISABLE_MAX
+TEST_CASE(TPE_NAME "_max", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ max(); };
+  RUN_CHECK(int, std::optional<int>, "", {4, 2, 3, 1, 5}, std::optional<int>{5}, op);
+  RUN_CHECK(string, std::optional<string>, "", {"banana", "cherry", "apple"}, std::optional<string>{"cherry"}, op);
+  RUN_CHECK(Foo, std::optional<Foo>, "", {Foo(3), Foo(2), Foo(1)}, std::optional<Foo>{Foo(3)}, op);
+  RUN_CHECK(int, std::optional<int>, "", {7}, std::optional<int>{7}, op);
+  RUN_CHECK(int, std::optional<int>, "", {}, std::nullopt, op);
+  RUN_CHECK(string, std::optional<string>, "", {}, std::nullopt, op);
+  RUN_CHECK(Foo, std::optional<Foo>, "", {}, std::nullopt, op);
+}
+#endif
+
+#ifndef DISABLE_MIN_BY
+TEST_CASE(TPE_NAME "_min_by", "[" TPE_NAME "][" TPE_GROUP "]") {
+  RUN_CHECK(int, std::optional<int>, "", {4, 2, 3, 1, 5}, std::optional<int>{5},
+            [](auto &&xs) { return xs OP_ min_by([](auto x) { return -x; }); });
+  RUN_CHECK(string, std::optional<string>, "", {"bb", "a", "cccc"}, std::optional<string>{"a"},
+            [](auto &&xs) { return xs OP_ min_by([](auto x) { return x.size(); }); });
+  RUN_CHECK(Foo, std::optional<Foo>, "", {Foo(3), Foo(2), Foo(1)}, std::optional<Foo>{Foo(1)},
+            [](auto &&xs) { return xs OP_ min_by([](auto x) { return x.value; }); });
+  RUN_CHECK(int, std::optional<int>, "", {}, std::nullopt, [](auto &&xs) { return xs OP_ min_by([](auto x) { return -x; }); });
+}
+#endif
+
+#ifndef DISABLE_MAX_BY
+TEST_CASE(TPE_NAME "_max_by", "[" TPE_NAME "][" TPE_GROUP "]") {
+  RUN_CHECK(int, std::optional<int>, "", {4, 2, 3, 1, 5}, std::optional<int>{1},
+            [](auto &&xs) { return xs OP_ max_by([](auto x) { return -x; }); });
+  RUN_CHECK(string, std::optional<string>, "", {"bb", "a", "cccc"}, std::optional<string>{"cccc"},
+            [](auto &&xs) { return xs OP_ max_by([](auto x) { return x.size(); }); });
+  RUN_CHECK(Foo, std::optional<Foo>, "", {Foo(3), Foo(2), Foo(1)}, std::optional<Foo>{Foo(3)},
+            [](auto &&xs) { return xs OP_ max_by([](auto x) { return x.value; }); });
+  RUN_CHECK(int, std::optional<int>, "", {}, std::nullopt, [](auto &&xs) { return xs OP_ max_by([](auto x) { return -x; }); });
+}
+#endif
+
+#if !defined(TPE_UNORDERED)
+  #ifndef DISABLE_INDEX_OF_MIN
+TEST_CASE(TPE_NAME "_index_of_min", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ index_of_min(); };
+    #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, std::optional<size_t>, "", {4, 2, 3, 1, 5}, std::optional<size_t>{3}, op);
+    #endif
+  RUN_CHECK(int, std::optional<size_t>, "", {7}, std::optional<size_t>{0}, op);
+  RUN_CHECK(int, std::optional<size_t>, "", {}, std::nullopt, op);
+}
+  #endif
+
+  #ifndef DISABLE_INDEX_OF_MAX
+TEST_CASE(TPE_NAME "_index_of_max", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ index_of_max(); };
+    #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, std::optional<size_t>, "", {4, 2, 3, 1, 5}, std::optional<size_t>{4}, op);
+    #endif
+  RUN_CHECK(int, std::optional<size_t>, "", {7}, std::optional<size_t>{0}, op);
+  RUN_CHECK(int, std::optional<size_t>, "", {}, std::nullopt, op);
+}
+  #endif
+
+  #ifndef DISABLE_INDEX_OF_MIN_BY
+TEST_CASE(TPE_NAME "_index_of_min_by", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ index_of_min_by([](auto x) { return -x; }); };
+    #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, std::optional<size_t>, "", {4, 2, 3, 1, 5}, std::optional<size_t>{4}, op);
+    #endif
+  RUN_CHECK(int, std::optional<size_t>, "", {7}, std::optional<size_t>{0}, op);
+  RUN_CHECK(int, std::optional<size_t>, "", {}, std::nullopt, op);
+}
+  #endif
+
+  #ifndef DISABLE_INDEX_OF_MAX_BY
+TEST_CASE(TPE_NAME "_index_of_max_by", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ index_of_max_by([](auto x) { return -x; }); };
+    #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, std::optional<size_t>, "", {4, 2, 3, 1, 5}, std::optional<size_t>{3}, op);
+    #endif
+  RUN_CHECK(int, std::optional<size_t>, "", {7}, std::optional<size_t>{0}, op);
+  RUN_CHECK(int, std::optional<size_t>, "", {}, std::nullopt, op);
+}
+  #endif
+#endif
+
+#ifndef DISABLE_SUM
+TEST_CASE(TPE_NAME "_sum", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ sum(); };
+  RUN_CHECK(int, int, "", {1, 2, 3, 4}, 10, op);
+  RUN_CHECK(int, int, "", {7}, 7, op);
+  RUN_CHECK(int, int, "", {}, 0, op);
+}
+#endif
+
+#ifndef DISABLE_PRODUCT
+TEST_CASE(TPE_NAME "_product", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) { return xs OP_ product(); };
+  RUN_CHECK(int, int, "", {1, 2, 3, 4}, 24, op);
+  RUN_CHECK(int, int, "", {5}, 5, op);
+  RUN_CHECK(int, int, "", {}, 1, op);
+}
+#endif
+
+#ifndef DISABLE_SUM_BY
+TEST_CASE(TPE_NAME "_sum_by", "[" TPE_NAME "][" TPE_GROUP "]") {
+  RUN_CHECK(int, int, "", {1, 2, 3}, 12, [](auto &&xs) { return xs OP_ sum_by([](auto x) { return x * 2; }); });
+  RUN_CHECK(string, size_t, "", {"a", "bb", "ccc"}, size_t{6}, [](auto &&xs) { return xs OP_ sum_by([](auto x) { return x.size(); }); });
+  RUN_CHECK(Foo, int, "", {Foo(1), Foo(2), Foo(3)}, 6, [](auto &&xs) { return xs OP_ sum_by([](auto x) { return x.value; }); });
+  RUN_CHECK(int, int, "", {}, 0, [](auto &&xs) { return xs OP_ sum_by([](auto x) { return x * 2; }); });
+}
+#endif
+
+#ifndef DISABLE_NONE_MATCH
+TEST_CASE(TPE_NAME "_none_match", "[" TPE_NAME "][" TPE_GROUP "]") {
+  RUN_CHECK(int, bool, "", {1, 2, 3}, true, [](auto &&xs) { return xs OP_ none_match([](auto x) { return x > 5; }); });
+  RUN_CHECK(int, bool, "", {1, 2, 3}, false, [](auto &&xs) { return xs OP_ none_match([](auto x) { return x == 2; }); });
+  RUN_CHECK(string, bool, "", {"a", "bb"}, true, [](auto &&xs) { return xs OP_ none_match([](auto x) { return x.size() > 5; }); });
+  RUN_CHECK(Foo, bool, "", {Foo(1), Foo(2)}, false, [](auto &&xs) { return xs OP_ none_match([](auto x) { return x.value == 1; }); });
+  RUN_CHECK(int, bool, "", {}, true, [](auto &&xs) { return xs OP_ none_match([](auto x) { return x == 2; }); });
+}
+#endif
+
+#ifndef DISABLE_COMBINE_ALL
+TEST_CASE(TPE_NAME "_combine_all", "[" TPE_NAME "][" TPE_GROUP "]") {
+  RUN_CHECK(int, int, "", {1, 2, 3, 4}, 10, [](auto &&xs) { return xs OP_ combine_all(); });
+  RUN_CHECK(int, int, "", {}, 0, [](auto &&xs) { return xs OP_ combine_all(); });
+  RUN_CHECK(string, string, "", {"abc", "def"}, "abcdef", [](auto &&xs) { return xs OP_ combine_all(); });
+  RUN_CHECK(string, string, "", {}, "", [](auto &&xs) { return xs OP_ combine_all(); });
+}
+#endif
+
+#ifndef DISABLE_INTERSPERSE
+TEST_CASE(TPE_NAME "_intersperse", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto intOp = [](auto &&xs) { return xs OP_ intersperse(0); };
+  #ifdef TPE_MANY_INIT
+  auto strOp = [](auto &&xs) { return xs OP_ intersperse(string{"_"}); };
+  RUN_CHECK(int, TPE_CTOR_OUT(int), "", {1, 2, 3}, {1, 0, 2, 0, 3}, intOp);
+  RUN_CHECK(string, TPE_CTOR_OUT(string), "", {"a", "b", "c"}, {"a", "_", "b", "_", "c"}, strOp);
+  #endif
+  RUN_CHECK(int, TPE_CTOR_OUT(int), "", {7}, {7}, intOp);
+  RUN_CHECK(int, TPE_CTOR_OUT(int), "", {}, {}, intOp);
+}
+#endif
+
+#ifndef DISABLE_TRAVERSE
+TEST_CASE(TPE_NAME "_traverse_optional", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto ok = [](auto &&xs) { return xs OP_ traverse([](int x) -> std::optional<int> { return x * 2; }); };
+  auto okStr = [](auto &&xs) { return xs OP_ traverse([](int x) -> std::optional<string> { return std::to_string(x); }); };
+  auto okFoo = [](auto &&xs) { return xs OP_ traverse([](int x) -> std::optional<Foo> { return Foo{x}; }); };
+  using ResOk = std::optional<TPE_CTOR_OUT(int)>;
+  using ResStr = std::optional<TPE_CTOR_OUT(string)>;
+  using ResFoo = std::optional<TPE_CTOR_OUT(Foo)>;
+  #ifdef TPE_MANY_INIT
+  auto none_on3 = [](auto &&xs) {
+    return xs OP_ traverse([](int x) -> std::optional<int> { return x == 3 ? std::nullopt : std::optional<int>{x}; });
+  };
+  auto none_on_first = [](auto &&xs) {
+    return xs OP_ traverse([](int x) -> std::optional<int> { return x == 1 ? std::nullopt : std::optional<int>{x}; });
+  };
+  auto none_on_last = [](auto &&xs) {
+    return xs OP_ traverse([](int x) -> std::optional<int> { return x == 4 ? std::nullopt : std::optional<int>{x}; });
+  };
+  RUN_CHECK(int, ResOk, "all-some", {1, 2, 4}, ResOk{TPE_CTOR_OUT(int){2, 4, 8}}, ok);
+  RUN_CHECK(int, ResOk, "none-on-3", {1, 2, 3, 4}, ResOk{}, none_on3);
+  RUN_CHECK(int, ResOk, "none-on-first", {1, 2, 3}, ResOk{}, none_on_first);
+  RUN_CHECK(int, ResOk, "none-on-last", {1, 2, 3, 4}, ResOk{}, none_on_last);
+  RUN_CHECK(int, ResStr, "to-string", {1, 2, 3}, ResStr{TPE_CTOR_OUT(string){"1", "2", "3"}}, okStr);
+  RUN_CHECK(int, ResFoo, "to-foo", {1, 2, 3}, ResFoo{TPE_CTOR_OUT(Foo){Foo{1}, Foo{2}, Foo{3}}}, okFoo);
+  #endif
+  RUN_CHECK(int, ResOk, "empty", {}, ResOk{TPE_CTOR_OUT(int){}}, ok);
+  RUN_CHECK(int, ResStr, "empty-str", {}, ResStr{TPE_CTOR_OUT(string){}}, okStr);
+}
+
+  #if defined(__cpp_lib_expected) && defined(TPE_INPLACE_SEQ)
+// std::expected has neither operator< nor std::hash, so the result-container
+// types in this case (e.g. set<expected<...>>) only compile for sequence-shaped
+// drivers (vector/deque/list). Set/map drivers are gated out.
+TEST_CASE(TPE_NAME "_traverse_expected", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using ExpInt = std::expected<int, string>;
+  using ResExpInt = std::expected<TPE_CTOR_OUT(int), string>;
+  using ExpStr = std::expected<string, int>;
+  using ResExpStr = std::expected<TPE_CTOR_OUT(string), int>;
+  auto ok = [](auto &&xs) { return xs OP_ traverse([](int x) -> ExpInt { return x * 2; }); };
+  auto okStr = [](auto &&xs) { return xs OP_ traverse([](int x) -> ExpStr { return std::to_string(x); }); };
+    #ifdef TPE_MANY_INIT
+  auto err_on3 = [](auto &&xs) {
+    return xs OP_ traverse([](int x) -> ExpInt { return x == 3 ? ExpInt{std::unexpected("err-3")} : ExpInt{x}; });
+  };
+  auto err_on_first = [](auto &&xs) {
+    return xs OP_ traverse([](int x) -> ExpInt { return x == 1 ? ExpInt{std::unexpected("err-1")} : ExpInt{x}; });
+  };
+  RUN_CHECK(int, ResExpInt, "all-ok", {1, 2, 4}, ResExpInt{TPE_CTOR_OUT(int){2, 4, 8}}, ok);
+  RUN_CHECK(int, ResExpInt, "err-on-3", {1, 2, 3, 4}, ResExpInt{std::unexpected("err-3")}, err_on3);
+  RUN_CHECK(int, ResExpInt, "err-on-first", {1, 2, 3}, ResExpInt{std::unexpected("err-1")}, err_on_first);
+  RUN_CHECK(int, ResExpStr, "to-string", {1, 2, 3}, ResExpStr{TPE_CTOR_OUT(string){"1", "2", "3"}}, okStr);
+    #endif
+  RUN_CHECK(int, ResExpInt, "empty", {}, ResExpInt{TPE_CTOR_OUT(int){}}, ok);
+}
+  #endif
+#endif
+
+#ifndef DISABLE_SEQUENCE
+TEST_CASE(TPE_NAME "_sequence", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using OptInt = std::optional<int>;
+  using OptStr = std::optional<string>;
+  using OptFoo = std::optional<Foo>;
+  using ResInt = std::optional<TPE_CTOR_OUT(int)>;
+  using ResStr = std::optional<TPE_CTOR_OUT(string)>;
+  using ResFoo = std::optional<TPE_CTOR_OUT(Foo)>;
+  auto op = [](auto &&xs) { return xs OP_ sequence(); };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(OptInt, ResInt, "int-all-some", {OptInt{1}, OptInt{2}, OptInt{3}}, ResInt{TPE_CTOR_OUT(int){1, 2, 3}}, op);
+  RUN_CHECK(OptInt, ResInt, "int-none-mid", {OptInt{1}, std::nullopt, OptInt{3}}, ResInt{}, op);
+  RUN_CHECK(OptInt, ResInt, "int-none-first", {std::nullopt, OptInt{2}, OptInt{3}}, ResInt{}, op);
+  RUN_CHECK(OptInt, ResInt, "int-none-last", {OptInt{1}, OptInt{2}, std::nullopt}, ResInt{}, op);
+  RUN_CHECK(OptInt, ResInt, "int-all-none", {std::nullopt, std::nullopt, std::nullopt}, ResInt{}, op);
+  RUN_CHECK(OptStr, ResStr, "str-all-some", {OptStr{"a"}, OptStr{"b"}, OptStr{"c"}}, ResStr{TPE_CTOR_OUT(string){"a", "b", "c"}}, op);
+  RUN_CHECK(OptStr, ResStr, "str-none-mid", {OptStr{"a"}, std::nullopt, OptStr{"c"}}, ResStr{}, op);
+  RUN_CHECK(OptFoo, ResFoo, "foo-all-some", {OptFoo{Foo{1}}, OptFoo{Foo{2}}, OptFoo{Foo{3}}},
+            ResFoo{TPE_CTOR_OUT(Foo){Foo{1}, Foo{2}, Foo{3}}}, op);
+  RUN_CHECK(OptFoo, ResFoo, "foo-none-mid", {OptFoo{Foo{1}}, std::nullopt, OptFoo{Foo{3}}}, ResFoo{}, op);
+  #endif
+  RUN_CHECK(OptInt, ResInt, "empty-int", {}, ResInt{TPE_CTOR_OUT(int){}}, op);
+  RUN_CHECK(OptStr, ResStr, "empty-str", {}, ResStr{TPE_CTOR_OUT(string){}}, op);
+}
+
+TEST_CASE(TPE_NAME "_sequence_nested_optional", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using OptInt = std::optional<int>;
+  using OptOptInt = std::optional<OptInt>;
+  using ResOptInt = std::optional<TPE_CTOR_OUT(OptInt)>;
+  auto op = [](auto &&xs) { return xs OP_ sequence(); };
+  #ifdef TPE_MANY_INIT
+  // The OUTER optional drives the monad short-circuit; the INNER optional is an
+  // opaque element preserved as-is (including when empty).
+  RUN_CHECK(OptOptInt, ResOptInt, "nested-all-outer-engaged-inner-some", {OptOptInt{OptInt{1}}, OptOptInt{OptInt{2}}, OptOptInt{OptInt{3}}},
+            ResOptInt{TPE_CTOR_OUT(OptInt){OptInt{1}, OptInt{2}, OptInt{3}}}, op);
+  RUN_CHECK(OptOptInt, ResOptInt, "nested-outer-engaged-with-empty-inner",
+            {OptOptInt{OptInt{1}}, OptOptInt{OptInt{}}, OptOptInt{OptInt{3}}},
+            ResOptInt{TPE_CTOR_OUT(OptInt){OptInt{1}, OptInt{}, OptInt{3}}}, op);
+  RUN_CHECK(OptOptInt, ResOptInt, "nested-outer-nullopt-short-circuits", {OptOptInt{OptInt{1}}, std::nullopt, OptOptInt{OptInt{3}}},
+            ResOptInt{}, op);
+  #endif
+  RUN_CHECK(OptOptInt, ResOptInt, "nested-empty", {}, ResOptInt{TPE_CTOR_OUT(OptInt){}}, op);
+}
+
+  #if defined(__cpp_lib_expected) && defined(TPE_INPLACE_SEQ)
+TEST_CASE(TPE_NAME "_sequence_expected", "[" TPE_NAME "][" TPE_GROUP "]") {
+  using ExpInt = std::expected<int, string>;
+  using ResInt = std::expected<TPE_CTOR_OUT(int), string>;
+  using ExpStr = std::expected<string, int>;
+  using ResStr = std::expected<TPE_CTOR_OUT(string), int>;
+  auto op = [](auto &&xs) { return xs OP_ sequence(); };
+    #ifdef TPE_MANY_INIT
+  RUN_CHECK(ExpInt, ResInt, "int-all-ok", {ExpInt{1}, ExpInt{2}, ExpInt{3}}, ResInt{TPE_CTOR_OUT(int){1, 2, 3}}, op);
+  RUN_CHECK(ExpInt, ResInt, "int-err-mid", {ExpInt{1}, ExpInt{std::unexpected("err")}, ExpInt{3}}, ResInt{std::unexpected("err")}, op);
+  RUN_CHECK(ExpInt, ResInt, "int-err-first", {ExpInt{std::unexpected("first")}, ExpInt{2}, ExpInt{3}}, ResInt{std::unexpected("first")},
+            op);
+  RUN_CHECK(ExpStr, ResStr, "str-all-ok", {ExpStr{"a"}, ExpStr{"b"}, ExpStr{"c"}}, ResStr{TPE_CTOR_OUT(string){"a", "b", "c"}}, op);
+  RUN_CHECK(ExpStr, ResStr, "str-err-mid", {ExpStr{"a"}, ExpStr{std::unexpected(42)}, ExpStr{"c"}}, ResStr{std::unexpected(42)}, op);
+    #endif
+  RUN_CHECK(ExpInt, ResInt, "empty", {}, ResInt{TPE_CTOR_OUT(int){}}, op);
+}
+  #endif
 #endif

@@ -8,24 +8,23 @@ template <typename OuterIterator, //
           typename Function,      //
           typename InnerRange = typename std::invoke_result_t<Function, typename details::value_type_of_t<OuterIterator>>,
           typename U = typename InnerRange::value_type>
-class flat_map_iterator : public fwd_iterator<flat_map_iterator<OuterIterator, Function, InnerRange, U>, U> {
+class flat_map_iterator : public fwd_iterator<flat_map_iterator<OuterIterator, Function, InnerRange, U>, U, std::input_iterator_tag> {
   struct State {
     ca_optional<Function> flat_map;
     OuterIterator outer_it, outer_end;
     std::shared_ptr<InnerRange> inner_container;
     typename InnerRange::const_iterator inner_it;
-    constexpr State(Function f, OuterIterator begin, OuterIterator end)
+    ASPARTAME_CONSTEXPR_ALLOC State(Function f, OuterIterator begin, OuterIterator end)
         : flat_map(f), outer_it(std::move(begin)), outer_end(std::move(end)), //
           inner_container(std::make_shared<InnerRange>((*flat_map)(*outer_it))), inner_it(inner_container->begin()) {
       advance();
     }
-    constexpr void advance() {
+    ASPARTAME_CONSTEXPR_ALLOC void advance() {
       while (outer_it != outer_end && inner_it == inner_container->end()) {
         ++outer_it;
         if (outer_it != outer_end) {
           inner_container = std::make_shared<InnerRange>((*flat_map)(*outer_it));
           inner_it = inner_container->begin();
-          inner_container->end() = inner_container->end();
         }
       }
     }

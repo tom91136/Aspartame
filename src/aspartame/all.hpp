@@ -2,6 +2,7 @@
 
 #include "aspartame/array.hpp"
 #include "aspartame/deque.hpp"
+#include "aspartame/expected.hpp"
 #include "aspartame/list.hpp"
 #include "aspartame/map.hpp"
 #include "aspartame/optional.hpp"

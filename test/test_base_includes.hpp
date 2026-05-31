@@ -1,3 +1,3 @@
 #pragma once
-// XXX include everything to test correct overload resolution
+#define ASPARTAME_SHOW_STREAM
 #include "aspartame/all.hpp"

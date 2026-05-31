@@ -1,47 +1,26 @@
 #pragma once
 
-#include "details/base.hpp"
-#include "fluent.hpp"
-
 #include <deque>
 
+#include "fluent.hpp"
+#include "traits.hpp"
+
 namespace aspartame {
-namespace details {
-template <typename> constexpr bool is_deque_impl = false;
-template <typename T> constexpr bool is_deque_impl<std::deque<T>> = true;
-} // namespace details
 
-template <typename T> constexpr bool is_deque = details::is_deque_impl<std::decay_t<T>>;
-template <typename T, typename Op>
-#ifdef ASPARTAME_USE_CONCEPTS
-  requires std::invocable<Op, const std::deque<T> &, tag>
-#endif
-auto operator^(const std::deque<T> &l, const Op &r) {
-  return r(l, tag{});
-}
-template <typename T, typename Op>
-#ifdef ASPARTAME_USE_CONCEPTS
-  requires std::invocable<Op, std::deque<T> &, tag>
-#endif
-auto &operator^=(std::deque<T> &l, const Op &r) {
-  r(l, tag{});
-  return l;
-}
+template <typename T, typename A> struct enable_pipe<std::deque<T, A>> : std::true_type {};
+
+template <typename T, typename A> struct sequence_traits<std::deque<T, A>> {
+  using value_type = T;
+  template <typename U> using rebind = std::deque<U>;
+  static constexpr bool set_like = false;
+};
+
+template <typename T, typename A> struct monoid_traits<std::deque<T, A>> {
+  static std::deque<T, A> empty() { return {}; }
+  static std::deque<T, A> combine(std::deque<T, A> a, const std::deque<T, A> &b) {
+    a.insert(a.end(), b.begin(), b.end());
+    return a;
+  }
+};
+
 } // namespace aspartame
-
-#define ASPARTAME_IN_TYPE2(K, V) std::deque<std::pair<K, V>>
-#define ASPARTAME_IN_TYPE1(C) std::deque<C>
-#define ASPARTAME_OUT_TYPE std::deque
-#define ASPARTAME_SET_LIKE false
-
-#include "details/container1_template.hpp"
-#include "details/sequence1_template.hpp"
-
-#include "details/nop/map_template.hpp"
-#include "details/nop/optional_template.hpp"
-#include "details/nop/string_template.hpp"
-
-#undef ASPARTAME_SET_LIKE
-#undef ASPARTAME_OUT_TYPE
-#undef ASPARTAME_IN_TYPE1
-#undef ASPARTAME_IN_TYPE2

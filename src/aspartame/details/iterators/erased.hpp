@@ -1,9 +1,10 @@
 #pragma once
 
-#include "iterator_base.hpp"
-
 #include <memory>
 #include <utility>
+
+#include "../base.hpp"
+#include "iterator_base.hpp"
 
 namespace aspartame::details {
 
@@ -42,11 +43,12 @@ public:
   erased_iterator() = default;
 
   template <typename Iterator>
-  erased_iterator(Iterator begin, Iterator end) : impl(std::make_unique<erased<Iterator>>(std::move(begin), std::move(end))) {}
+  ASPARTAME_CONSTEXPR_ALLOC erased_iterator(Iterator begin, Iterator end)
+      : impl(std::make_unique<erased<Iterator>>(std::move(begin), std::move(end))) {}
 
-  erased_iterator(const erased_iterator &other) : impl(other.impl ? other.impl->clone() : nullptr) {}
+  ASPARTAME_CONSTEXPR_ALLOC erased_iterator(const erased_iterator &other) : impl(other.impl ? other.impl->clone() : nullptr) {}
 
-  erased_iterator &operator=(const erased_iterator &other) {
+  ASPARTAME_CONSTEXPR_ALLOC erased_iterator &operator=(const erased_iterator &other) {
     if (this != &other) impl = other.impl ? other.impl->clone() : nullptr;
     return *this;
   }

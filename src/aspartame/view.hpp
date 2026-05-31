@@ -1,12 +1,15 @@
 #pragma once
 
-#include "fluent.hpp"
+#include <limits>
 
 #include "details/base.hpp"
 #include "details/container1_impl.hpp"
 #include "details/iterators/append_prepend.hpp"
+#include "details/iterators/chunk_by.hpp"
 #include "details/iterators/collect.hpp"
+#include "details/iterators/combinations.hpp"
 #include "details/iterators/concat.hpp"
+#include "details/iterators/cross.hpp"
 #include "details/iterators/distinct.hpp"
 #include "details/iterators/drop_take.hpp"
 #include "details/iterators/erased.hpp"
@@ -14,13 +17,15 @@
 #include "details/iterators/flat_map.hpp"
 #include "details/iterators/iterate.hpp"
 #include "details/iterators/map.hpp"
+#include "details/iterators/pairwise.hpp"
+#include "details/iterators/permutations.hpp"
 #include "details/iterators/slice.hpp"
 #include "details/iterators/sliding.hpp"
+#include "details/iterators/stride.hpp"
 #include "details/iterators/tap_each.hpp"
 #include "details/iterators/zip.hpp"
 #include "details/sequence1_impl.hpp"
-
-#include <limits>
+#include "fluent.hpp"
 
 #ifndef ASPARTAME_ERASE_VIEW_PIPE_TYPES
   #ifndef NDEBUG
@@ -76,11 +81,25 @@ public:
   explicit view(Storage storage, Iterator begin, Iterator end = {})
       : storage(std::move(storage)), begin_(std::move(begin)), end_(std::move(end)) {}
 
-  template <typename C> explicit view(C c) : storage(std::move(c)), begin_(std::move(storage->begin())), end_(std::move(storage->end())) {}
+  template <typename C, typename S = Storage, std::enable_if_t<details::is_owning<S> || details::is_sharing<S>, int> = 0>
+  explicit view(C c) : storage(std::move(c)), begin_(storage->begin()), end_(storage->end()) {}
 
   [[nodiscard]] constexpr Iterator begin() const { return begin_; }
   [[nodiscard]] constexpr Iterator end() const { return end_; }
   [[nodiscard]] constexpr bool empty() const { return begin_ == end_; }
+
+  template <
+      typename It = Iterator,
+      std::enable_if_t<std::is_base_of_v<std::bidirectional_iterator_tag, typename std::iterator_traits<It>::iterator_category>, int> = 0>
+  [[nodiscard]] constexpr auto rbegin() const {
+    return std::reverse_iterator<It>{end_};
+  }
+  template <
+      typename It = Iterator,
+      std::enable_if_t<std::is_base_of_v<std::bidirectional_iterator_tag, typename std::iterator_traits<It>::iterator_category>, int> = 0>
+  [[nodiscard]] constexpr auto rend() const {
+    return std::reverse_iterator<It>{begin_};
+  }
   [[nodiscard]] constexpr bool operator==(const view &rhs) const { return begin_ == rhs.begin_ && end_ == rhs.end_; }
   [[nodiscard]] constexpr bool operator!=(const view &rhs) const { return !rhs.operator==(*this); }
 
@@ -96,11 +115,12 @@ public:
 template <typename Iterator> //
 view(Iterator, Iterator) -> view<Iterator, non_owning>;
 
-template <typename C> //
-view(C) -> view<typename C::const_iterator, C>;
-
 template <typename Iterator, typename Storage> //
 view(Storage &, Iterator, Iterator) -> view<Iterator, Storage>;
+
+#define ASPARTAME_VIEW_UNSUPPORTED(op_name)                                                                                                \
+  static_assert(details::is_supported<C>,                                                                                                  \
+                #op_name " cannot be implemented optimally and may not terminate, consider converting to a container first")
 
 namespace details {
 template <typename Storage, typename F> auto use_shared(Storage &storage, F f) {
@@ -150,19 +170,22 @@ template <typename N> auto iota(const N &origin) { //
   return view<details::iterate_iterator<std::decay_t<N>, decltype(next)>, non_owning>({origin, next});
 }
 
-template <typename N> auto iota(const N &origin, const N &count) { //
-  return iota<N>(origin) | take(count);
+template <typename N> auto iota(const N &origin, const N &to_exclusive) { //
+  return iota<N>(origin) | take_while([=](auto &&x) { return x < to_exclusive; });
 }
 
 template <typename N> auto exclusive(const N &from_inclusive, const N &to_exclusive, const N &step = 1) { //
   if (step == N{}) details::raise<std::range_error>("step cannot be empty (0)");
   auto next = [=](auto &&x) { return x + step; };
   return view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next}) |
-         take_while(std::move([=](auto &&x) { return x < to_exclusive; }));
+         take_while([=](auto &&x) { return x < to_exclusive; });
 }
 
 template <typename N> auto inclusive(const N &from_inclusive, const N &to_inclusive, const N &step = 1) { //
-  return exclusive(from_inclusive, to_inclusive + 1, step);
+  if (step == N{}) details::raise<std::range_error>("step cannot be empty (0)");
+  auto next = [=](auto &&x) { return x + step; };
+  return view<details::iterate_iterator<N, decltype(next)>, non_owning>({from_inclusive, next}) |
+         take_while([=](auto &&x) { return x <= to_inclusive; });
 }
 
 namespace details {
@@ -186,11 +209,9 @@ auto operator|(Iterable &&l, const Op &r) {
         [&]() { return r(view<decltype(l.begin()), owning<Iterable>>(std::make_unique<Iterable>(std::forward<Iterable &&>(l))), tag{}); });
 }
 
-// == container
-
 template <typename C, typename Storage, typename Function> //
-[[nodiscard]] auto mk_string(view<C, Storage> &in, const std::string_view &prefix, const std::string_view &sep,
-                             const std::string_view &suffix, Function &&f, tag = {}) {
+[[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto mk_string(view<C, Storage> &in, const std::string_view &prefix, const std::string_view &sep,
+                                                       const std::string_view &suffix, Function &&f, tag = {}) {
   return details::container1::mk_string<view<C, Storage>, Function>(in, prefix, sep, suffix, f);
 }
 
@@ -290,6 +311,54 @@ template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto reduce(const view<C, Storage> &in, Function &&function, tag = {}) {
   return details::container1::reduce<view<C, Storage>, Function>(in, function);
 }
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto min(const view<C, Storage> &in, tag = {}) {
+  return details::container1::min<view<C, Storage>>(in);
+}
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto max(const view<C, Storage> &in, tag = {}) {
+  return details::container1::max<view<C, Storage>>(in);
+}
+template <typename C, typename Storage, typename Function> //
+[[nodiscard]] constexpr auto min_by(const view<C, Storage> &in, Function &&function, tag = {}) {
+  return details::container1::min_by<view<C, Storage>, Function>(in, function);
+}
+template <typename C, typename Storage, typename Function> //
+[[nodiscard]] constexpr auto max_by(const view<C, Storage> &in, Function &&function, tag = {}) {
+  return details::container1::max_by<view<C, Storage>, Function>(in, function);
+}
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto index_of_min(const view<C, Storage> &in, tag = {}) {
+  return details::container1::index_of_min<view<C, Storage>>(in);
+}
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto index_of_max(const view<C, Storage> &in, tag = {}) {
+  return details::container1::index_of_max<view<C, Storage>>(in);
+}
+template <typename C, typename Storage, typename Function> //
+[[nodiscard]] constexpr auto index_of_min_by(const view<C, Storage> &in, Function &&function, tag = {}) {
+  return details::container1::index_of_min_by<view<C, Storage>, Function>(in, function);
+}
+template <typename C, typename Storage, typename Function> //
+[[nodiscard]] constexpr auto index_of_max_by(const view<C, Storage> &in, Function &&function, tag = {}) {
+  return details::container1::index_of_max_by<view<C, Storage>, Function>(in, function);
+}
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto sum(const view<C, Storage> &in, tag = {}) {
+  return details::container1::sum<view<C, Storage>>(in);
+}
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto product(const view<C, Storage> &in, tag = {}) {
+  return details::container1::product<view<C, Storage>>(in);
+}
+template <typename C, typename Storage, typename Function> //
+[[nodiscard]] constexpr auto sum_by(const view<C, Storage> &in, Function &&function, tag = {}) {
+  return details::container1::sum_by<view<C, Storage>, Function>(in, function);
+}
+template <typename C, typename Storage, typename Predicate> //
+[[nodiscard]] constexpr auto none_match(const view<C, Storage> &in, Predicate &&predicate, tag = {}) {
+  return !details::container1::exists<view<C, Storage>, Predicate>(in, predicate);
+}
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto tap_each(view<C, Storage> &in, Function &&function, tag = {}) {
@@ -319,12 +388,16 @@ template <typename C, typename Storage, typename GroupFunction, typename MapFunc
 
 template <typename C, typename Storage, typename GroupFunction, typename MapFunction> //
 [[nodiscard]] constexpr auto group_map(const view<C, Storage> &in, GroupFunction &&group, MapFunction &&map, tag = {}) {
-  return details::container1::group_map<view<C, Storage>, GroupFunction, MapFunction, std::vector>(in, group, map);
+  using V = std::decay_t<decltype(details::ap(map, *in.begin()))>;
+  using Inner = std::vector<V>;
+  return details::container1::group_map<view<C, Storage>, Inner, GroupFunction, MapFunction>(in, group, map);
 }
 
 template <typename C, typename Storage, typename Function> //
 [[nodiscard]] constexpr auto group_by(const view<C, Storage> &in, Function &&function, tag = {}) {
-  return details::container1::group_by<view<C, Storage>, Function, std::vector>(in, function);
+  using V = std::decay_t<decltype(*in.begin())>;
+  using Inner = std::vector<V>;
+  return details::container1::group_by<view<C, Storage>, Inner, Function>(in, function);
 }
 
 template <typename C, typename Storage> //
@@ -341,8 +414,6 @@ template <template <typename...> typename Cs, typename C, typename Storage> //
     return Cs<T>{in.begin(), in.end()};
   }
 }
-
-// == sequence
 
 template <typename C, typename Storage, typename T> //
 [[nodiscard]] constexpr auto prepend(view<C, Storage> &in, const T &t, tag = {}) {
@@ -363,8 +434,7 @@ template <typename C, typename Storage> //
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto init(const view<C, Storage> &, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "init cannot be implemented optimally and may not terminate, consider converting to a container first");
+  ASPARTAME_VIEW_UNSUPPORTED(init);
 }
 
 template <typename C, typename Storage> //
@@ -408,6 +478,14 @@ template <typename C, typename Storage, typename Predicate> //
 [[nodiscard]] constexpr auto index_where(const view<C, Storage> &in, Predicate &&predicate, tag = {}) {
   return details::sequence1::index_where<view<C, Storage>, Predicate>(in, predicate);
 }
+template <typename C, typename Storage, typename T> //
+[[nodiscard]] constexpr auto last_index_of(const view<C, Storage> &in, const T &t, tag = {}) {
+  return details::sequence1::last_index_of<view<C, Storage>, T>(in, t);
+}
+template <typename C, typename Storage, typename Predicate> //
+[[nodiscard]] constexpr auto last_index_where(const view<C, Storage> &in, Predicate &&predicate, tag = {}) {
+  return details::sequence1::last_index_where<view<C, Storage>, Predicate>(in, predicate);
+}
 
 template <typename C, typename Storage, typename N> //
 [[nodiscard]] constexpr auto zip_with_index(view<C, Storage> &in, N from, tag = {}) {
@@ -416,52 +494,149 @@ template <typename C, typename Storage, typename N> //
       in, details::zip_iterator(in.begin(), in.end(), idx.begin(), idx.end()));
 }
 
+template <typename C, typename Storage, typename N> //
+[[nodiscard]] constexpr auto enumerate(view<C, Storage> &in, N from, tag = {}) {
+  return zip_with_index(in, from, tag{});
+}
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto enumerate(view<C, Storage> &in, tag = {}) {
+  return zip_with_index(in, size_t{0}, tag{});
+}
+
 template <typename C, typename Storage, typename Container> //
 [[nodiscard]] constexpr auto zip(view<C, Storage> &in, const Container &other, tag = {}) {
   return details::make_unique_view( //
       in, details::zip_iterator(in.begin(), in.end(), other.begin(), other.end()));
 }
 
+template <typename C, typename Storage, typename Container> //
+[[nodiscard]] constexpr auto cross(view<C, Storage> &in, const Container &other, tag = {}) {
+  return details::make_unique_view( //
+      in, details::cross_iterator(in.begin(), in.end(), other.begin(), other.end()));
+}
+
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto combinations(view<C, Storage> &in, size_t k, tag = {}) {
+  return details::make_unique_view( //
+      in, details::combinations_iterator(in.begin(), in.end(), k));
+}
+
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto permutations(view<C, Storage> &in, tag = {}) {
+  return details::make_unique_view( //
+      in, details::permutations_iterator(in.begin(), in.end()));
+}
+
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto stride(view<C, Storage> &in, size_t n, tag = {}) {
+  return details::make_unique_view( //
+      in, details::stride_iterator(in.begin(), in.end(), n));
+}
+
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto pairwise(view<C, Storage> &in, tag = {}) {
+  return details::make_unique_view( //
+      in, details::pairwise_iterator(in.begin(), in.end()));
+}
+
+template <typename C, typename Storage, typename Predicate> //
+[[nodiscard]] constexpr auto chunk_by(view<C, Storage> &in, Predicate &&p, tag = {}) {
+  return details::make_unique_view( //
+      in, details::chunk_by_iterator(in.begin(), in.end(), std::forward<Predicate>(p)));
+}
+
+template <typename C, typename Storage, typename Sep> //
+[[nodiscard]] constexpr auto join_with(const view<C, Storage> &, const Sep &, tag = {}) {
+  ASPARTAME_VIEW_UNSUPPORTED(join_with);
+}
+
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto is_sorted(const view<C, Storage> &in, tag = {}) {
+  return details::sequence1::is_sorted<view<C, Storage>>(in);
+}
+template <typename C, typename Storage, typename F> //
+[[nodiscard]] constexpr auto is_sorted_by(const view<C, Storage> &in, F &&f, tag = {}) {
+  return details::sequence1::is_sorted_by<view<C, Storage>, F>(in, std::forward<F>(f));
+}
+
+template <typename C, typename Storage, typename URBG> //
+[[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto sample(const view<C, Storage> &, size_t, URBG &&, tag = {}) {
+  ASPARTAME_VIEW_UNSUPPORTED(sample);
+}
+template <typename C, typename Storage> //
+[[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto top_k(const view<C, Storage> &, size_t, tag = {}) {
+  ASPARTAME_VIEW_UNSUPPORTED(top_k);
+}
+template <typename C, typename Storage> //
+[[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto bottom_k(const view<C, Storage> &, size_t, tag = {}) {
+  ASPARTAME_VIEW_UNSUPPORTED(bottom_k);
+}
+template <typename C, typename Storage, typename Other> //
+[[nodiscard]] constexpr auto symmetric_difference(const view<C, Storage> &, const Other &, tag = {}) {
+  ASPARTAME_VIEW_UNSUPPORTED(symmetric_difference);
+}
+
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto transpose(const view<C, Storage> &, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "transpose cannot be implemented optimally and may not terminate, consider converting to a container first");
+  ASPARTAME_VIEW_UNSUPPORTED(transpose);
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto sequence(const view<C, Storage> &, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "sequence cannot be implemented optimally and may not terminate, consider converting to a container first");
+[[nodiscard]] constexpr auto cartesian_product(const view<C, Storage> &, tag = {}) {
+  ASPARTAME_VIEW_UNSUPPORTED(cartesian_product);
 }
 
 template <typename C, typename Storage> //
-[[nodiscard]] constexpr auto reverse(const view<C, Storage> &, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "reverse cannot be implemented optimally and may not terminate, consider converting to a container first");
+[[nodiscard]] constexpr auto reverse(view<C, Storage> &in, tag = {}) {
+  static_assert(std::is_base_of_v<std::bidirectional_iterator_tag, typename std::iterator_traits<C>::iterator_category>,
+                "reverse on a view requires a bidirectional underlying iterator");
+  using R = std::reverse_iterator<C>;
+  return details::use_shared(in.storage, [&](auto &&s) { return view<R, std::decay_t<decltype(s)>>(s, R{in.end()}, R{in.begin()}); });
 }
 
 template <typename C, typename Storage, typename URBG> //
 [[nodiscard]] constexpr auto shuffle(const view<C, Storage> &, URBG &&, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "shuffle cannot be implemented optimally and may not terminate, consider converting to a container first");
+  ASPARTAME_VIEW_UNSUPPORTED(shuffle);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto sort(const view<C, Storage> &, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "sort cannot be implemented optimally and may not terminate, consider converting to a container first");
+  ASPARTAME_VIEW_UNSUPPORTED(sort);
 }
 
 template <typename C, typename Storage, typename Compare> //
 [[nodiscard]] constexpr auto sort(const view<C, Storage> &, Compare &&, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "sort cannot be implemented optimally and may not terminate, consider converting to a container first");
+  ASPARTAME_VIEW_UNSUPPORTED(sort);
+}
+
+template <typename C, typename Storage, typename Acc, typename F> //
+[[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto scan_left(const view<C, Storage> &in, Acc init, F &&f, tag = {}) {
+  using B = std::decay_t<Acc>;
+  return details::sequence1::scan_left<view<C, Storage>, B, F, std::vector<B>>(in, std::move(init), std::forward<F>(f));
+}
+template <
+    typename C, typename Storage, typename Acc, typename F,
+    std::enable_if_t<std::is_base_of_v<std::bidirectional_iterator_tag, typename std::iterator_traits<C>::iterator_category>, int> = 0>
+[[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto scan_right(const view<C, Storage> &in, Acc init, F &&f, tag = {}) {
+  using B = std::decay_t<Acc>;
+  return details::sequence1::scan_right<view<C, Storage>, B, F, std::vector<B>>(in, std::move(init), std::forward<F>(f));
+}
+template <typename C, typename Storage> //
+[[nodiscard]] constexpr auto unzip(const view<C, Storage> &, tag = {}) {
+  ASPARTAME_VIEW_UNSUPPORTED(unzip);
+}
+template <typename C, typename Storage, typename Other> //
+[[nodiscard]] constexpr auto intersect(const view<C, Storage> &, const Other &, tag = {}) {
+  ASPARTAME_VIEW_UNSUPPORTED(intersect);
+}
+template <typename C, typename Storage, typename Other> //
+[[nodiscard]] constexpr auto diff(const view<C, Storage> &, const Other &, tag = {}) {
+  ASPARTAME_VIEW_UNSUPPORTED(diff);
 }
 
 template <typename C, typename Storage, typename Select> //
 [[nodiscard]] constexpr auto sort_by(const view<C, Storage> &, Select &&, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "sort_by cannot be implemented optimally and may not terminate, consider converting to a container first");
+  ASPARTAME_VIEW_UNSUPPORTED(sort_by);
 }
 
 template <typename C, typename Storage> //
@@ -474,14 +649,12 @@ template <typename C, typename Storage> //
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto take_right(const view<C, Storage> &, size_t, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "take_right cannot be implemented optimally and may not terminate, consider converting to a container first");
+  ASPARTAME_VIEW_UNSUPPORTED(take_right);
 }
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto drop_right(const view<C, Storage> &, size_t, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "drop_right cannot be implemented optimally and may not terminate, consider converting to a container first");
+  ASPARTAME_VIEW_UNSUPPORTED(drop_right);
 }
 
 template <typename C, typename Storage> //
@@ -524,14 +697,15 @@ template <typename C, typename Storage, typename Predicate> //
 }
 
 template <typename C, typename Storage, typename Accumulator, typename Function> //
-[[nodiscard]] constexpr auto fold_left(const view<C, Storage> &in, Accumulator &&init, Function &&function, tag = {}) {
-  return details::sequence1::fold_left<view<C, Storage>, Accumulator, Function>(in, std::forward<Accumulator &&>(init), function);
+[[nodiscard]] constexpr auto fold_left(const view<C, Storage> &in, Accumulator init, Function &&function, tag = {}) {
+  return details::sequence1::fold_left<view<C, Storage>, Accumulator, Function>(in, std::move(init), std::forward<Function>(function));
 }
 
-template <typename C, typename Storage, typename Accumulator, typename Function> //
-[[nodiscard]] constexpr auto fold_right(const view<C, Storage> &, Accumulator &&, Function &&, tag = {}) {
-  static_assert(details::is_supported<C>,
-                "fold_right cannot be implemented optimally and may not terminate, consider converting to a container first");
+template <
+    typename C, typename Storage, typename Accumulator, typename Function,
+    std::enable_if_t<std::is_base_of_v<std::bidirectional_iterator_tag, typename std::iterator_traits<C>::iterator_category>, int> = 0>
+[[nodiscard]] constexpr auto fold_right(const view<C, Storage> &in, Accumulator init, Function &&function, tag = {}) {
+  return details::sequence1::fold_right<view<C, Storage>, Accumulator, Function>(in, std::move(init), std::forward<Function>(function));
 }
 
 template <typename C, typename Storage> //
@@ -569,5 +743,7 @@ template <typename C, typename Storage, typename Function> //
   return details::make_unique_view( //
       in, details::map_iterator(in.begin(), in.end(), applied));
 }
+
+#undef ASPARTAME_VIEW_UNSUPPORTED
 
 } // namespace aspartame

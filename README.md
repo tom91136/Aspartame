@@ -11,51 +11,45 @@ high-productivity languages like Scala and Haskell.
 
 ### Feature highlights
 
-* C++ \>= 17
+* C++ >= 17
 * Rich container support:
     * `std::optional` as a 1-element container: support for all container methods
     * `std::string` as a char container: support for all container methods + extra string methods
-    * `std::vector`, `std::array`, `std::deque`
+    * `std::vector`, `std::array`, `std::deque`, `std::list`
     * `std::set`, `std::unordered_set`
     * `std::map`, `std::unordered_map`
-* Two modes: immediate (strict and allocating) and views (lazy via iterators) 
-* Lightweight: Doesn't pull in all supported container headers at once
+    * `std::variant`, `std::expected` (C++23) and `tl::expected`
+    * Optional ext bridges for Boost, abseil, parallel-hashmap, tsl, LLVM ADT, and Qt containers
+* Two modes: immediate (strict, allocating) and views (lazy via iterators)
+* Lightweight: doesn't pull in all supported container headers at once
 * Automatic application of `std::pair`/`std::tuple` values in lambdas
-* Readable error messages with limited use of SFINAE and early dispatch (`if constexpr`) to signal
-  compile errors
-* TODO Tested with GCC X, Clang X, VS X
-* Correct IntelliSense and type information in CLion, Clangd-based IDES, and VS2019
-
-```c++
-
-
-
-```
+* Readable error messages via limited SFINAE and early dispatch (`if constexpr`)
+* CI matrix covers GCC 9-15, Clang 11-21, MSVC (Windows), Apple Clang (macOS), NVHPC, on x86_64 and aarch64
 
 ## Quick start
 
-C++ algorithms in many cases are designed for composition:
+C++ algorithms are designed for composition by index, not by data flow:
 
 ```c++
 std::vector<int> xs = {4, 1, 3, 2, 0};
-xs.erase(std::remove_if(xs.begin(), xs.end(), [](auto x) { return val > 5; }), xs.end());
+xs.erase(std::remove_if(xs.begin(), xs.end(), [](auto x) { return x > 5; }), xs.end());
 std::sort(xs.begin(), xs.end());
-std::unique(xs.begin(), xs.end());
+xs.erase(std::unique(xs.begin(), xs.end()), xs.end());
 ```
 
-While this is excellent for performance, productivity suffers a bit; here's the same with Aspartame:
+The same pipeline in Aspartame:
 
 ```c++
-auto xs = std::vector<int>{4, 1, 3, 2, 0} | filter([](auto x) { return val > 5; }) | unique();
+auto xs = std::vector<int>{4, 1, 3, 2, 0} ^ filter([](auto x) { return x > 5; }) ^ sort() ^ distinct();
 ```
+
+`^` is the eager pipe; `|` is the lazy view pipe.
 
 ## Supported operations
 
-Syntax:
-
 ```c++
 Container<T> xs = {...};
-OutCountainer<T> ys = xs | Op;
+OutContainer<T> ys = xs ^ Op;
 ```
 
 

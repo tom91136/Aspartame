@@ -1,41 +1,26 @@
 #pragma once
 
-#include "details/base.hpp"
-#include "fluent.hpp"
-
 #include <vector>
 
+#include "fluent.hpp"
+#include "traits.hpp"
+
 namespace aspartame {
-template <typename T, typename Op>
-#ifdef ASPARTAME_USE_CONCEPTS
-  requires std::invocable<Op, const std::vector<T> &, tag>
-#endif
-auto operator^(const std::vector<T> &l, const Op &r) {
-  return r(l, tag{});
-}
-template <typename T, typename Op>
-#ifdef ASPARTAME_USE_CONCEPTS
-  requires std::invocable<Op, std::vector<T> &, tag>
-#endif
-auto &operator^=(std::vector<T> &l, const Op &r) {
-  r(l, tag{});
-  return l;
-}
+
+template <typename T, typename A> struct enable_pipe<std::vector<T, A>> : std::true_type {};
+
+template <typename T, typename A> struct sequence_traits<std::vector<T, A>> {
+  using value_type = T;
+  template <typename U> using rebind = std::vector<U>;
+  static constexpr bool set_like = false;
+};
+
+template <typename T, typename A> struct monoid_traits<std::vector<T, A>> {
+  static std::vector<T, A> empty() { return {}; }
+  static std::vector<T, A> combine(std::vector<T, A> a, const std::vector<T, A> &b) {
+    a.insert(a.end(), b.begin(), b.end());
+    return a;
+  }
+};
+
 } // namespace aspartame
-
-#define ASPARTAME_IN_TYPE2(K, V) std::vector<std::pair<K, V>>
-#define ASPARTAME_IN_TYPE1(C) std::vector<C>
-#define ASPARTAME_OUT_TYPE std::vector
-#define ASPARTAME_SET_LIKE false
-
-#include "details/container1_template.hpp"
-#include "details/sequence1_template.hpp"
-
-#include "details/nop/map_template.hpp"
-#include "details/nop/optional_template.hpp"
-#include "details/nop/string_template.hpp"
-
-#undef ASPARTAME_SET_LIKE
-#undef ASPARTAME_OUT_TYPE
-#undef ASPARTAME_IN_TYPE1
-#undef ASPARTAME_IN_TYPE2

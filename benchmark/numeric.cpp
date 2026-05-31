@@ -5,9 +5,10 @@
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/matchers/catch_matchers_floating_point.hpp"
 
+#include <cmath>
+#include <numeric>
 #include <ranges>
 #include <vector>
-#include <numeric>
 
 double view_pi(int iter) {
   using namespace aspartame;
@@ -85,7 +86,7 @@ long long range_fib_product(int lim) {
 }
 
 TEST_CASE("fib") {
-  volatile int iter = 48; // XXX yes, this is testing a very small range
+  volatile int iter = 48;
   CHECK(view_fib_product(iter) == 8789267254022766592);
   CHECK(range_fib_product(iter) == 8789267254022766592);
   BENCHMARK("aspartame_view") { return view_fib_product(iter); };

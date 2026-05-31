@@ -14,9 +14,9 @@ class slice_iterator : public fwd_iterator<slice_iterator<InputIterator, T>, T> 
 
 public:
   constexpr slice_iterator() = default;
-  constexpr slice_iterator(InputIterator begin, InputIterator end, size_t from_inclusive, size_t to_exclusive)
-      : it(std::move(begin)), end(std::move(end)), idx(0), to_exclusive(to_exclusive) {
-    while (it != this->end && idx < from_inclusive) {
+  constexpr slice_iterator(InputIterator begin, InputIterator end_, size_t from_inclusive, size_t to_exclusive_)
+      : it(std::move(begin)), end(std::move(end_)), to_exclusive(to_exclusive_) {
+    while (it != end && idx < from_inclusive) {
       ++it;
       ++idx;
     }

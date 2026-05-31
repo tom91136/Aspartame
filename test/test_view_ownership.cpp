@@ -1,6 +1,6 @@
-#include "test_base_includes.hpp"
-
 #include "catch2/catch_test_macros.hpp"
+
+#include "test_base_includes.hpp"
 
 using namespace aspartame;
 
@@ -72,9 +72,7 @@ TEST_CASE("view_non-owning-copy") {
 TEST_CASE("view_owning-observe") {
   auto ys = std::vector{1, 2, 3, 4, 5, 6}       //
             | map([](auto x) { return x * 2; }) //
-            | and_then([](auto &x) {
-                return std::list<int>{x.begin(), x.end()};
-              });
+            | and_then([](auto &x) { return std::list<int>{x.begin(), x.end()}; });
   CHECK(ys == std::list{2, 4, 6, 8, 10, 12});
 }
 
@@ -82,8 +80,6 @@ TEST_CASE("view_non-owning-observe") {
   std::vector source{1, 2, 3, 4, 5, 6};
   auto ys = source                              //
             | map([](auto x) { return x * 2; }) //
-            | and_then([](auto &x) {
-                return std::list<int>{x.begin(), x.end()};
-              });
+            | and_then([](auto &x) { return std::list<int>{x.begin(), x.end()}; });
   CHECK(ys == std::list{2, 4, 6, 8, 10, 12});
 }

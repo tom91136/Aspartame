@@ -1,8 +1,8 @@
 #pragma once
 
-#include "iterator_base.hpp"
-
 #include <cstdint>
+
+#include "iterator_base.hpp"
 
 namespace aspartame::details {
 
@@ -11,12 +11,9 @@ enum class append_prepend_iterator_mode : uint8_t { append, prepend };
 template <append_prepend_iterator_mode Mode,
           typename InputIterator, //
           typename T = typename details::value_type_of_t<InputIterator>>
-class append_prepend_iterator : public fwd_iterator<append_prepend_iterator<Mode, InputIterator, T>, T> {
-public:
-private:
+class append_prepend_iterator : public fwd_iterator<append_prepend_iterator<Mode, InputIterator, T>, T, std::input_iterator_tag> {
   InputIterator it, end;
   ca_optional<T> value{};
-  //  append_prepend_iterator_mode mode = append_prepend_iterator_mode::append;
   bool use_value = false;
   [[nodiscard]] constexpr bool has_next() const { return value && (it != end || use_value); }
 

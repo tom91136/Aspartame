@@ -4,6 +4,13 @@
   #define ASPARTAME_USE_CONCEPTS
 #endif
 
+// constexpr only when the stdlib gives std::vector/string a constexpr destructor (C++20+).
+#if __cplusplus >= 202002L
+  #define ASPARTAME_CONSTEXPR_ALLOC constexpr
+#else
+  #define ASPARTAME_CONSTEXPR_ALLOC
+#endif
+
 #include <functional>
 #include <optional>
 #include <tuple>
@@ -41,7 +48,7 @@ constexpr bool is_map_like_impl<T, std::void_t<typename T::key_type, typename T:
 template <typename, typename = void> constexpr bool is_set_like_impl = false;
 template <typename T>
 constexpr bool is_set_like_impl<T, std::void_t<typename T::key_type, typename T::value_type,
-                                               decltype(std::declval<T &>().emplace(std::declval<const typename T::value_type &&>()))>> =
+                                               decltype(std::declval<T &>().insert(std::declval<const typename T::value_type &>()))>> =
     true;
 
 template <typename T, typename = void> constexpr bool is_hashable_impl = false;
@@ -73,16 +80,17 @@ struct tag {};
 
 namespace details {
 
-template <typename T> struct unsupported1 {};
-
-template <typename K, typename V> struct unsupported2 {};
+// XXX matches std::pair and public-derived (e.g. llvm DenseMapPair) but not duck-typed first/second.
+template <typename A, typename B> std::true_type derives_from_pair_test(const std::pair<A, B> &);
+std::false_type derives_from_pair_test(...);
+template <typename T> constexpr bool is_pair_like_v = decltype(derives_from_pair_test(std::declval<T>()))::value;
 
 template <typename F, typename Args> constexpr auto ap(F f, Args &&t) {
   using U = std::decay_t<Args>;
-  if constexpr (is_tuple<Args> || is_pair<Args>) {
-    if constexpr (std::is_invocable_v<F, U>) return f(std::forward<Args &&>(t));
-    else return std::apply(f, std::forward<Args &&>(t));
-  } else return f(std::forward<Args &&>(t));
+  if constexpr (std::is_invocable_v<F, Args>) return f(std::forward<Args &&>(t));
+  else if constexpr (is_pair_like_v<U>) return f(t.first, t.second);
+  else if constexpr (is_tuple<U>) return std::apply(f, std::forward<Args &&>(t));
+  else return f(std::forward<Args &&>(t));
 }
 
 template <typename In, typename... Args> constexpr auto unsupported(Args...) {
@@ -118,6 +126,9 @@ constexpr bool has_push_back<T, std::void_t<decltype(std::declval<T>().push_back
 
 template <typename T, typename = void> constexpr bool has_size = false;
 template <typename T> constexpr bool has_size<T, std::void_t<decltype(std::declval<T>().size())>> = true;
+
+template <typename T, typename = void> constexpr bool has_tuple_size = false;
+template <typename T> constexpr bool has_tuple_size<T, std::void_t<decltype(std::tuple_size<T>::value)>> = true;
 
 template <typename T, typename = void> constexpr bool has_associative_insert = false;
 template <typename T>

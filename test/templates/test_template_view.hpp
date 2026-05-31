@@ -1,9 +1,15 @@
-#include "../test_base_includes.hpp"
-
-#include "catch2/catch_test_macros.hpp"
 #include <sstream>
 
+#include "catch2/catch_test_macros.hpp"
+
+#include "../test_base_includes.hpp"
+
 #define TPE_IS_VIEW 1
+
+#define DISABLE_COMBINE_ALL
+#define DISABLE_INTERSPERSE
+#define DISABLE_TRAVERSE
+#define DISABLE_SEQUENCE
 
 template <typename Element, typename Expected, typename F>
 void runTest(const std::string &typeName,       //
@@ -63,41 +69,26 @@ void runTest(const std::string &typeName,       //
   }
 }
 
-// #define DISABLE_TAP_EACH
-
 #include "test_template_container.hpp"
 
-// #define DISABLE_PREPEND
-// #define DISABLE_HEAD_MAYBE
-// #define DISABLE_LAST_MAYBE
 #define DISABLE_INIT
-// #define DISABLE_TAIL
-//  #define DISABLE_AT_MAYBE
-//  #define DISABLE_SLICE
-// #define DISABLE_INDEX_OF_SLICE
-// #define DISABLE_CONTAINS_SLICE
-//  #define DISABLE_INDEX_OF
-//  #define DISABLE_CONTAINS
-//  #define DISABLE_INDEX_WHERE
-// #define DISABLE_ZIP_WITH_INDEX
-// #define DISABLE_ZIP
 #define DISABLE_TRANSPOSE
-#define DISABLE_SEQUENCE
+#define DISABLE_CARTESIAN_PRODUCT
 #define DISABLE_REVERSE
 #define DISABLE_SHUFFLE
 #define DISABLE_SORT
 #define DISABLE_SORT_BY
-// #define DISABLE_SPLIT_AT
-//  #define DISABLE_TAKE
-//  #define DISABLE_DROP
 #define DISABLE_TAKE_RIGHT
 #define DISABLE_DROP_RIGHT
-// #define DISABLE_TAKE_WHILE
-// #define DISABLE_DROP_WHILE
-// #define DISABLE_FOLD_LEFT
 #define DISABLE_FOLD_RIGHT
-// #define DISABLE_SLIDING
-// #define DISABLE_GROUPED
+#define DISABLE_SCAN_LEFT
+#define DISABLE_SCAN_RIGHT
+#define DISABLE_UNZIP
+#define DISABLE_INTERSECT
+#define DISABLE_DIFF
+#define DISABLE_JOIN_WITH
+#define DISABLE_TOP_K
+#define DISABLE_BOTTOM_K
+#define DISABLE_SYMMETRIC_DIFFERENCE
 
 #include "test_template_sequence.hpp"
-// #include "templates/test_template_any.hpp"

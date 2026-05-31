@@ -2,6 +2,10 @@ name: Windows
 
 on: [ push, pull_request ]
 
+concurrency:
+  group: windows-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: MSVC, ${{matrix.os}} (${{matrix.arch}}), ${{matrix.build_type}}
@@ -20,7 +24,7 @@ jobs:
             arch: arm64
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up MSVC environment
         shell: cmd
@@ -50,7 +54,7 @@ jobs:
       - name: Build tests + lib
         working-directory: ${{runner.workspace}}
         shell: cmd
-        run: cmake --build build --target all
+        run: cmake --build build --target all --parallel
 
       - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}
@@ -62,11 +66,16 @@ jobs:
         shell: cmd
         run: build\test_17.exe
 
+      - name: Run CXX23 tests
+        working-directory: ${{runner.workspace}}
+        shell: cmd
+        run: if exist build\test_23.exe (build\test_23.exe) else (echo test_23 not built ^(compiler lacks C++23 support^))
+
   example:
     name: example FetchContent
     runs-on: windows-2025-vs2026
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up MSVC environment
         shell: cmd
         run: |

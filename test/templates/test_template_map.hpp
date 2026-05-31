@@ -3,8 +3,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../test_base_container2.hpp"
 #include "catch2/catch_test_macros.hpp"
+
+#include "../test_base_container2.hpp"
 
 #ifndef DISABLE_MK_STRING
 TEST_CASE(TPE_NAME "_mk_string", "[" TPE_NAME "][" TPE_GROUP "]") {
@@ -103,7 +104,6 @@ TEST_CASE(TPE_NAME "_concat", "[" TPE_NAME "][" TPE_GROUP "]") {
 
 #ifndef DISABLE_MAP
 TEST_CASE(TPE_NAME "_map", "[" TPE_NAME "][" TPE_GROUP "]") {
-  // XXX for maps, we must return a pair
   auto intMapOp = [](auto &&xs) { return xs OP_ map([](auto x) { return std::pair(x.first * 2, x.second * 2); }); };
   auto strMapOp = [](auto &&xs) { return xs OP_ map([](auto x) { return std::pair(x.first + x.first, x.second + x.second); }); };
   auto fooMapOp = [](auto &&xs) { return xs OP_ map([](auto x) { return std::pair(Foo(x.first.value * 2), Foo(x.second.value * 2)); }); };
@@ -211,8 +211,8 @@ TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
-#ifndef DISABLE_BIND
-TEST_CASE(TPE_NAME "_bind", "[" TPE_NAME "][" TPE_GROUP "]") {
+#ifndef DISABLE_FLAT_MAP
+TEST_CASE(TPE_NAME "_flat_map", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto bindOp = [](auto &&xs) {
     return xs OP_ flat_map([](auto x) { return TPE_CTOR_OUT(std::remove_const_t<decltype(x.first)>, decltype(x.second)){x}; });
   };
@@ -473,14 +473,12 @@ TEST_CASE(TPE_NAME "_for_each", "[" TPE_NAME "][" TPE_GROUP "]") {
   };
   p2("spread", [](auto &&xs) {
     std::vector<int> out;
-    auto ys = xs OP_ tap_each([&](auto x0, auto x1) { out.push_back(x0 + x1); });
-    CHECK((ys == xs));
+    xs OP_ for_each([&](auto x0, auto x1) { out.push_back(x0 + x1); });
     return out;
   });
   p2("single", [](auto &&xs) {
     std::vector<int> out;
-    auto ys = xs OP_ tap_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x)); });
-    CHECK((ys == xs));
+    xs OP_ for_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x)); });
     return out;
   });
 }
@@ -852,5 +850,38 @@ TEST_CASE(TPE_NAME "_get_or_default", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(int, int, int, "", {}, 1, op(0, 1));
   RUN_CHECK(string, string, string, "", {}, "a", op("", "a"));
   RUN_CHECK(Foo, Foo, Foo, "", {}, Foo(42), op(Foo(1), Foo(42)));
+}
+#endif
+#ifndef DISABLE_FILTER_KEYS
+TEST_CASE(TPE_NAME "_filter_keys", "[" TPE_NAME "][" TPE_GROUP "]") {
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {{4, 4}, {2, 2}, {3, 3}, {1, 1}, {5, 5}}, {{4, 4}, {2, 2}},
+            [](auto &&xs) { return xs OP_ filter_keys([](auto k) { return k % 2 == 0; }); });
+  RUN_CHECK(string, int, TPE_CTOR_OUT(string, int), "", {{"banana", 1}, {"cherry", 2}, {"apple", 3}}, {{"apple", 3}},
+            [](auto &&xs) { return xs OP_ filter_keys([](auto k) { return k == "apple"; }); });
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {{1, 1}}, {}, [](auto &&xs) { return xs OP_ filter_keys([](auto k) { return k > 5; }); });
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {}, {}, [](auto &&xs) { return xs OP_ filter_keys([](auto k) { return k > 5; }); });
+}
+#endif
+
+#ifndef DISABLE_FILTER_VALUES
+TEST_CASE(TPE_NAME "_filter_values", "[" TPE_NAME "][" TPE_GROUP "]") {
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {{1, 10}, {2, 20}, {3, 30}}, {{2, 20}, {3, 30}},
+            [](auto &&xs) { return xs OP_ filter_values([](auto v) { return v >= 20; }); });
+  RUN_CHECK(int, string, TPE_CTOR_OUT(int, string), "", {{1, "a"}, {2, "bb"}, {3, "ccc"}}, {{1, "a"}},
+            [](auto &&xs) { return xs OP_ filter_values([](auto v) { return v.size() == 1; }); });
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {{1, 1}}, {},
+            [](auto &&xs) { return xs OP_ filter_values([](auto v) { return v > 5; }); });
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {}, {}, [](auto &&xs) { return xs OP_ filter_values([](auto v) { return v > 5; }); });
+}
+#endif
+
+#ifndef DISABLE_COMBINE
+TEST_CASE(TPE_NAME "_combine", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&ys) { return [&](auto &&xs) { return xs OP_ combine(ys, [](auto a, auto b) { return a + b; }); }; };
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {{1, 10}, {2, 20}, {3, 30}}, {{1, 10}, {2, 25}, {3, 30}, {4, 40}},
+            op(TPE_CTOR_IN(int, int){{2, 5}, {4, 40}}));
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {{1, 1}}, {{1, 1}, {2, 2}}, op(TPE_CTOR_IN(int, int){{2, 2}}));
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {{1, 1}, {2, 2}}, {{1, 1}, {2, 2}}, op(TPE_CTOR_IN(int, int){}));
+  RUN_CHECK(int, int, TPE_CTOR_OUT(int, int), "", {}, {{2, 2}}, op(TPE_CTOR_IN(int, int){{2, 2}}));
 }
 #endif

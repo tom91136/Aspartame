@@ -252,8 +252,7 @@ $RECYCLE.BIN/
 .vscode/
 
 /build-*
-
-/llvm-*
+/build_*
 
 venv
 

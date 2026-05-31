@@ -2,6 +2,10 @@ name: macOS
 
 on: [ push, pull_request ]
 
+concurrency:
+  group: macos-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: ${{matrix.os}}, ${{matrix.cxx}}, ${{matrix.build_type}}
@@ -11,20 +15,20 @@ jobs:
       matrix:
         os: [ macos-26-intel, macos-15, macos-26 ]
         build_type: [ Debug, Release ]
-        include:
-          - cxx: clang++
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Prepare environment
         run: command -v ninja >/dev/null || brew install ninja
 
+      - name: Report compiler version
+        run: clang++ --version
+
       - name: Configure build
         working-directory: ${{runner.workspace}}
         env:
-          CXX: ${{matrix.cxx}}
-          CXXFLAGS: ${{matrix.cxxflags}}
+          CXX: clang++
         run: |
           cmake -Bbuild -S $GITHUB_WORKSPACE \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
@@ -37,7 +41,7 @@ jobs:
 
       - name: Build tests + lib
         working-directory: ${{runner.workspace}}
-        run: cmake --build build --target all
+        run: cmake --build build --target all --parallel
 
       - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}
@@ -47,11 +51,20 @@ jobs:
         working-directory: ${{runner.workspace}}
         run: ./build/test_17
 
+      - name: Run CXX23 tests
+        working-directory: ${{runner.workspace}}
+        run: |
+          if [ -x ./build/test_23 ]; then
+            ./build/test_23
+          else
+            echo "test_23 not built (compiler lacks C++23 support)"
+          fi
+
   example:
     name: example FetchContent
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Prepare environment
         run: command -v ninja >/dev/null || brew install ninja
       - name: Configure example

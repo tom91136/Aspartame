@@ -13,3 +13,6 @@
 #include "templates/test_template_any.hpp"
 #include "templates/test_template_container.hpp"
 #include "templates/test_template_sequence.hpp"
+
+#define TPE_INPLACE_SEQ 1
+#include "templates/test_template_inplace.hpp"

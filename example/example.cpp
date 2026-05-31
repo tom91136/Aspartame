@@ -1,20 +1,13 @@
-// Small end-to-end example: parse a CSV of daily sensor readings, compute
-// per-sensor summary stats, and print a sorted report.
-//
-// Demonstrates strings (`lines`, `trim`, `split`, `is_blank`), containers
-// (`collect`, `map`, `tail`, `group_map`, `to_vector`), folds (`fold_left`,
-// `reduce`), and ordering (`sort_by`).
-
-#include "aspartame/optional.hpp"
-#include "aspartame/string.hpp"
-#include "aspartame/vector.hpp"
-#include "aspartame/view.hpp"
-
 #include <cstdio>
 #include <iostream>
 #include <limits>
 #include <string>
 #include <vector>
+
+#include "aspartame/optional.hpp"
+#include "aspartame/string.hpp"
+#include "aspartame/vector.hpp"
+#include "aspartame/view.hpp"
 
 using namespace aspartame;
 

@@ -1,29 +1,16 @@
 #pragma once
 
-#include "fixtures.hpp"
-
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/matchers/catch_matchers_all.hpp"
 
+#include "test_base_harness.hpp"
+
 using namespace ::aspartame;
-
-#define Q(x) #x
-#define QUOTE(x) Q(x)
-
-#ifndef __FILE_NAME__
-  #define __FILE_NAME__ __FILE__
-#endif
 
 #define RUN_CHECK(T, U, _name, ...)                                                                                                        \
   runTest<T, U>(std::string(TPE_NAME "<" #T "> => " #U " [") + _name + "]", __FILE_NAME__ ":" QUOTE(__LINE__), __VA_ARGS__)
 #define RUN_CHECK_ID(T, _name, ...) RUN_CHECK(T, TPE_CTOR_OUT(T), _name, __VA_ARGS__)
 #define COMMA ,
-
-template <typename> constexpr bool is_unordered_set_private = false;
-template <typename T> constexpr bool is_unordered_set_private<std::unordered_set<T>> = true;
-
-template <typename> constexpr bool is_vector_private = false;
-template <typename T> constexpr bool is_vector_private<std::vector<T>> = true;
 
 #ifndef TPE_RUN_TEST
 
@@ -50,7 +37,7 @@ void runTest(const std::string &typeName,       //
     INFO("actual =    " << actual_stream.str());
 
   #ifdef TPE_UNORDERED
-    if constexpr (is_unordered_set_private<Expected> || is_vector_private<Expected> || std::is_same_v<Expected, std::string>) {
+    if constexpr (harness_detail::wants_sort_compare_v<Expected>) {
       std::vector<typename Expected::value_type> expected_sorted{expected.begin(), expected.end()};
       std::vector<typename Expected::value_type> actual_sorted{actual.begin(), actual.end()};
       std::sort(expected_sorted.begin(), expected_sorted.end());
@@ -71,4 +58,43 @@ void runTest(const std::string &typeName,       //
   }
 }
 
+template <typename Element, typename Expected, typename F>
+void runTestInplace(const std::string &typeName,       //
+                    const std::string &location,       //
+                    std::initializer_list<Element> in, //
+                    Expected expected,                 //
+                    F f) {
+
+  if (TPE_INIT_SKIP(in)) return;
+  DYNAMIC_SECTION(typeName << " (inplace) n=" << in.size() << " @ " << location) {
+    TPE_CTOR_IN(Element) v = TPE_INIT_TO_CTOR_IN(in);
+    static_assert(std::is_same_v<std::decay_t<decltype(f(v))>, TPE_CTOR_IN(Element)>, "in-place op must return the input type");
+    auto &ret = f(v);
+    CHECK(&ret == &v); // operator^= returns the lhs
+
+    std::stringstream expected_stream, actual_stream;
+    expected_stream << expected;
+    actual_stream << v;
+    INFO("expected =  " << expected_stream.str());
+    INFO("actual =    " << actual_stream.str());
+
+  #ifdef TPE_UNORDERED
+    if constexpr (harness_detail::wants_sort_compare_v<Expected>) {
+      std::vector<typename Expected::value_type> expected_sorted{expected.begin(), expected.end()};
+      std::vector<typename Expected::value_type> actual_sorted{v.begin(), v.end()};
+      std::sort(expected_sorted.begin(), expected_sorted.end());
+      std::sort(actual_sorted.begin(), actual_sorted.end());
+      CHECK(actual_sorted == expected_sorted);
+    } else {
+      CHECK(v == expected);
+    }
+  #else
+    CHECK(v == expected);
+  #endif
+  }
+}
+
 #endif
+
+#define RUN_CHECK_INPLACE(T, _name, ...)                                                                                                   \
+  runTestInplace<T, TPE_CTOR_IN(T)>(std::string(TPE_NAME "<" #T "> ^= [") + _name + "]", __FILE_NAME__ ":" QUOTE(__LINE__), __VA_ARGS__)

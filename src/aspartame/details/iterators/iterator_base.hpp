@@ -34,12 +34,13 @@ public:
   constexpr explicit operator bool() const noexcept { return storage.operator bool(); }
 };
 
-template <typename Derived, typename T> struct fwd_iterator {
+// XXX adapters caching into a member overwritten on ++ pass std::input_iterator_tag here.
+template <typename Derived, typename T, typename Category = std::forward_iterator_tag> struct fwd_iterator {
   using difference_type = std::ptrdiff_t;
   using value_type = T;
   using pointer = const T *;
   using reference = const T &;
-  using iterator_category = std::forward_iterator_tag;
+  using iterator_category = Category;
   constexpr fwd_iterator() {
     static_assert(std::is_same_v<                                    //
                       decltype(std::declval<Derived>().operator*()), //
