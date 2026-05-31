@@ -7,6 +7,10 @@
 #include <QMap>
 #include <QString>
 
+// Pulled in for operator<< on std::pair/optional/etc. so QList<pair<...>> can print.
+// Must precede the template definitions below for 2-phase lookup to find them.
+#include "../fixtures.hpp"
+
 inline std::ostream &operator<<(std::ostream &os, const QString &s) { return os << s.toStdString(); }
 
 template <class T> std::ostream &operator<<(std::ostream &os, const QList<T> &xs) {

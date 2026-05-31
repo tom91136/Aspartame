@@ -1244,6 +1244,7 @@ TEST_CASE(TPE_NAME "_sequence", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK(OptStr, ResStr, "empty-str", {}, ResStr{TPE_CTOR_OUT(string){}}, op);
 }
 
+#ifndef DISABLE_SEQUENCE_NESTED
 TEST_CASE(TPE_NAME "_sequence_nested_optional", "[" TPE_NAME "][" TPE_GROUP "]") {
   using OptInt = std::optional<int>;
   using OptOptInt = std::optional<OptInt>;
@@ -1262,6 +1263,7 @@ TEST_CASE(TPE_NAME "_sequence_nested_optional", "[" TPE_NAME "][" TPE_GROUP "]")
   #endif
   RUN_CHECK(OptOptInt, ResOptInt, "nested-empty", {}, ResOptInt{TPE_CTOR_OUT(OptInt){}}, op);
 }
+#endif
 
   #if defined(__cpp_lib_expected) && defined(TPE_INPLACE_SEQ)
 TEST_CASE(TPE_NAME "_sequence_expected", "[" TPE_NAME "][" TPE_GROUP "]") {

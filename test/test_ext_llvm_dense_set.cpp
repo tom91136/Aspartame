@@ -1,5 +1,10 @@
 #include <aspartame/ext/llvm.hpp>
 
+// XXX DenseSet<std::optional<T>> requires a DenseMapInfo<std::optional<T>> specialization
+// that only exists on LLVM 22+
+#define DISABLE_SEQUENCE
+#define DISABLE_SEQUENCE_NESTED
+
 #include "ext/llvm_dense_info.hpp"
 #include "fixtures.hpp"
 #include "test_base_includes.hpp"

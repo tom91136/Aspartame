@@ -4,8 +4,12 @@
   #define ASPARTAME_USE_CONCEPTS
 #endif
 
-// constexpr only when the stdlib gives std::vector/string a constexpr destructor (C++20+).
-#if __cplusplus >= 202002L
+// constexpr only when the stdlib actually gives std::vector/string constexpr destructors.
+// libstdc++ <12 and libc++ <15 report __cplusplus 202002L without these.
+#include <version>
+#if __cplusplus >= 202002L &&                                                                                                              \
+    defined(__cpp_lib_constexpr_string) && __cpp_lib_constexpr_string >= 201907L &&                                                        \
+    defined(__cpp_lib_constexpr_vector) && __cpp_lib_constexpr_vector >= 201907L
   #define ASPARTAME_CONSTEXPR_ALLOC constexpr
 #else
   #define ASPARTAME_CONSTEXPR_ALLOC
@@ -123,6 +127,18 @@ template <typename T> constexpr bool has_reverse<T, std::void_t<decltype(std::de
 template <typename T, typename = void> constexpr bool has_push_back = false;
 template <typename T>
 constexpr bool has_push_back<T, std::void_t<decltype(std::declval<T>().push_back(std::declval<typename T::value_type>()))>> = true;
+
+template <typename T, typename U, typename = void> constexpr bool has_find = false;
+template <typename T, typename U>
+constexpr bool has_find<T, U, std::void_t<decltype(std::declval<const T>().find(std::declval<const U &>()))>> = true;
+
+template <typename T, typename U, typename = void> constexpr bool has_contains = false;
+template <typename T, typename U>
+constexpr bool has_contains<T, U, std::void_t<decltype(std::declval<const T>().contains(std::declval<const U &>()))>> = true;
+
+template <typename T, typename U, typename = void> constexpr bool has_count = false;
+template <typename T, typename U>
+constexpr bool has_count<T, U, std::void_t<decltype(std::declval<const T>().count(std::declval<const U &>()))>> = true;
 
 template <typename T, typename = void> constexpr bool has_size = false;
 template <typename T> constexpr bool has_size<T, std::void_t<decltype(std::declval<T>().size())>> = true;

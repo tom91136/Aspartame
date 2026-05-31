@@ -31,16 +31,27 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
     if (MSVC)
         set(ASPARTAME_COMPILE_FLAGS /bigobj /W4 /EHsc /Zc:__cplusplus /permissive-)
     else ()
+        include(CheckCXXCompilerFlag)
+        set(ASPARTAME_CLANG_OPT_FLAGS "")
+        if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            # XXX clang-22+ flags Catch2's use of __COUNTER__ as a C2y extension under -pedantic
+            check_cxx_compiler_flag(-Wno-c2y-extensions ASPARTAME_HAS_WNO_C2Y_EXTENSIONS)
+            if (ASPARTAME_HAS_WNO_C2Y_EXTENSIONS)
+                list(APPEND ASPARTAME_CLANG_OPT_FLAGS -Wno-c2y-extensions)
+            endif ()
+            # XXX clang's -Wpass-failed sometimes fires for inlined loops in templates; not actionable
+            check_cxx_compiler_flag(-Wno-pass-failed ASPARTAME_HAS_WNO_PASS_FAILED)
+            if (ASPARTAME_HAS_WNO_PASS_FAILED)
+                list(APPEND ASPARTAME_CLANG_OPT_FLAGS -Wno-pass-failed)
+            endif ()
+        endif ()
         set(ASPARTAME_COMPILE_FLAGS
                 -Wno-unused-parameter
                 -Wall
                 -Wextra
                 $<$<CXX_COMPILER_ID:Clang,GNU,AppleClang>:-Werror>
                 $<$<CXX_COMPILER_ID:Clang,GNU,AppleClang>:-pedantic>
-                # clang-22+ flags Catch2's use of __COUNTER__ as a C2y extension under -pedantic.
-                $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-c2y-extensions>
-                # clang's -Wpass-failed sometimes fires for inlined loops in templates; not actionable.
-                $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-pass-failed>
+                ${ASPARTAME_CLANG_OPT_FLAGS}
                 # GCC 12+ false-positives on std::optional<std::variant<...>> with -O2; clang is clean.
                 $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
                 $<$<CXX_COMPILER_ID:PGI,NVHPC>:--pedantic>
@@ -114,7 +125,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
                 target_compile_options(test_ext_llvm_${std} PRIVATE ${ASPARTAME_COMPILE_FLAGS})
                 target_compile_features(test_ext_llvm_${std} PRIVATE cxx_std_${std})
                 target_include_directories(test_ext_llvm_${std} SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
-                target_compile_definitions(test_ext_llvm_${std} PRIVATE ${LLVM_DEFINITIONS_LIST})
+                target_compile_definitions(test_ext_llvm_${std} PRIVATE ${LLVM_DEFINITIONS_LIST} ASPARTAME_SHOW_STREAM)
                 target_link_libraries(test_ext_llvm_${std} PRIVATE Aspartame Catch2::Catch2WithMain LLVMSupport)
                 target_link_options(test_ext_llvm_${std} PRIVATE ${ASPARTAME_LINK_FLAGS})
             endforeach ()
@@ -128,6 +139,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
                 foreach (std 17 20)
                     add_executable(test_ext_${lib}_${std} ${_ext_${lib}_srcs})
                     target_compile_options(test_ext_${lib}_${std} PRIVATE ${ASPARTAME_COMPILE_FLAGS})
+                    target_compile_definitions(test_ext_${lib}_${std} PRIVATE ASPARTAME_SHOW_STREAM)
                     target_compile_features(test_ext_${lib}_${std} PRIVATE cxx_std_${std})
                     target_link_libraries(test_ext_${lib}_${std} PRIVATE Aspartame Catch2::Catch2WithMain)
                     target_link_options(test_ext_${lib}_${std} PRIVATE ${ASPARTAME_LINK_FLAGS})
@@ -143,6 +155,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
             foreach (std 17 20)
                 add_executable(test_ext_abseil_${std} ${_ext_abseil_srcs})
                 target_compile_options(test_ext_abseil_${std} PRIVATE ${ASPARTAME_COMPILE_FLAGS})
+                target_compile_definitions(test_ext_abseil_${std} PRIVATE ASPARTAME_SHOW_STREAM)
                 target_compile_features(test_ext_abseil_${std} PRIVATE cxx_std_${std})
                 target_link_libraries(test_ext_abseil_${std} PRIVATE Aspartame Catch2::Catch2WithMain
                         absl::flat_hash_map absl::flat_hash_set absl::btree absl::inlined_vector)
@@ -158,6 +171,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
             foreach (std 17 20)
                 add_executable(test_ext_qt_${std} ${_ext_qt_srcs})
                 target_compile_options(test_ext_qt_${std} PRIVATE ${ASPARTAME_COMPILE_FLAGS})
+                target_compile_definitions(test_ext_qt_${std} PRIVATE ASPARTAME_SHOW_STREAM)
                 target_compile_features(test_ext_qt_${std} PRIVATE cxx_std_${std})
                 target_link_libraries(test_ext_qt_${std} PRIVATE Aspartame Catch2::Catch2WithMain Qt6::Core)
                 target_link_options(test_ext_qt_${std} PRIVATE ${ASPARTAME_LINK_FLAGS})

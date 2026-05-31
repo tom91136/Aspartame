@@ -186,8 +186,12 @@ template <typename In, typename Predicate> //
 
 template <typename In, typename T> //
 [[nodiscard]] constexpr auto contains(const In &in, const T &t) {
-  if constexpr (is_set_like_impl<In>) return in.find(t) != seq_view(in).end();
-  else return std::find(seq_view(in).begin(), seq_view(in).end(), t) != seq_view(in).end();
+  if constexpr (is_set_like_impl<In>) {
+    if constexpr (has_contains<In, T>) return in.contains(t);
+    else if constexpr (has_find<In, T>) return in.find(t) != seq_view(in).end();
+    else if constexpr (has_count<In, T>) return in.count(t) != 0;
+    else return std::find(seq_view(in).begin(), seq_view(in).end(), t) != seq_view(in).end();
+  } else return std::find(seq_view(in).begin(), seq_view(in).end(), t) != seq_view(in).end();
 }
 
 template <typename In, typename Function> //

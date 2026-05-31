@@ -41,7 +41,7 @@ jobs:
 
       - name: Build tests + lib
         working-directory: ${{runner.workspace}}
-        run: cmake --build build --target all --parallel
+        run: cmake --build build --target all --parallel 2
 
       - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}

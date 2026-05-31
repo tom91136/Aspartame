@@ -85,7 +85,7 @@ jobs:
 
       - name: Build tests + lib
         working-directory: ${{runner.workspace}}
-        run: cmake --build build --target all --parallel
+        run: cmake --build build --target all --parallel 2
 
       - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}
@@ -142,7 +142,7 @@ jobs:
 
       - name: Build tests + lib
         working-directory: ${{runner.workspace}}
-        run: cmake --build build --target all --parallel
+        run: cmake --build build --target all --parallel 2
 
       - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}
@@ -204,6 +204,10 @@ jobs:
           sudo cp -r /tmp/sparse-map/include/tsl /usr/local/include/
           git clone --depth=1 https://github.com/Tessil/robin-map /tmp/robin-map
           sudo cp -r /tmp/robin-map/include/tsl/* /usr/local/include/tsl/
+          git clone --depth=1 https://github.com/Tessil/hopscotch-map /tmp/hopscotch-map
+          sudo cp -r /tmp/hopscotch-map/include/tsl/* /usr/local/include/tsl/
+          git clone --depth=1 https://github.com/Tessil/ordered-map /tmp/ordered-map
+          sudo cp -r /tmp/ordered-map/include/tsl/* /usr/local/include/tsl/
           git clone --depth=1 https://github.com/TartanLlama/expected /tmp/tl-expected
           sudo cp -r /tmp/tl-expected/include/tl /usr/local/include/
 
@@ -279,8 +283,8 @@ jobs:
 
       - name: Build tests + lib
         working-directory: ${{runner.workspace}}
-        # nvc++ template instantiation is memory-heavy, cap parallelism to avoid OOM on hosted runners (~7GB).
-        run: cmake --build build --target all --parallel
+        # nvc++ template instantiation is memory-heavy; one TU at a time to stay under the runner's RAM budget.
+        run: cmake --build build --target all --parallel 1
 
       - name: Run CXX20 tests
         working-directory: ${{runner.workspace}}
