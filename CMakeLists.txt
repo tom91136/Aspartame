@@ -70,7 +70,23 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
 
     if (ASPARTAME_ENABLE_TEST)
         set(ASPARTAME_TEST_STDS 17 20)
-        if (cxx_std_23 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+        # XXX clang 16/17 + libstdc++ 14 + c++23 mode triggers a stdlib SFINAE bug in
+        # std::tuple's pair-like-conversion constructor (probes `std::get` on non-tuple-like types
+        # like std::optional<tuple> with a hard error instead of SFINAE). Newer clang versions
+        # work around it. Skip c++23 only on the affected combo.
+        set(_skip_cxx23_clang_libstdcpp14 OFF)
+        if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18)
+            include(CheckCXXSourceCompiles)
+            check_cxx_source_compiles("#include <version>
+                #if defined(__GLIBCXX__) && __GLIBCXX__ >= 20240801
+                #error libstdc++ >= 14
+                #endif
+                int main() {}" _aspartame_libstdcpp_lt_14)
+            if (NOT _aspartame_libstdcpp_lt_14)
+                set(_skip_cxx23_clang_libstdcpp14 ON)
+            endif ()
+        endif ()
+        if (cxx_std_23 IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT _skip_cxx23_clang_libstdcpp14)
             list(APPEND ASPARTAME_TEST_STDS 23)
         endif ()
         foreach (std IN LISTS ASPARTAME_TEST_STDS)

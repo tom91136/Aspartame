@@ -6,7 +6,12 @@
 #define TPE_CTOR_IN(T) std::optional<T>
 #define TPE_CTOR_OUT(T) std::optional<T>
 #define TPE_CTOR_VAR_OUT(T) std::vector<T>
-#define TPE_INIT_TO_CTOR_IN(x) (empty(x) ? std::nullopt : std::optional{*x.begin()})
+// XXX Avoid the bare `std::nullopt` here: in clang+libstdc++14+c++23 mode, the ternary
+// common-type computation forces a probe of `is_constructible<T, nullopt_t>` whose SFINAE
+// hard-errors when T is std::pair or std::tuple (libstdc++ 14 bug, see
+// https://github.com/catchorg/Catch2/issues/2923). Both arms must be the same optional<T>.
+#define TPE_INIT_TO_CTOR_IN(x)                                                                                                             \
+  (empty(x) ? std::optional<std::decay_t<decltype(*(x).begin())>>{} : std::optional{*(x).begin()})
 #define TPE_INIT_SKIP(x) ((x).size() > 1)
 
 #define DISABLE_INDEX_OF_MIN
