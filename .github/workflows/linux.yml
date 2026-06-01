@@ -198,17 +198,17 @@ jobs:
 
       - name: Install header-only deps (phmap, tsl, tl-expected)
         run: |
-          git clone --depth=1 https://github.com/greg7mdp/parallel-hashmap /tmp/phmap
+          git clone --depth=1 --branch v2.0.0 https://github.com/greg7mdp/parallel-hashmap /tmp/phmap
           sudo cp -r /tmp/phmap/parallel_hashmap /usr/local/include/
-          git clone --depth=1 https://github.com/Tessil/sparse-map /tmp/sparse-map
+          git clone --depth=1 --branch v0.7.0 https://github.com/Tessil/sparse-map /tmp/sparse-map
           sudo cp -r /tmp/sparse-map/include/tsl /usr/local/include/
-          git clone --depth=1 https://github.com/Tessil/robin-map /tmp/robin-map
+          git clone --depth=1 --branch v1.4.1 https://github.com/Tessil/robin-map /tmp/robin-map
           sudo cp -r /tmp/robin-map/include/tsl/* /usr/local/include/tsl/
-          git clone --depth=1 https://github.com/Tessil/hopscotch-map /tmp/hopscotch-map
+          git clone --depth=1 --branch v2.4.0 https://github.com/Tessil/hopscotch-map /tmp/hopscotch-map
           sudo cp -r /tmp/hopscotch-map/include/tsl/* /usr/local/include/tsl/
-          git clone --depth=1 https://github.com/Tessil/ordered-map /tmp/ordered-map
+          git clone --depth=1 --branch v1.2.0 https://github.com/Tessil/ordered-map /tmp/ordered-map
           sudo cp -r /tmp/ordered-map/include/tsl/* /usr/local/include/tsl/
-          git clone --depth=1 https://github.com/TartanLlama/expected /tmp/tl-expected
+          git clone --depth=1 --branch v1.3.1 https://github.com/TartanLlama/expected /tmp/tl-expected
           sudo cp -r /tmp/tl-expected/include/tl /usr/local/include/
 
       - name: Configure
@@ -253,12 +253,16 @@ jobs:
     name: nvc++ ${{matrix.nvhpc_version}}, ${{matrix.build_type}}
     runs-on: ubuntu-22.04
     container:
-      image: nvcr.io/nvidia/nvhpc:${{matrix.nvhpc_version}}-devel-cuda_multi-ubuntu22.04
+      image: nvcr.io/nvidia/nvhpc:${{matrix.nvhpc_version}}-devel-cuda${{matrix.cuda}}-ubuntu22.04
     strategy:
       fail-fast: false
       matrix:
         build_type: [ Debug, Release ]
         nvhpc_version: [ '25.7', '25.5', '25.3' ]
+        include:
+          - { nvhpc_version: '25.7', cuda: '12.9' }
+          - { nvhpc_version: '25.5', cuda: '12.9' }
+          - { nvhpc_version: '25.3', cuda: '12.8' }
 
     steps:
       - uses: actions/checkout@v6

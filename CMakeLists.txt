@@ -25,8 +25,8 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
     include(FetchContent)
     FetchContent_Declare(
             Catch2
-            URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.8.0.tar.gz
-            URL_HASH SHA1=c073761e6934ac45a8b1029de7ad17e03fffafe2
+            URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.15.0.tar.gz
+            URL_HASH SHA1=e50cdd9097f28a492d75b6a8b78d0dc13d57dbc7
     )
     if (MSVC)
         set(ASPARTAME_COMPILE_FLAGS /bigobj /W4 /EHsc /Zc:__cplusplus /permissive-)
