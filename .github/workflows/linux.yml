@@ -67,7 +67,7 @@ jobs:
             sudo ./llvm.sh ${{matrix.llvm_apt}}
           fi
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build ${{matrix.pkg}} libstdc++-14-dev
+          sudo apt-get install -y cmake ninja-build ${{matrix.pkg}}
 
       - name: Configure build
         working-directory: ${{runner.workspace}}
@@ -124,7 +124,7 @@ jobs:
       - name: Prepare environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build ${{matrix.pkg}} libstdc++-14-dev
+          sudo apt-get install -y cmake ninja-build ${{matrix.pkg}}
 
       - name: Configure build
         working-directory: ${{runner.workspace}}
