@@ -104,6 +104,22 @@ jobs:
             echo "test_23 not built (compiler lacks C++23 support)"
           fi
 
+      - name: Compile header with exceptions disabled
+        working-directory: ${{runner.workspace}}
+        env:
+          CXX: ${{matrix.cxx}}
+        run: |
+          printf '#include "aspartame/all.hpp"\nint main() {}\n' > noexcept.cpp
+          for std in 17 20 23; do
+            base="$CXX -std=c++$std -Wall -Wextra -Werror -pedantic -I $GITHUB_WORKSPACE/src -c noexcept.cpp -o /dev/null"
+            if ! $base 2>/dev/null; then
+              echo "skipping c++$std (header does not compile with exceptions; not a -fno-exceptions regression)"
+              continue
+            fi
+            echo "=== c++$std -fno-exceptions ==="
+            $base -fno-exceptions
+          done
+
   build-arm:
     name: ${{matrix.os}}, ${{matrix.cxx}}, ${{matrix.build_type}}
     runs-on: ${{matrix.os}}

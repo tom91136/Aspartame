@@ -1387,9 +1387,13 @@ template <typename F> [[nodiscard]] constexpr auto tap(F f) {
 
 template <typename F> [[nodiscard]] auto attempt(F &&f) -> std::optional<std::decay_t<decltype(f())>> {
   static_assert(!std::is_void_v<decltype(f())>, "attempt: callable must return a value");
+#if __cpp_exceptions == 199711
   try {
     return std::forward<F>(f)();
   } catch (...) { return std::nullopt; }
+#else
+  return std::forward<F>(f)();
+#endif
 }
 
 template <typename P> [[nodiscard]] constexpr auto ensure(P p) {
