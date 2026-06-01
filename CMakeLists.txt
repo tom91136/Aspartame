@@ -25,8 +25,8 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
     include(FetchContent)
     FetchContent_Declare(
             Catch2
-            URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.5.2.tar.gz
-            URL_HASH SHA1=ce9613c9b25803a5b052fb75b71a6e14f1e95eb8
+            URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.8.0.tar.gz
+            URL_HASH SHA1=c073761e6934ac45a8b1029de7ad17e03fffafe2
     )
     if (MSVC)
         set(ASPARTAME_COMPILE_FLAGS /bigobj /W4 /EHsc /Zc:__cplusplus /permissive-)
@@ -103,6 +103,9 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
                     test/test_compile_constexpr.cpp
             )
             target_compile_options(test_${std} PRIVATE ${ASPARTAME_COMPILE_FLAGS})
+            # XXX Pre-PCH compilers (nvc++) don't see the ASPARTAME_SHOW_STREAM define from
+            # test_base_includes.hpp before aspartame/all.hpp is parsed; set it here too.
+            target_compile_definitions(test_${std} PRIVATE ASPARTAME_SHOW_STREAM)
             target_compile_features(test_${std} PRIVATE cxx_std_${std})
             target_link_libraries(test_${std} PRIVATE Aspartame Catch2::Catch2WithMain)
             target_link_options(test_${std} PRIVATE ${ASPARTAME_LINK_FLAGS})

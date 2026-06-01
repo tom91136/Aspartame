@@ -46,8 +46,9 @@ constexpr auto chained_sum = xs ^ map([](int x) { return x + 1; }) ^ fold_left(0
 static_assert(chained_sum == 20);
 #endif
 
-#if defined(__cpp_lib_constexpr_vector) && __cpp_lib_constexpr_vector >= 201907L && defined(__cpp_lib_constexpr_algorithms) &&             \
-    __cpp_lib_constexpr_algorithms >= 201806L
+#if defined(__cpp_lib_constexpr_vector) && __cpp_lib_constexpr_vector >= 201907L &&                                                        \
+    defined(__cpp_lib_constexpr_algorithms) && __cpp_lib_constexpr_algorithms >= 201806L &&                                                \
+    !(defined(__clang__) && !defined(__apple_build_version__) && __clang_major__ < 16)
 // std::vector can't escape as a constexpr namespace-scope variable (heap allocation isn't
 // core-constant); it must be constructed and consumed entirely inside a constexpr function.
   #include "aspartame/vector.hpp"
