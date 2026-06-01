@@ -43,7 +43,7 @@ struct SuperConstIter {
     ++p_;
     return c;
   }
-  friend bool operator==(SuperConstIter a, SuperConstIter b) { return a.p_ == b.p_; }
+  [[maybe_unused]] friend bool operator==(SuperConstIter a, SuperConstIter b) { return a.p_ == b.p_; }
   friend bool operator!=(SuperConstIter a, SuperConstIter b) { return a.p_ != b.p_; }
 };
 
@@ -62,7 +62,7 @@ template <> struct enable_pipe<::SuperConstRange> : std::true_type {};
 template <> struct sequence_traits<::SuperConstRange> {
   using value_type = const int *const;
   template <typename U> using rebind = std::vector<U>;
-  static constexpr bool set_like = false;
+  [[maybe_unused]] static constexpr bool set_like = false;
 };
 } // namespace aspartame
 

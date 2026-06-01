@@ -4,10 +4,11 @@
 
 namespace aspartame::details {
 
-template <typename Iter1,                                         //
-          typename Iter2,                                         //
-          typename I1 = typename details::value_type_of_t<Iter1>, //
-          typename I2 = typename details::value_type_of_t<Iter2>, //
+template <typename Iter1, //
+          typename Iter2, //
+          // XXX decay so cv-qualified deref types (e.g. `const T*const`) don't make the pair non-copy-assignable
+          typename I1 = std::decay_t<typename details::value_type_of_t<Iter1>>, //
+          typename I2 = std::decay_t<typename details::value_type_of_t<Iter2>>, //
           typename T = std::pair<I1, I2>>
 class zip_iterator : public fwd_iterator<zip_iterator<Iter1, Iter2, I1, I2, T>, T, std::input_iterator_tag> {
   Iter1 it1, end1;
