@@ -117,6 +117,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
                     test/test_closure_lifetime.cpp
                     test/test_expected.cpp
                     test/test_compile_constexpr.cpp
+                    test/test_regression_iterator_quirks.cpp
             )
             target_compile_options(test_${std} PRIVATE ${ASPARTAME_COMPILE_FLAGS})
             # XXX Pre-PCH compilers (nvc++) don't see the ASPARTAME_SHOW_STREAM define from

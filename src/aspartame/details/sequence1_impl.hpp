@@ -27,12 +27,12 @@ template <typename In, typename T, typename Out> //
   }
 }
 
-template <typename In, typename T = typename In::value_type> //
+template <typename In, typename T = seq_value_type_t<In>> //
 [[nodiscard]] constexpr std::optional<T> head_maybe(const In &in) {
   return !in.empty() ? std::optional<T>{*seq_view(in).begin()} : std::nullopt;
 }
 
-template <typename In, typename T = typename In::value_type> //
+template <typename In, typename T = seq_value_type_t<In>> //
 [[nodiscard]] constexpr std::optional<T> last_maybe(const In &in) {
   if constexpr (std::is_base_of_v<std::bidirectional_iterator_tag,
                                   typename std::iterator_traits<typename In::const_iterator>::iterator_category>) {
@@ -58,7 +58,7 @@ template <typename In, typename Out> //
   return in.empty() ? Out{} : Out{std::next(seq_view(in).begin()), seq_view(in).end()};
 }
 
-template <typename In, typename T = typename In::value_type> //
+template <typename In, typename T = seq_value_type_t<In>> //
 [[nodiscard]] constexpr std::optional<T> at_maybe(const In &in, size_t idx) {
   if constexpr (has_size<In>) {
     if (idx >= static_cast<size_t>(in.size())) return std::nullopt;
@@ -92,7 +92,7 @@ template <typename In, typename Out> //
 
 template <typename In, typename T> //
 [[nodiscard]] constexpr std::make_signed_t<size_t> index_of(const In &in, const T &t) {
-  static_assert(std::is_convertible_v<std::decay_t<T>, typename In::value_type>, "type does not match vector's value type");
+  static_assert(std::is_convertible_v<std::decay_t<T>, seq_value_type_t<In>>, "type does not match vector's value type");
   size_t i = 0;
 
   for (auto it = seq_view(in).begin(), end = seq_view(in).end(); it != end; ++it) {
@@ -105,7 +105,7 @@ template <typename In, typename T> //
 
 template <typename In, typename Container> //
 [[nodiscard]] constexpr std::make_signed_t<size_t> index_of_slice(const In &in, const Container &other) {
-  static_assert(std::is_convertible_v<std::decay_t<typename Container::value_type>, typename In::value_type>,
+  static_assert(std::is_convertible_v<std::decay_t<typename Container::value_type>, seq_value_type_t<In>>,
                 "type does not match vector's value type");
   auto first = seq_view(in).begin(), last = seq_view(in).end();
   std::make_signed_t<size_t> i = 0;
@@ -145,7 +145,7 @@ template <typename In, typename Function> //
 
 template <typename In, typename Predicate> //
 [[nodiscard]] constexpr auto find_last(const In &in, Predicate p) {
-  using T = typename In::value_type;
+  using T = seq_value_type_t<In>;
   if constexpr (details::assert_predicate<decltype(details::ap(p, *seq_view(in).begin()))>()) {}
   if constexpr (has_rbegin<In> && has_rend<In>) {
     auto it = std::find_if(in.rbegin(), in.rend(), [&](auto &&x) { return details::ap(p, x); });
@@ -162,7 +162,9 @@ template <typename In, typename Predicate> //
 
 template <typename In, typename Out, typename N> //
 [[nodiscard]] constexpr auto zip_with_index(const In &in, N from) {
-  using T = typename In::value_type;
+  // XXX seq_view iterator value_type (trait-supplied works), decayed so cv-qualified deref types (e.g. `const T*const`) stay
+  // copy-assignable
+  using T = std::decay_t<typename std::iterator_traits<decltype(seq_view(in).begin())>::value_type>;
   if constexpr (std::is_default_constructible_v<T> && has_size<In>) {
     Out ys(in.size());
     auto it = ys.begin();
@@ -200,8 +202,8 @@ template <typename In, typename Container, typename Out> //
 
 template <typename In, typename Inner, typename Outer> //
 [[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto transpose(const In &in) {
-  static_assert(is_iterable<typename In::value_type>, "not a nested type that is iterable");
-  using Inr = typename In::value_type;
+  static_assert(is_iterable<seq_value_type_t<In>>, "not a nested type that is iterable");
+  using Inr = seq_value_type_t<In>;
 
   if (in.empty()) return Outer();
 
@@ -237,7 +239,7 @@ template <typename In, typename Inner, typename Outer> //
 
 template <typename In, typename Inner, typename Outer> //
 [[nodiscard]] constexpr auto cartesian_product(const In &in) {
-  static_assert(is_iterable<typename In::value_type>, "not a nested type that is iterable");
+  static_assert(is_iterable<seq_value_type_t<In>>, "not a nested type that is iterable");
   Outer s = {Inner{}};
   for (const auto &u : seq_view(in)) {
     Outer r;
@@ -271,7 +273,7 @@ template <typename In, typename URBG, typename Out> //
     std::shuffle(ys.begin(), ys.end(), std::forward<URBG &&>(urbg));
     return ys;
   } else {
-    std::vector<std::reference_wrapper<const typename In::value_type>> refs{in.cbegin(), in.cend()};
+    std::vector<std::reference_wrapper<const seq_value_type_t<In>>> refs{in.cbegin(), in.cend()};
     std::shuffle(refs.begin(), refs.end(), std::forward<URBG>(urbg));
     return Out{refs.begin(), refs.end()};
   }
@@ -485,7 +487,7 @@ template <typename In, typename Acc, typename Function, typename Out> //
 
 template <typename In, typename OutA, typename OutB> //
 [[nodiscard]] constexpr std::pair<OutA, OutB> unzip(const In &in) {
-  static_assert(is_pair_like_v<typename In::value_type>, "unzip requires a sequence of pair-like elements");
+  static_assert(is_pair_like_v<seq_value_type_t<In>>, "unzip requires a sequence of pair-like elements");
   OutA as;
   OutB bs;
   if constexpr (has_reserve<OutA>) as.reserve(in.size());
@@ -499,7 +501,7 @@ template <typename In, typename OutA, typename OutB> //
 
 template <typename In, typename T> //
 [[nodiscard]] constexpr std::make_signed_t<size_t> last_index_of(const In &in, const T &t) {
-  static_assert(std::is_convertible_v<std::decay_t<T>, typename In::value_type>, "type does not match the container's value type");
+  static_assert(std::is_convertible_v<std::decay_t<T>, seq_value_type_t<In>>, "type does not match the container's value type");
   std::make_signed_t<size_t> found = -1;
   size_t i = 0;
   for (auto it = seq_view(in).begin(), end = seq_view(in).end(); it != end; ++it, ++i)
@@ -533,7 +535,7 @@ template <typename In, typename Other, typename Out> //
 template <typename In, typename Inner, typename Outer> //
 [[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC Outer combinations(const In &in, size_t k) {
   Outer out;
-  std::vector<typename In::value_type> src(seq_view(in).begin(), seq_view(in).end());
+  std::vector<seq_value_type_t<In>> src(seq_view(in).begin(), seq_view(in).end());
   size_t n = src.size();
   if (k > n) return out;
   if (k == 0) {
@@ -563,7 +565,7 @@ template <typename In, typename Inner, typename Outer> //
 template <typename In, typename Inner, typename Outer> //
 [[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC Outer permutations(const In &in) {
   Outer out;
-  std::vector<typename In::value_type> src(seq_view(in).begin(), seq_view(in).end());
+  std::vector<seq_value_type_t<In>> src(seq_view(in).begin(), seq_view(in).end());
   size_t n = src.size();
   if (n == 0) {
     Inner empty;
@@ -678,7 +680,7 @@ template <typename In, typename URBG, typename Out> //
 
 template <typename In, typename Out> //
 [[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC Out bottom_k(const In &in, size_t k) {
-  std::vector<typename In::value_type> tmp(seq_view(in).begin(), seq_view(in).end());
+  std::vector<seq_value_type_t<In>> tmp(seq_view(in).begin(), seq_view(in).end());
   k = std::min(k, tmp.size());
   std::partial_sort(tmp.begin(), tmp.begin() + k, tmp.end());
   Out ys;
@@ -690,7 +692,7 @@ template <typename In, typename Out> //
 
 template <typename In, typename Out> //
 [[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC Out top_k(const In &in, size_t k) {
-  std::vector<typename In::value_type> tmp(seq_view(in).begin(), seq_view(in).end());
+  std::vector<seq_value_type_t<In>> tmp(seq_view(in).begin(), seq_view(in).end());
   k = std::min(k, tmp.size());
   std::partial_sort(tmp.begin(), tmp.begin() + k, tmp.end(), std::greater<>());
   Out ys;

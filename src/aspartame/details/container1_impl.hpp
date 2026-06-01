@@ -112,16 +112,16 @@ template <typename In, typename Out, typename Function> //
   Out ys;
   if constexpr (has_reserve<Out> && has_size<In>) ys.reserve(in.size());
   for (auto it = seq_view(in).begin(), end = seq_view(in).end(); it != end; ++it) {
-    auto zs = details::ap(f, *it);
+    auto zs = details::ap(f, *it); // XXX `zs` is owned and dies at iteration end; move so move-only element types work
     for (auto &&z : zs)
-      push(ys, z);
+      push(ys, std::move(z));
   }
   return ys;
 }
 
 template <typename In, typename Out> //
 [[nodiscard]] constexpr auto flatten(const In &in) {
-  static_assert(is_iterable<typename In::value_type>, "not a nested type that is iterable");
+  static_assert(is_iterable<seq_value_type_t<In>>, "not a nested type that is iterable");
   Out ys;
   if constexpr (has_reserve<Out> && has_size<In>) ys.reserve(in.size());
   for (auto &&x : seq_view(in))
@@ -180,8 +180,8 @@ template <typename In, typename Predicate> //
 [[nodiscard]] constexpr auto find(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *seq_view(in).begin()))>()) {}
   auto it = std::find_if(seq_view(in).begin(), seq_view(in).end(), [&](auto &&x) { return details::ap(p, x); });
-  if (it == seq_view(in).end()) return std::optional<typename In::value_type>{std::nullopt};
-  else return std::optional<typename In::value_type>{*it};
+  if (it == seq_view(in).end()) return std::optional<seq_value_type_t<In>>{std::nullopt};
+  else return std::optional<seq_value_type_t<In>>{*it};
 }
 
 template <typename In, typename T> //
@@ -196,7 +196,7 @@ template <typename In, typename T> //
 
 template <typename In, typename Function> //
 [[nodiscard]] constexpr auto reduce(const In &in, Function f) {
-  using T = typename In::value_type;
+  using T = seq_value_type_t<In>;
   static_assert(std::is_invocable_v<Function, T, T>, "function must be invocable with two value types of the container");
   static_assert(std::is_convertible_v<std::invoke_result_t<Function, T, T>, T>,
                 "function must return something that is convertable to value type");
@@ -288,7 +288,7 @@ template <typename In, typename Inner, typename GroupFunction> //
   return ys;
 }
 
-template <typename In, typename T = typename In::value_type> //
+template <typename In, typename T = seq_value_type_t<In>> //
 [[nodiscard]] constexpr std::optional<T> min(const In &in) {
   auto it = seq_view(in).begin(), end = seq_view(in).end();
   if (it == end) return std::nullopt;
@@ -298,7 +298,7 @@ template <typename In, typename T = typename In::value_type> //
   return std::optional<T>{best};
 }
 
-template <typename In, typename T = typename In::value_type> //
+template <typename In, typename T = seq_value_type_t<In>> //
 [[nodiscard]] constexpr std::optional<T> max(const In &in) {
   auto it = seq_view(in).begin(), end = seq_view(in).end();
   if (it == end) return std::nullopt;
@@ -308,7 +308,7 @@ template <typename In, typename T = typename In::value_type> //
   return std::optional<T>{best};
 }
 
-template <typename In, typename Function, typename T = typename In::value_type> //
+template <typename In, typename Function, typename T = seq_value_type_t<In>> //
 [[nodiscard]] constexpr std::optional<T> min_by(const In &in, Function f) {
   auto it = seq_view(in).begin(), end = seq_view(in).end();
   if (it == end) return std::nullopt;
@@ -319,7 +319,7 @@ template <typename In, typename Function, typename T = typename In::value_type> 
   return std::optional<T>{best};
 }
 
-template <typename In, typename Function, typename T = typename In::value_type> //
+template <typename In, typename Function, typename T = seq_value_type_t<In>> //
 [[nodiscard]] constexpr std::optional<T> max_by(const In &in, Function f) {
   auto it = seq_view(in).begin(), end = seq_view(in).end();
   if (it == end) return std::nullopt;
@@ -386,7 +386,7 @@ template <typename In, typename Function> //
   return std::optional<size_t>{best_idx};
 }
 
-template <typename In, typename T = typename In::value_type> //
+template <typename In, typename T = seq_value_type_t<In>> //
 [[nodiscard]] constexpr T sum(const In &in) {
   T acc{};
   for (auto &&x : seq_view(in))
@@ -394,7 +394,7 @@ template <typename In, typename T = typename In::value_type> //
   return acc;
 }
 
-template <typename In, typename T = typename In::value_type> //
+template <typename In, typename T = seq_value_type_t<In>> //
 [[nodiscard]] constexpr T product(const In &in) {
   static_assert(std::is_arithmetic_v<T>, "product requires an arithmetic element type");
   T acc = static_cast<T>(1);
@@ -414,7 +414,7 @@ template <typename In, typename Function> //
 
 template <typename In, typename Out, typename Other> //
 [[nodiscard]] constexpr Out intersect(const In &in, const Other &other) {
-  using V = typename In::value_type;
+  using V = seq_value_type_t<In>;
   static_assert(is_hashable<V>, "intersect type must be hashable");
   static_assert(is_comparable<V>, "intersect type must be comparable");
   std::unordered_multiset<V> pool{other.begin(), other.end()};
@@ -427,7 +427,7 @@ template <typename In, typename Out, typename Other> //
 
 template <typename In, typename Out, typename Other> //
 [[nodiscard]] constexpr Out diff(const In &in, const Other &other) {
-  using V = typename In::value_type;
+  using V = seq_value_type_t<In>;
   static_assert(is_hashable<V>, "diff type must be hashable");
   static_assert(is_comparable<V>, "diff type must be comparable");
   std::unordered_multiset<V> pool{other.begin(), other.end()};
@@ -442,7 +442,7 @@ template <typename In, typename Out, typename Other> //
 
 template <typename In, typename Out, typename Other> //
 [[nodiscard]] constexpr Out symmetric_difference(const In &in, const Other &other) {
-  using V = typename In::value_type;
+  using V = seq_value_type_t<In>;
   static_assert(is_hashable<V>, "symmetric_difference type must be hashable");
   static_assert(is_comparable<V>, "symmetric_difference type must be comparable");
   Out ys;

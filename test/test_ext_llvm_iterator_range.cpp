@@ -64,3 +64,14 @@ TEST_CASE("llvm::iterator_range_partition", "[llvm::iterator_range]") {
   REQUIRE(evens.size() == 2);
   REQUIRE(odds.size() == 3);
 }
+
+TEST_CASE("llvm::iterator_range_zip_with_index", "[llvm::iterator_range][zip_with_index][regression]") {
+  std::vector<int> backing{40, 41, 42};
+  auto r = llvm::make_range(backing.begin(), backing.end());
+  auto pairs = r ^ zip_with_index<size_t>();
+  REQUIRE(pairs.size() == 3);
+  REQUIRE(pairs[0].first == 40);
+  REQUIRE(pairs[0].second == 0u);
+  REQUIRE(pairs[2].first == 42);
+  REQUIRE(pairs[2].second == 2u);
+}

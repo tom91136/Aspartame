@@ -45,6 +45,21 @@ auto xs = std::vector<int>{4, 1, 3, 2, 0} ^ filter([](auto x) { return x > 5; })
 
 `^` is the eager pipe; `|` is the lazy view pipe.
 
+### Mutating through the chain (`^` vs `|`)
+
+`^` takes the source by const-ref (every downstream lambda sees `const T&`); `|` takes it by forwarding-ref so a non-const lvalue source stays non-const through the chain. Use `|` whenever the chain needs to mutate or move from the source.
+
+```c++
+std::vector<std::unique_ptr<Device>> devices = enumerate();
+auto matches = devices                                            //
+               | map([](auto &d) { return std::ref(d); })         // reference_wrapper<unique_ptr<Device>>
+               | filter([&](auto rw) { return pred(*rw.get()); }) //
+               | to_vector();
+currentDevice = std::move(matches.front().get());
+```
+
+`as_ref()` / `as_cref()` are shorthand for `map(std::ref)` / `map(std::cref)`; `as_ref()` only works under `|` for the same reason.
+
 ## Supported operations
 
 ```c++

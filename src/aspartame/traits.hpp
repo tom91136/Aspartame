@@ -38,6 +38,10 @@ template <typename C> struct sequence_access {
 
 namespace details {
 template <typename C> constexpr decltype(auto) seq_view(const C &c) { return sequence_access<C>::iterate(c); }
+
+// XXX prefer over `typename C::value_type` so trait-supplied value_types (e.g. llvm::iterator_range) unify with member-supplied ones
+template <typename C>
+using seq_value_type_t = typename std::iterator_traits<decltype(seq_view(std::declval<const C &>()).begin())>::value_type;
 } // namespace details
 
 namespace details {

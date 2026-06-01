@@ -6,7 +6,8 @@ namespace aspartame::details {
 
 template <typename OuterIterator, //
           typename Function,      //
-          typename InnerRange = typename std::invoke_result_t<Function, typename details::value_type_of_t<OuterIterator>>,
+          // XXX see map_iterator: derive InnerRange from `decltype(*it)`, not value_type_of_t
+          typename InnerRange = typename std::invoke_result_t<Function, decltype(*std::declval<OuterIterator>())>,
           typename U = typename InnerRange::value_type>
 class flat_map_iterator : public fwd_iterator<flat_map_iterator<OuterIterator, Function, InnerRange, U>, U, std::input_iterator_tag> {
   struct State {

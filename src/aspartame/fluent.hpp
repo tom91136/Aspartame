@@ -356,7 +356,8 @@ template <ASPARTAME_SEQ_TPL(typename P)> [[nodiscard]] constexpr auto find_last(
   return details::sequence1::find_last<C, P>(in, std::forward<P>(p));
 }
 template <ASPARTAME_SEQ_TPL(typename N)> [[nodiscard]] constexpr auto zip_with_index(const C &in, N from, tag = {}) {
-  using Pair = std::pair<seq_impl::V<C>, N>;
+  // XXX decay so cv-qualified deref types (e.g. `const T*const`) don't make the pair non-copy-assignable
+  using Pair = std::pair<std::decay_t<seq_impl::V<C>>, N>;
   return details::sequence1::zip_with_index<C, seq_impl::Reb<C, Pair>, N>(in, from);
 }
 template <ASPARTAME_SEQ_TPL(typename N)> [[nodiscard]] constexpr auto enumerate(const C &in, N from, tag = {}) {
@@ -675,9 +676,8 @@ constexpr auto show_string = [](const auto &x) -> std::string {
     out << x;
     return out.str();
 #else
-    static_assert(sizeof(T) == 0,
-                  "mk_string default formatter handles arithmetic and string-like only; "
-                  "pass an explicit formatter or define ASPARTAME_SHOW_STREAM to enable the ostream<< fallback");
+    static_assert(sizeof(T) == 0, "mk_string default formatter handles arithmetic and string-like only; "
+                                  "pass an explicit formatter or define ASPARTAME_SHOW_STREAM to enable the ostream<< fallback");
     return {};
 #endif
   }
@@ -712,6 +712,14 @@ template <typename U> [[nodiscard]] constexpr auto const_as() {
                  [cast](auto &o) -> std::enable_if_t<details::inplace::can_map_inplace<std::decay_t<decltype(o)>, F>> {
                    details::inplace::map(o, cast);
                  }};
+}
+
+// XXX `as_ref` needs `|` to keep the source non-const; under `^` const propagates and you get `reference_wrapper<const T>`
+[[nodiscard]] inline constexpr auto as_ref() {
+  return [](auto &&o, tag) { return map(o, [](auto &x) { return std::ref(x); }, tag{}); };
+}
+[[nodiscard]] inline constexpr auto as_cref() {
+  return [](auto &&o, tag) { return map(o, [](const auto &x) { return std::cref(x); }, tag{}); };
 }
 template <typename P> [[nodiscard]] constexpr auto filter(P p) {
   return dual_op{[p](auto &&o) { return filter(o, p, tag{}); },
