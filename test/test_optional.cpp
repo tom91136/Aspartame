@@ -23,6 +23,7 @@
 #define DISABLE_SCAN_LEFT
 #define DISABLE_SCAN_RIGHT
 #define DISABLE_UNZIP
+
 #define DISABLE_CROSS
 #define DISABLE_COMBINATIONS
 #define DISABLE_PERMUTATIONS
@@ -33,6 +34,9 @@
 #define DISABLE_INTERSPERSE
 #define DISABLE_TRAVERSE
 #define DISABLE_SEQUENCE
+#define DISABLE_COLLECT_TO
+#define DISABLE_APPEND_TO
+#define DISABLE_DISTINCT_BY_IF
 
 #include "catch2/catch_test_macros.hpp"
 
@@ -40,6 +44,12 @@
 #include "templates/test_template_container.hpp"
 #include "templates/test_template_optional.hpp"
 #include "templates/test_template_sequence.hpp"
+
+TEST_CASE("optional_receiver_with_temporary_optional_rhs", "[std::optional][ownership]") {
+  using namespace aspartame;
+  CHECK((std::optional<int>{1} | concat(std::optional<int>{2})) == std::vector{1, 2});
+  CHECK((std::optional<int>{1} | zip(std::optional<int>{2})) == std::optional{std::pair{1, 2}});
+}
 
 TEST_CASE("optional_attempt_returns_value_on_success", "[std::optional][attempt]") {
   using namespace aspartame;

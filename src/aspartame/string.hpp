@@ -105,6 +105,20 @@ template <> struct string_char_ops<char8_t> {
   }
 };
 #endif
+
+template <typename String, typename Equals> constexpr bool glob_matches_by(const String &in, const String &pattern, Equals equals) {
+  using C = typename String::value_type;
+  size_t i = 0, j = 0, star = String::npos, retry = 0;
+  while (i < in.size()) {
+    if (j < pattern.size() && (pattern[j] == static_cast<C>('?') || equals(pattern[j], in[i]))) ++i, ++j;
+    else if (j < pattern.size() && pattern[j] == static_cast<C>('*')) star = j++, retry = i;
+    else if (star != String::npos) j = star + 1, i = ++retry;
+    else return false;
+  }
+  while (j < pattern.size() && pattern[j] == static_cast<C>('*'))
+    ++j;
+  return j == pattern.size();
+}
 } // namespace details
 
 template <typename C, typename F>
@@ -124,12 +138,8 @@ template <typename C, typename Container>
 
 template <typename C, typename F> [[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto map(const std::basic_string<C> &in, F &&f, tag = {}) {
   using T = std::decay_t<decltype(details::ap(f, *std::begin(in)))>;
-  if constexpr (std::is_trivial_v<T> && std::is_convertible_v<C, T>) {
+  if constexpr (std::is_convertible_v<T, C>) {
     std::basic_string<C> ys(in.size(), C{});
-    std::transform(in.begin(), in.end(), ys.begin(), [&](auto &&x) { return details::ap(f, x); });
-    return ys;
-  } else if constexpr (std::is_trivial_v<T>) {
-    std::basic_string<T> ys(in.size(), T{});
     std::transform(in.begin(), in.end(), ys.begin(), [&](auto &&x) { return details::ap(f, x); });
     return ys;
   } else {
@@ -244,8 +254,10 @@ template <typename C>
 }
 template <typename C, typename Container>
 [[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto index_of_slice(const std::basic_string<C> &in, const Container &other, tag = {}) {
-  static_assert(std::is_convertible_v<Container, std::basic_string<C>>, "other string type must be convertible to LHS string type");
-  return details::sequence1::index_of_slice<std::basic_string<C>, std::basic_string<C>>(in, other);
+  static_assert(std::is_constructible_v<std::basic_string_view<C>, const Container &>,
+                "other string type must be viewable as the LHS character type");
+  const std::basic_string_view<C> needle(other);
+  return details::sequence1::index_of_slice<std::basic_string<C>, std::basic_string_view<C>>(in, needle);
 }
 template <typename C, typename Container>
 [[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto contains_slice(const std::basic_string<C> &in, const Container &other, tag = {}) {
@@ -495,6 +507,7 @@ template <typename C, typename Delimiter>
   size_t start = 0, end;
   if constexpr (std::is_convertible_v<Delimiter, std::basic_string<C>>) {
     auto delimiter_ = static_cast<std::basic_string<C>>(delimiter);
+    if (delimiter_.empty()) return std::vector<std::basic_string<C>>{in};
     while ((end = in.find(delimiter_, start)) != std::basic_string<C>::npos) {
       ys.push_back(in.substr(start, end - start));
       start = end + delimiter_.size();
@@ -509,6 +522,53 @@ template <typename C, typename Delimiter>
   }
   ys.push_back(in.substr(start));
   return ys;
+}
+template <typename C, typename Delimiter>
+[[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto split_once(const std::basic_string<C> &in, const Delimiter &delimiter, tag = {}) {
+  size_t pos;
+  size_t width;
+  if constexpr (std::is_convertible_v<Delimiter, std::basic_string<C>>) {
+    const auto d = static_cast<std::basic_string<C>>(delimiter);
+    if (d.empty() || (pos = in.find(d)) == std::basic_string<C>::npos)
+      return std::optional<std::pair<std::basic_string<C>, std::basic_string<C>>>{};
+    width = d.size();
+  } else if constexpr (std::is_same_v<std::decay_t<Delimiter>, C>) {
+    if ((pos = in.find(delimiter)) == std::basic_string<C>::npos)
+      return std::optional<std::pair<std::basic_string<C>, std::basic_string<C>>>{};
+    width = 1;
+  } else {
+    static_assert(std::is_convertible_v<Delimiter, std::basic_string<C>>, "delimiter must be a compatible string or character");
+  }
+  return std::optional{std::pair{in.substr(0, pos), in.substr(pos + width)}};
+}
+template <typename C, typename Delimiter>
+[[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto rsplit_once(const std::basic_string<C> &in, const Delimiter &delimiter, tag = {}) {
+  size_t pos;
+  size_t width;
+  if constexpr (std::is_convertible_v<Delimiter, std::basic_string<C>>) {
+    const auto d = static_cast<std::basic_string<C>>(delimiter);
+    if (d.empty() || (pos = in.rfind(d)) == std::basic_string<C>::npos)
+      return std::optional<std::pair<std::basic_string<C>, std::basic_string<C>>>{};
+    width = d.size();
+  } else if constexpr (std::is_same_v<std::decay_t<Delimiter>, C>) {
+    if ((pos = in.rfind(delimiter)) == std::basic_string<C>::npos)
+      return std::optional<std::pair<std::basic_string<C>, std::basic_string<C>>>{};
+    width = 1;
+  } else {
+    static_assert(std::is_convertible_v<Delimiter, std::basic_string<C>>, "delimiter must be a compatible string or character");
+  }
+  return std::optional{std::pair{in.substr(0, pos), in.substr(pos + width)}};
+}
+template <typename C, typename Pattern>
+[[nodiscard]] constexpr bool glob_matches(const std::basic_string<C> &in, const Pattern &pattern, tag = {}) {
+  const auto p = static_cast<std::basic_string<C>>(pattern);
+  return details::glob_matches_by(in, p, [](C a, C b) { return a == b; });
+}
+template <typename C, typename Pattern>
+[[nodiscard]] constexpr bool glob_matches_ignore_case(const std::basic_string<C> &in, const Pattern &pattern, tag = {}) {
+  const auto p = static_cast<std::basic_string<C>>(pattern);
+  return details::glob_matches_by(
+      in, p, [](C a, C b) { return details::string_char_ops<C>::to_lower(a) == details::string_char_ops<C>::to_lower(b); });
 }
 template <typename C> [[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto lines(const std::basic_string<C> &in, tag = {}) {
   auto xs = split(in, static_cast<C>('\n'));

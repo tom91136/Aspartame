@@ -7,8 +7,9 @@ namespace aspartame::details {
 
 template <typename InputIterator, //
           typename Predicate,     //
-          typename T = typename details::value_type_of_t<InputIterator>>
-class filter_iterator : public fwd_iterator<filter_iterator<InputIterator, Predicate, T>, T> {
+          typename T = typename details::value_type_of_t<InputIterator>, typename Reference = decltype(*std::declval<InputIterator &>())>
+class filter_iterator
+    : public fwd_iterator<filter_iterator<InputIterator, Predicate, T, Reference>, T, std::forward_iterator_tag, Reference> {
   InputIterator it, end;
   ca_optional<Predicate> p;
   [[nodiscard]] constexpr bool has_next() const { return p && it != end; }
@@ -27,7 +28,7 @@ public:
     } while (it != end && !(*p)(*it));
     return *this;
   }
-  [[nodiscard]] constexpr const T &operator*() { return *it; }
+  [[nodiscard]] constexpr Reference operator*() { return *it; }
   [[nodiscard]] constexpr bool operator==(const filter_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 

@@ -18,6 +18,7 @@ template <typename T> struct optional_traits<std::optional<T>> {
   using value_type = T;
   template <typename U> using rebind = std::optional<U>;
   static constexpr bool engaged(const std::optional<T> &o) noexcept { return o.has_value(); }
+  static constexpr T &get(std::optional<T> &o) noexcept { return *o; }
   static constexpr const T &get(const std::optional<T> &o) noexcept { return *o; }
 };
 
@@ -28,6 +29,7 @@ template <typename C> using opt_value = typename optional_traits<std::decay_t<C>
 template <typename C, typename U> using opt_rebind = typename optional_traits<std::decay_t<C>>::template rebind<U>;
 template <typename C> using opt_same = opt_rebind<C, opt_value<C>>;
 template <typename C> constexpr bool opt_engaged(const C &c) noexcept { return optional_traits<std::decay_t<C>>::engaged(c); }
+template <typename C> constexpr decltype(auto) opt_get(C &c) noexcept { return optional_traits<std::decay_t<C>>::get(c); }
 template <typename C> constexpr const opt_value<C> &opt_get(const C &c) noexcept { return optional_traits<std::decay_t<C>>::get(c); }
 } // namespace details
 

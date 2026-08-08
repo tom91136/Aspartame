@@ -96,6 +96,17 @@ template <typename In, typename Out, typename Function> //
   return ys;
 }
 
+template <typename In, typename Out, typename Function> //
+[[nodiscard]] constexpr auto collect_to(const In &in, Function f) {
+  using T = decltype(details::ap(f, *seq_view(in).begin()));
+  static_assert(is_optional<T>, "collect_to function should return an optional");
+  Out ys;
+  if constexpr (has_reserve<Out> && has_size<In>) ys.reserve(in.size());
+  for (auto it = seq_view(in).begin(), end = seq_view(in).end(); it != end; ++it)
+    if (auto y = details::ap(f, *it); y) push(ys, std::move(*y));
+  return ys;
+}
+
 template <typename In, typename Out, typename Predicate> //
 [[nodiscard]] constexpr auto filter(const In &in, Predicate p) {
   if constexpr (details::assert_predicate<decltype(details::ap(p, *seq_view(in).begin()))>()) {}
@@ -146,6 +157,21 @@ template <typename In, typename Out, typename Function> //
   if constexpr (has_reserve<Out> && has_size<In>) ys.reserve(in.size());
   for (auto &&x : seq_view(in))
     if (seen.insert(details::ap(f, x)).second) push(ys, x);
+  return ys;
+}
+
+template <typename In, typename Out, typename Predicate, typename Function> //
+[[nodiscard]] ASPARTAME_CONSTEXPR_ALLOC auto distinct_by_if(const In &in, Predicate predicate, Function f) {
+  using V = std::decay_t<decltype(details::ap(f, *seq_view(in).begin()))>;
+  static_assert(is_hashable<V>, "distinct type must be hashable");
+  static_assert(is_comparable<V>, "distinct type must be comparable");
+
+  std::unordered_set<V> seen;
+  if constexpr (has_size<In>) seen.reserve(in.size());
+  Out ys;
+  if constexpr (has_reserve<Out> && has_size<In>) ys.reserve(in.size());
+  for (auto &&x : seq_view(in))
+    if (!details::ap(predicate, x) || seen.insert(details::ap(f, x)).second) push(ys, x);
   return ys;
 }
 

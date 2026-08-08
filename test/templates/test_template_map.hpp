@@ -183,6 +183,19 @@ TEST_CASE(TPE_NAME "_collect", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+#ifndef DISABLE_COLLECT_TO
+TEST_CASE(TPE_NAME "_collect_to", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) {
+    return xs OP_ collect_to<std::vector>([](auto key, const auto &value) -> std::optional<int> {
+      return value % 2 == 0 ? std::optional{key} : std::nullopt;
+    });
+  };
+  RUN_CHECK(int, int, std::vector<int>, "", {{1, 2}, {2, 3}, {3, 4}}, {1, 3}, op);
+  RUN_CHECK(int, int, std::vector<int>, "", {{1, 1}}, {}, op);
+  RUN_CHECK(int, int, std::vector<int>, "", {}, {}, op);
+}
+#endif
+
 #ifndef DISABLE_FILTER
 TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto intFilterOp = [](auto &&xs) { return xs OP_ filter([](auto x) { return x.second % 2 == 0; }); };

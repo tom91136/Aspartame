@@ -45,6 +45,15 @@ int main() {
   std::map<int, int> m{{1, 1}};
   m ^= map_values([](int v) { return std::to_string(v); });
   (void)m;
+#elif ASPARTAME_OP == 14
+  (void)(std::vector<int>{1, 2, 3} | find_ref([](int x) { return x == 2; }));
+#elif ASPARTAME_OP == 15
+  std::vector<int> xs{1, 2, 3};
+  auto values = xs | filter([](int) { return true; });
+  (void)(values | find_cref([](int x) { return x == 2; }));
+#elif ASPARTAME_OP == 16
+  const std::vector<int> xs{1, 2, 3};
+  (void)(xs | find_ref([](int x) { return x == 2; }));
 #elif ASPARTAME_OP == 99
   std::vector<int> v{3, 1, 2};
   v ^= filter([](int x) { return x > 1; });

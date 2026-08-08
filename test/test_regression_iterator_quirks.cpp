@@ -164,6 +164,25 @@ TEMPLATE_TEST_CASE("as_cref_yields_const_reference_wrapper", "[as_cref][regressi
   REQUIRE(at_idx(crefs_caret, 2).get() == 30);
 }
 
+TEMPLATE_TEST_CASE("find_ref_and_find_cref_preserve_stable_container_references", "[find_ref][find_cref][regression]", std::vector<int>,
+                   std::deque<int>, std::list<int>) {
+  TestType xs{1, 2, 3};
+  auto found = xs | find_ref([](int x) { return x == 2; });
+  REQUIRE(found);
+  found->get() = 20;
+  REQUIRE(*std::next(xs.begin()) == 20);
+  REQUIRE_FALSE(xs | find_ref([](int x) { return x == 4; }));
+
+  const auto &const_xs = xs;
+  auto found_const = const_xs | find_cref([](int x) { return x == 20; });
+  REQUIRE(found_const);
+  REQUIRE(found_const->get() == 20);
+
+  auto found_eager = xs ^ find_cref([](int x) { return x == 3; });
+  REQUIRE(found_eager);
+  REQUIRE(found_eager->get() == 3);
+}
+
 // XXX `^` is `const L &` so const propagates; `|` is `Iterable &&` so non-const lvalues stay non-const through the chain
 TEMPLATE_TEST_CASE("caret_propagates_const_pipe_preserves_value_category", "[operators][regression]", std::vector<int>, std::deque<int>,
                    std::list<int>) {

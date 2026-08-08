@@ -7,16 +7,19 @@
 // constexpr only when the stdlib actually gives std::vector/string constexpr destructors.
 // libstdc++ <12 and libc++ <15 report __cplusplus 202002L without these.
 #include <version>
-#if __cplusplus >= 202002L &&                                                                                                              \
-    defined(__cpp_lib_constexpr_string) && __cpp_lib_constexpr_string >= 201907L &&                                                        \
+#if __cplusplus >= 202002L && defined(__cpp_lib_constexpr_string) && __cpp_lib_constexpr_string >= 201907L &&                              \
     defined(__cpp_lib_constexpr_vector) && __cpp_lib_constexpr_vector >= 201907L
   #define ASPARTAME_CONSTEXPR_ALLOC constexpr
 #else
   #define ASPARTAME_CONSTEXPR_ALLOC
 #endif
 
+#include <cstdio>
+#include <cstdlib>
 #include <functional>
 #include <optional>
+#include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -62,7 +65,8 @@ template <typename T, typename = void> constexpr bool is_comparable_impl = false
 template <typename T> constexpr bool is_comparable_impl<T, std::void_t<decltype(std::declval<T &>() == std::declval<T &>())>> = true;
 
 template <template <typename...> class, typename, typename = void> constexpr bool is_unary_instantiable = false;
-template <template <typename...> class C, typename T> constexpr bool is_unary_instantiable<C, T, std::void_t<C<T>>> = true;
+template <template <typename...> class C, typename T>
+constexpr bool is_unary_instantiable<C, T, std::void_t<decltype(sizeof(C<T>))>> = true;
 
 template <typename T> constexpr bool is_supported = false;
 
@@ -166,11 +170,12 @@ template <typename T> constexpr bool has_rend<T, std::void_t<decltype(std::declv
 template <typename T, typename = void> constexpr bool has_const_iterator = false;
 template <typename T> constexpr bool has_const_iterator<T, std::void_t<typename T::const_iterator>> = true;
 
-template <typename E, typename M> [[noreturn]] void raise(const M &message) {
+template <typename E> [[noreturn]] void raise(std::string_view message) {
 #if __cpp_exceptions == 199711
-  throw E(message);
+  throw E(std::string(message));
 #else
-  std::fprintf(stderr, "%s\n", message.c_str());
+  if (!message.empty()) std::fwrite(message.data(), sizeof(char), message.size(), stderr);
+  std::fputc('\n', stderr);
   std::abort();
 #endif
 }

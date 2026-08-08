@@ -28,6 +28,7 @@ public:
     storage.operator=(std::forward<T &&>(t));
     return *this;
   }
+  constexpr void reset() noexcept { storage.reset(); }
   constexpr T &operator*() & noexcept { return storage.operator*(); }
   constexpr const T &operator*() const & noexcept { return storage.operator*(); }
   constexpr const T *operator->() const noexcept { return storage.operator->(); }
@@ -35,11 +36,11 @@ public:
 };
 
 // XXX adapters caching into a member overwritten on ++ pass std::input_iterator_tag here.
-template <typename Derived, typename T, typename Category = std::forward_iterator_tag> struct fwd_iterator {
+template <typename Derived, typename T, typename Category = std::forward_iterator_tag, typename Reference = const T &> struct fwd_iterator {
   using difference_type = std::ptrdiff_t;
   using value_type = T;
-  using pointer = const T *;
-  using reference = const T &;
+  using pointer = std::add_pointer_t<std::remove_reference_t<Reference>>;
+  using reference = Reference;
   using iterator_category = Category;
   constexpr fwd_iterator() {
     static_assert(std::is_same_v<                                    //

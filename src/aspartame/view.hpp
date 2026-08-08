@@ -15,6 +15,7 @@
 #include "details/iterators/erased.hpp"
 #include "details/iterators/filter.hpp"
 #include "details/iterators/flat_map.hpp"
+#include "details/iterators/istream_lines.hpp"
 #include "details/iterators/iterate.hpp"
 #include "details/iterators/map.hpp"
 #include "details/iterators/pairwise.hpp"
@@ -23,9 +24,11 @@
 #include "details/iterators/sliding.hpp"
 #include "details/iterators/stride.hpp"
 #include "details/iterators/tap_each.hpp"
+#include "details/iterators/unfold.hpp"
 #include "details/iterators/zip.hpp"
 #include "details/sequence1_impl.hpp"
 #include "fluent.hpp"
+#include "optional.hpp"
 
 #ifndef ASPARTAME_ERASE_VIEW_PIPE_TYPES
   #ifndef NDEBUG
@@ -90,6 +93,20 @@ public:
 
   template <
       typename It = Iterator,
+      std::enable_if_t<std::is_base_of_v<std::random_access_iterator_tag, typename std::iterator_traits<It>::iterator_category>, int> = 0>
+  [[nodiscard]] constexpr size_t size() const {
+    return static_cast<size_t>(end_ - begin_);
+  }
+
+  template <
+      typename It = Iterator,
+      std::enable_if_t<std::is_base_of_v<std::random_access_iterator_tag, typename std::iterator_traits<It>::iterator_category>, int> = 0>
+  [[nodiscard]] constexpr decltype(auto) operator[](size_t idx) const {
+    return begin_[static_cast<typename std::iterator_traits<It>::difference_type>(idx)];
+  }
+
+  template <
+      typename It = Iterator,
       std::enable_if_t<std::is_base_of_v<std::bidirectional_iterator_tag, typename std::iterator_traits<It>::iterator_category>, int> = 0>
   [[nodiscard]] constexpr auto rbegin() const {
     return std::reverse_iterator<It>{end_};
@@ -108,6 +125,8 @@ public:
     requires std::invocable<Op, view &, tag>
 #endif
   auto operator|(const Op &r) {
+    static_assert(!is_reference_search_op<std::decay_t<Op>>,
+                  "find_ref/find_cref cannot safely return a reference from a view; search the stable source container directly");
     return details::invoke_pipe_step([&]() { return r(*this, tag{}); });
   }
 };
@@ -123,6 +142,33 @@ view(Storage &, Iterator, Iterator) -> view<Iterator, Storage>;
                 #op_name " cannot be implemented optimally and may not terminate, consider converting to a container first")
 
 namespace details {
+template <typename T> struct is_reference_wrapper : std::false_type {};
+template <typename T> struct is_reference_wrapper<std::reference_wrapper<T>> : std::true_type {};
+
+template <typename T> decltype(auto) unwrap_reference(T &value) {
+  if constexpr (is_reference_wrapper<std::decay_t<T>>::value) return value.get();
+  else return (value);
+}
+
+template <typename Range> constexpr auto retained_begin(Range &range) {
+  if constexpr (details::has_optional_traits_v<std::decay_t<Range>>) {
+    using Pointer = decltype(std::addressof(details::opt_get(range)));
+    return details::opt_engaged(range) ? std::addressof(details::opt_get(range)) : Pointer{};
+  } else return range.begin();
+}
+
+template <typename Range> constexpr auto retained_end(Range &range) {
+  if constexpr (details::has_optional_traits_v<std::decay_t<Range>>) {
+    const auto begin = retained_begin(range);
+    return begin ? begin + 1 : begin;
+  } else return range.end();
+}
+
+template <typename LeftStorage, typename RightStorage> struct binary_view_storage {
+  LeftStorage left;
+  RightStorage right;
+};
+
 template <typename Storage, typename F> auto use_shared(Storage &storage, F f) {
   using S = std::decay_t<Storage>;
   if constexpr (details::is_non_owning<S> || details::is_sharing<S>) {
@@ -131,6 +177,29 @@ template <typename Storage, typename F> auto use_shared(Storage &storage, F f) {
     sharing<typename S::element_type> s = std::move(storage);
     return f(s);
   } else static_assert(!sizeof(Storage), "unhandled ownership of storage, this is a bug");
+}
+
+template <typename C, typename Storage, typename Container, typename F>
+auto retain_rhs(view<C, Storage> &in, Container &&other, F &&make_iterator) {
+  return use_shared(in.storage, [&](auto left) {
+    if constexpr (details::is_sharing<std::decay_t<Container>>) {
+      using RightStorage = std::decay_t<Container>;
+      using State = binary_view_storage<std::decay_t<decltype(left)>, RightStorage>;
+      auto state = std::make_shared<State>(State{left, std::forward<Container>(other)});
+      auto iter = make_iterator(*state->right);
+      return view<decltype(iter), sharing<State>>(std::move(state), std::move(iter));
+    } else {
+      using Other = std::remove_reference_t<Container>;
+      using RightStorage = std::conditional_t<std::is_lvalue_reference_v<Container &&>, std::reference_wrapper<Other>, Other>;
+      using State = binary_view_storage<std::decay_t<decltype(left)>, RightStorage>;
+      auto state = [&] {
+        if constexpr (std::is_lvalue_reference_v<Container &&>) return std::make_shared<State>(State{left, std::ref(other)});
+        else return std::make_shared<State>(State{left, std::forward<Container>(other)});
+      }();
+      auto iter = make_iterator(unwrap_reference(state->right));
+      return view<decltype(iter), sharing<State>>(std::move(state), std::move(iter));
+    }
+  });
 }
 
 template <typename C, typename Storage, typename Iter> auto make_unique_view(view<C, Storage> &in, Iter &&it) {
@@ -144,12 +213,16 @@ template <typename C, typename Storage, typename Iter> auto make_unique_view(vie
 
 template <typename Iterator, typename Storage> auto normalize_pipe_result(view<Iterator, Storage> result) {
 #if ASPARTAME_ERASE_VIEW_PIPE_TYPES
-  using erased = details::erased_iterator<typename view<Iterator, Storage>::value_type>;
-  auto begin = erased(result.begin(), result.end());
-  auto end = erased(result.end(), result.end());
-  using S = std::decay_t<Storage>;
-  if constexpr (details::is_owning<S>) return view<erased, Storage>(std::move(result.storage), std::move(begin), std::move(end));
-  else return view<erased, Storage>(result.storage, std::move(begin), std::move(end));
+  using V = typename view<Iterator, Storage>::value_type;
+  using R = typename std::iterator_traits<Iterator>::reference;
+  if constexpr (std::is_same_v<R, const V &>) {
+    using erased = details::erased_iterator<V>;
+    auto begin = erased(result.begin(), result.end());
+    auto end = erased(result.end(), result.end());
+    using S = std::decay_t<Storage>;
+    if constexpr (details::is_owning<S>) return view<erased, Storage>(std::move(result.storage), std::move(begin), std::move(end));
+    else return view<erased, Storage>(result.storage, std::move(begin), std::move(end));
+  } else return result;
 #else
   return result;
 #endif
@@ -163,6 +236,25 @@ template <typename T> auto repeat(T &&t) { //
 
 template <typename T, typename F> auto iterate(T &&init, F &&next) { //
   return view<details::iterate_iterator<std::decay_t<T>, F>, non_owning>({init, next});
+}
+
+template <typename T, typename F> auto unfold(T &&init, F &&next) { //
+  return view<details::unfold_iterator<std::decay_t<T>, std::decay_t<F>>, non_owning>({std::forward<T>(init), std::forward<F>(next)});
+}
+
+template <typename T, typename F> auto iterate_maybe(T &&init, F &&next) { return unfold(std::forward<T>(init), std::forward<F>(next)); }
+
+inline auto istream_lines(std::istream &in) {
+  return view<details::istream_line_iterator, non_owning>(details::istream_line_iterator(in), details::istream_line_iterator());
+}
+
+inline auto istream_split(std::istream &in, char delimiter) {
+  return view<details::istream_line_iterator, non_owning>(details::istream_line_iterator(in, delimiter), details::istream_line_iterator());
+}
+
+inline auto istream_lines_with_position(std::istream &in) {
+  return view<details::positioned_istream_line_iterator, non_owning>(details::positioned_istream_line_iterator(in),
+                                                                     details::positioned_istream_line_iterator());
 }
 
 template <typename N> auto iota(const N &origin) { //
@@ -198,7 +290,13 @@ template <typename Iterable, //
           typename Op,       //
           typename = std::enable_if_t<is_iterable<Iterable> && !is_view<Iterable>>>
 auto operator|(Iterable &&l, const Op &r) {
-  if constexpr (!std::is_rvalue_reference_v<Iterable &&>)
+  if constexpr (is_reference_search_op<std::decay_t<Op>>) {
+    static_assert(!std::is_rvalue_reference_v<Iterable &&>,
+                  "find_ref/find_cref require an lvalue source whose lifetime exceeds the returned reference");
+    return r(l, tag{});
+  } else if constexpr (is_direct_source_sink_op<std::decay_t<Op>>) {
+    return r(l, tag{});
+  } else if constexpr (!std::is_rvalue_reference_v<Iterable &&>)
     return details::invoke_pipe_step([&]() { return r(view(l.begin(), l.end()), tag{}); });
   else if constexpr (details::has_const_iterator<Iterable>)
     return details::invoke_pipe_step([&]() {
@@ -223,8 +321,9 @@ template <typename C, typename Storage, typename T> //
 
 template <typename C, typename Storage, typename Container> //
 [[nodiscard]] constexpr auto concat(view<C, Storage> &in, Container &&other, tag = {}) {
-  return details::make_unique_view( //
-      in, details::concat_iterator(in.begin(), in.end(), other.begin(), other.end()));
+  return details::retain_rhs(in, std::forward<Container>(other), [&](auto &rhs) {
+    return details::concat_iterator(in.begin(), in.end(), details::retained_begin(rhs), details::retained_end(rhs));
+  });
 }
 
 template <typename C, typename Storage, typename Function> //
@@ -275,6 +374,14 @@ template <typename C, typename Storage, typename Function> //
   auto applied = [function](auto &&x) { return details::ap(function, x); };
   return details::make_unique_view( //
       in, details::distinct_iterator(in.begin(), in.end(), applied));
+}
+
+template <typename C, typename Storage, typename Predicate, typename Function> //
+[[nodiscard]] constexpr auto distinct_by_if(view<C, Storage> &in, Predicate &&predicate, Function &&function, tag = {}) {
+  auto applied_predicate = [predicate](auto &&x) { return details::ap(predicate, x); };
+  auto applied_function = [function](auto &&x) { return details::ap(function, x); };
+  return details::make_unique_view(
+      in, details::conditional_distinct_iterator(in.begin(), in.end(), std::move(applied_predicate), std::move(applied_function)));
 }
 
 template <typename C, typename Storage> //
@@ -504,15 +611,17 @@ template <typename C, typename Storage> //
 }
 
 template <typename C, typename Storage, typename Container> //
-[[nodiscard]] constexpr auto zip(view<C, Storage> &in, const Container &other, tag = {}) {
-  return details::make_unique_view( //
-      in, details::zip_iterator(in.begin(), in.end(), other.begin(), other.end()));
+[[nodiscard]] constexpr auto zip(view<C, Storage> &in, Container &&other, tag = {}) {
+  return details::retain_rhs(in, std::forward<Container>(other), [&](auto &rhs) {
+    return details::zip_iterator(in.begin(), in.end(), details::retained_begin(rhs), details::retained_end(rhs));
+  });
 }
 
 template <typename C, typename Storage, typename Container> //
-[[nodiscard]] constexpr auto cross(view<C, Storage> &in, const Container &other, tag = {}) {
-  return details::make_unique_view( //
-      in, details::cross_iterator(in.begin(), in.end(), other.begin(), other.end()));
+[[nodiscard]] constexpr auto cross(view<C, Storage> &in, Container &&other, tag = {}) {
+  return details::retain_rhs(in, std::forward<Container>(other), [&](auto &rhs) {
+    return details::cross_iterator(in.begin(), in.end(), details::retained_begin(rhs), details::retained_end(rhs));
+  });
 }
 
 template <typename C, typename Storage> //
@@ -710,8 +819,20 @@ template <
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto sliding(view<C, Storage> &in, size_t size, size_t step, tag = {}) {
-  return details::make_unique_view( //
-      in, details::sliding_iterator<C, view>(in.begin(), in.end(), size, step));
+  if (size == 0 || step == 0)
+    details::raise<std::range_error>("cannot apply windowing with zero size or step, size=" + std::to_string(size) +
+                                     " step=" + std::to_string(step));
+  using Category = typename std::iterator_traits<C>::iterator_category;
+  if constexpr (std::is_base_of_v<std::random_access_iterator_tag, Category>) {
+    return details::use_shared(in.storage, [&](auto retained) {
+      using S = std::decay_t<decltype(retained)>;
+      using Iterator = details::indexable_sliding_iterator<C, view, S>;
+      auto iterator = Iterator(in.begin(), in.end(), size, step, retained);
+      return view<Iterator, S>(std::move(retained), std::move(iterator));
+    });
+  } else {
+    return details::make_unique_view(in, details::sliding_iterator<C, view>(in.begin(), in.end(), size, step));
+  }
 }
 
 template <typename C, typename Storage> //

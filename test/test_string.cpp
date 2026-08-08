@@ -320,6 +320,8 @@ TEST_CASE(TPE_NAME "_index_of_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abcde"_w ^ index_of_slice(""_w)) == 0);
   CHECK(("abcde"_w ^ index_of_slice("ab"_w)) == 0);
+  CHECK((string{"abcde"} ^ index_of_slice(std::string_view{"cde"})) == 2);
+  CHECK((wstring{L"abcde"} ^ index_of_slice(std::wstring_view{L"cde"})) == 2);
 }
 
 TEST_CASE(TPE_NAME "_contains_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
@@ -334,6 +336,8 @@ TEST_CASE(TPE_NAME "_contains_slice", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("abcde"_w ^ contains_slice(""_w)) == true);
   CHECK(("abcde"_w ^ contains_slice("ab"_w)) == true);
+  CHECK((string{"abcde"} ^ contains_slice(std::string_view{"bcd"})) == true);
+  CHECK((wstring{L"abcde"} ^ contains_slice(std::wstring_view{L"bcd"})) == true);
 }
 
 TEST_CASE(TPE_NAME "_index_of", "[" TPE_NAME "][" TPE_GROUP "]") {
@@ -706,6 +710,28 @@ TEST_CASE(TPE_NAME "_split", "[" TPE_NAME "][" TPE_GROUP "]") {
 
   CHECK(("hello"_w ^ split(wchar_t('o'))) == std::vector<wstring>{"hell"_w, ""_w});
   CHECK(("hello"_w ^ split("lo"_w)) == std::vector<wstring>{"hel"_w, ""_w});
+}
+
+TEST_CASE(TPE_NAME "_split_once", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK((string{"a:b:c"} ^ split_once(':')) == std::optional{std::pair{string{"a"}, string{"b:c"}}});
+  CHECK((string{"a:b:c"} ^ rsplit_once(':')) == std::optional{std::pair{string{"a:b"}, string{"c"}}});
+  CHECK_FALSE(string{"abc"} ^ split_once(':'));
+  CHECK_FALSE(string{"abc"} ^ split_once(""));
+}
+
+TEST_CASE(TPE_NAME "_glob_matches", "[" TPE_NAME "][" TPE_GROUP "]") {
+  CHECK(string{"src/aspartame/view.hpp"} ^ glob_matches("src/*.hpp"));
+  CHECK_FALSE(string{"alpha.cpp"} ^ glob_matches("*.hpp"));
+  CHECK(string{"Alpha.CPP"} ^ glob_matches_ignore_case("a?pha.*"));
+  CHECK_FALSE(string{"Alpha.CPP"} ^ glob_matches_ignore_case("a?pha.hpp"));
+}
+
+TEST_CASE(TPE_NAME "_map_non_character", "[" TPE_NAME "][" TPE_GROUP "]") {
+  const auto result = string{"ab"} ^ map([](char c) { return std::make_unique<char>(c); });
+  STATIC_REQUIRE(std::is_same_v<std::decay_t<decltype(result)>, std::vector<std::unique_ptr<char>>>);
+  REQUIRE(result.size() == 2);
+  CHECK(*result[0] == 'a');
+  CHECK(*result[1] == 'b');
 }
 
 TEST_CASE(TPE_NAME "_lines", "[" TPE_NAME "][" TPE_GROUP "]") {

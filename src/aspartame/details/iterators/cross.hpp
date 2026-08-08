@@ -6,11 +6,11 @@
 namespace aspartame::details {
 
 template <typename LeftIterator, //
-          typename RightIterator, typename T = std::pair<value_type_of_t<LeftIterator>, value_type_of_t<RightIterator>>>
-class cross_iterator : public fwd_iterator<cross_iterator<LeftIterator, RightIterator, T>, T, std::input_iterator_tag> {
+          typename RightIterator, typename T = std::pair<value_type_of_t<LeftIterator>, value_type_of_t<RightIterator>>,
+          typename Reference = std::pair<decltype(*std::declval<LeftIterator &>()), decltype(*std::declval<RightIterator &>())>>
+class cross_iterator : public fwd_iterator<cross_iterator<LeftIterator, RightIterator, T, Reference>, T, std::input_iterator_tag, Reference> {
   LeftIterator left_it, left_end;
   RightIterator right_begin, right_it, right_end;
-  std::optional<T> current;
 
   [[nodiscard]] constexpr bool has_next() const { return left_it != left_end; }
 
@@ -28,10 +28,7 @@ public:
     }
     return *this;
   }
-  [[nodiscard]] constexpr const T &operator*() {
-    current = T{*left_it, *right_it};
-    return *current;
-  }
+  [[nodiscard]] constexpr Reference operator*() { return Reference{*left_it, *right_it}; }
   [[nodiscard]] constexpr bool operator==(const cross_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 

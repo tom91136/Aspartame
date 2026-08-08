@@ -102,6 +102,7 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
                     test/test_map.cpp
                     test/test_unordered_map.cpp
                     test/test_string.cpp
+                    test/test_string_view.cpp
                     test/test_array.cpp
                     test/test_view_id.cpp
                     test/test_view_map.cpp
@@ -226,6 +227,9 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
             aspartame_compile_case(compile_fail_unregistered 0 11 TRUE)
             aspartame_compile_case(compile_fail_get_or_emplace_pipe 0 12 TRUE)
             aspartame_compile_case(compile_fail_map_values_retype 0 13 TRUE)
+            aspartame_compile_case(compile_fail_find_ref_temporary 0 14 TRUE)
+            aspartame_compile_case(compile_fail_find_cref_view 0 15 TRUE)
+            aspartame_compile_case(compile_fail_find_ref_const 0 16 TRUE)
 
             # Positive control: must compile.
             aspartame_compile_case(compile_ok_inplace 0 99 FALSE)

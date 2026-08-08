@@ -4,16 +4,15 @@
 
 namespace aspartame::details {
 
-template <typename Iter1, //
-          typename Iter2, //
-          // XXX decay so cv-qualified deref types (e.g. `const T*const`) don't make the pair non-copy-assignable
+template <typename Iter1,                                                       //
+          typename Iter2,                                                       //
           typename I1 = std::decay_t<typename details::value_type_of_t<Iter1>>, //
           typename I2 = std::decay_t<typename details::value_type_of_t<Iter2>>, //
-          typename T = std::pair<I1, I2>>
-class zip_iterator : public fwd_iterator<zip_iterator<Iter1, Iter2, I1, I2, T>, T, std::input_iterator_tag> {
+          typename T = std::pair<I1, I2>,
+          typename Reference = std::pair<decltype(*std::declval<Iter1 &>()), decltype(*std::declval<Iter2 &>())>>
+class zip_iterator : public fwd_iterator<zip_iterator<Iter1, Iter2, I1, I2, T, Reference>, T, std::input_iterator_tag, Reference> {
   Iter1 it1, end1;
   Iter2 it2, end2;
-  std::optional<T> current;
   [[nodiscard]] constexpr bool has_next() const { return it1 != end1 && it2 != end2; }
 
 public:
@@ -28,7 +27,7 @@ public:
     return *this;
   }
 
-  [[nodiscard]] constexpr const T &operator*() { return *(current = std::pair{*it1, *it2}); }
+  [[nodiscard]] constexpr Reference operator*() { return Reference{*it1, *it2}; }
   [[nodiscard]] constexpr bool operator==(const zip_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 

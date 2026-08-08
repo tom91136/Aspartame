@@ -282,6 +282,52 @@ TEST_CASE(TPE_NAME "_collect", "[" TPE_NAME "][" TPE_GROUP "]") {
 }
 #endif
 
+#ifndef DISABLE_COLLECT_TO
+TEST_CASE(TPE_NAME "_collect_to", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto intOp = [](auto &&xs) {
+    return xs OP_ collect_to<std::vector>([](auto x) -> std::optional<string> {
+      return x % 2 == 0 ? std::optional{to_string(x)} : std::nullopt;
+    });
+  };
+  auto strOp = [](auto &&xs) {
+    return xs OP_ collect_to<std::vector>([](auto x) -> std::optional<size_t> {
+      return x.size() > 5 ? std::optional{x.size()} : std::nullopt;
+    });
+  };
+  auto fooOp = [](auto &&xs) {
+    return xs OP_ collect_to<std::vector>([](auto x) -> std::optional<int> {
+      return x.value % 2 == 0 ? std::optional{x.value} : std::nullopt;
+    });
+  };
+  #ifdef TPE_MANY_INIT
+  RUN_CHECK(int, std::vector<string>, "", {4, 2, 3, 1, 5}, {"4", "2"}, intOp);
+  RUN_CHECK(string, std::vector<size_t>, "", {"banana", "cherry", "apple"}, {6, 6}, strOp);
+  RUN_CHECK(Foo, std::vector<int>, "", {Foo(3), Foo(2), Foo(1)}, {2}, fooOp);
+  #endif
+  RUN_CHECK(int, std::vector<string>, "", {1}, {}, intOp);
+  RUN_CHECK(int, std::vector<string>, "", {}, {}, intOp);
+  RUN_CHECK(string, std::vector<size_t>, "", {"banana"}, {6}, strOp);
+  RUN_CHECK(string, std::vector<size_t>, "", {}, {}, strOp);
+  RUN_CHECK(Foo, std::vector<int>, "", {Foo(2)}, {2}, fooOp);
+  RUN_CHECK(Foo, std::vector<int>, "", {}, {}, fooOp);
+
+  auto p2 = [](auto name, auto f) {
+    using P2 = std::pair<int, int>;
+    #ifdef TPE_MANY_INIT
+    RUN_CHECK(P2, std::vector<int>, name, {{3, 1}, {2, 2}, {1, 3}}, {4, 4, 4}, f);
+    #endif
+    RUN_CHECK(P2, std::vector<int>, name, {{3, 1}}, {4}, f);
+    RUN_CHECK(P2, std::vector<int>, name, {}, {}, f);
+  };
+  p2("spread", [](auto &&xs) {
+    return xs OP_ collect_to<std::vector>([](auto x0, auto x1) -> std::optional<int> { return x0 + x1; });
+  });
+  p2("single", [](auto &&xs) {
+    return xs OP_ collect_to<std::vector>([](auto x) -> std::optional<int> { return get<0>(x) + get<1>(x); });
+  });
+}
+#endif
+
 #ifndef DISABLE_FILTER
 TEST_CASE(TPE_NAME "_filter", "[" TPE_NAME "][" TPE_GROUP "]") {
   auto intOp = [](auto &&xs) { return xs OP_ filter([](auto x) { return x % 2 == 0; }); };
@@ -432,6 +478,30 @@ TEST_CASE(TPE_NAME "_distinct_by", "[" TPE_NAME "][" TPE_GROUP "]") {
   RUN_CHECK_ID(string, "", {}, {}, strOp);
   RUN_CHECK_ID(Foo, "", {Foo(1)}, {Foo(1)}, fooOp);
   RUN_CHECK_ID(Foo, "", {}, {}, fooOp);
+}
+#endif
+
+#ifndef DISABLE_DISTINCT_BY_IF
+TEST_CASE(TPE_NAME "_distinct_by_if", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto intOp = [](auto &&xs) {
+    return xs OP_ distinct_by_if([](auto x) { return x % 2 == 0; }, [](auto x) { return x % 10; });
+  };
+  auto strOp = [](auto &&xs) {
+    return xs OP_ distinct_by_if([](auto x) { return x.size() == 1; }, [](auto x) { return static_cast<char>(std::tolower(x[0])); });
+  };
+  #ifdef TPE_MANY_INIT
+    #ifdef TPE_UNORDERED
+  RUN_CHECK_ID(int, "", {1, 2, 3, 11, 14}, {1, 2, 3, 11, 14}, intOp);
+  RUN_CHECK_ID(string, "", {"A", "B", "keep"}, {"A", "B", "keep"}, strOp);
+    #else
+  RUN_CHECK_ID(int, "", {1, 11, 2, 12, 3}, {1, 11, 2, 3}, intOp);
+  RUN_CHECK_ID(string, "", {"keep", "A", "keep", "a", "B", "b"}, {"keep", "A", "keep", "B"}, strOp);
+    #endif
+  #endif
+  RUN_CHECK_ID(int, "", {2}, {2}, intOp);
+  RUN_CHECK_ID(int, "", {}, {}, intOp);
+  RUN_CHECK_ID(string, "", {"A"}, {"A"}, strOp);
+  RUN_CHECK_ID(string, "", {}, {}, strOp);
 }
 #endif
 
@@ -757,6 +827,31 @@ TEST_CASE(TPE_NAME "_for_each", "[" TPE_NAME "][" TPE_GROUP "]") {
     xs OP_ for_each([&](auto x) { out.push_back(get<0>(x) + get<1>(x) + get<2>(x)); });
     return out;
   });
+}
+#endif
+
+#ifndef DISABLE_APPEND_TO
+TEST_CASE(TPE_NAME "_append_to", "[" TPE_NAME "][" TPE_GROUP "]") {
+  auto op = [](auto &&xs) {
+    using T = std::decay_t<typename std::decay_t<decltype(xs)>::value_type>;
+    std::vector<T> out;
+    xs OP_ append_to(out);
+    return out;
+  };
+  auto intOp = [](auto &&xs) {
+    std::vector<int> out{-1};
+    xs OP_ append_to(out);
+    return out;
+  };
+  RUN_CHECK(int, std::vector<int>, "", {4, 2, 3, 1, 5}, {-1, 4, 2, 3, 1, 5}, intOp);
+  RUN_CHECK(int, std::vector<int>, "", {1}, {1}, op);
+  RUN_CHECK(int, std::vector<int>, "", {}, {}, op);
+  RUN_CHECK(string, std::vector<string>, "", {"banana", "cherry", "apple"}, {"banana", "cherry", "apple"}, op);
+  RUN_CHECK(string, std::vector<string>, "", {"apple"}, {"apple"}, op);
+  RUN_CHECK(string, std::vector<string>, "", {}, {}, op);
+  RUN_CHECK(Foo, std::vector<Foo>, "", {Foo(3), Foo(2), Foo(1)}, {Foo(3), Foo(2), Foo(1)}, op);
+  RUN_CHECK(Foo, std::vector<Foo>, "", {Foo(1)}, {Foo(1)}, op);
+  RUN_CHECK(Foo, std::vector<Foo>, "", {}, {}, op);
 }
 #endif
 

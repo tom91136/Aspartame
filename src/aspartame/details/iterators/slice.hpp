@@ -6,8 +6,8 @@
 namespace aspartame::details {
 
 template <typename InputIterator, //
-          typename T = typename details::value_type_of_t<InputIterator>>
-class slice_iterator : public fwd_iterator<slice_iterator<InputIterator, T>, T> {
+          typename T = typename details::value_type_of_t<InputIterator>, typename Reference = decltype(*std::declval<InputIterator &>())>
+class slice_iterator : public fwd_iterator<slice_iterator<InputIterator, T, Reference>, T, std::forward_iterator_tag, Reference> {
   InputIterator it, end;
   size_t idx{}, to_exclusive{};
   [[nodiscard]] constexpr bool has_next() const { return idx < to_exclusive && it != end; }
@@ -26,7 +26,7 @@ public:
     ++idx;
     return *this;
   }
-  [[nodiscard]] constexpr const T &operator*() { return *it; }
+  [[nodiscard]] constexpr Reference operator*() { return *it; }
   [[nodiscard]] constexpr bool operator==(const slice_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 

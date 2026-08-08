@@ -60,12 +60,55 @@ currentDevice = std::move(matches.front().get());
 
 `as_ref()` / `as_cref()` are shorthand for `map(std::ref)` / `map(std::cref)`; `as_ref()` only works under `|` for the same reason.
 
+Reference-preserving lazy adapters (`filter`, `take`, `drop`, `slice`, `distinct`, `tap_each`, and `zip`) now expose the
+underlying elements directly. This means a pipeline can mutate an lvalue source without an `as_ref()` detour:
+
+```c++
+devices | filter(is_active) | for_each([](Device &device) { device.refresh(); });
+```
+
+`find_ref(predicate)` and `find_cref(predicate)` return an optional `reference_wrapper` when copying the found value is
+undesirable. Lazy `zip` yields a pair of references, including for move-only values. Lazy `concat`, `zip`, and `cross`
+borrow an lvalue right-hand container and own an rvalue right-hand container, so `xs | concat(make_values())` is safe to
+store. They also accept an optional right-hand value directly as a zero-or-one collection.
+
+### Non-owning strings and parsing
+
+`std::string_view` supports the string and sequence pipe syntax. Shape-preserving operations such as `trim`, `slice`,
+`take`, `drop`, `split`, `split_once`, `rsplit_once`, `lines`, and `words` return views into the original character storage.
+The source storage must therefore outlive every returned view. Operations that transform characters, such as `to_upper`,
+return an owning `std::string`.
+
+```c++
+std::string_view line = "  name=value  ";
+auto pair = line ^ trim() ^ split_once('=');
+// optional<pair<string_view, string_view>>{"name", "value"}
+```
+
+`split_once` and `rsplit_once` are also available for owning strings. `glob_matches(pattern)` and
+`glob_matches_ignore_case(pattern)` implement full-string `*` and `?` wildcard matching without regular expressions.
+Owning results from a custom `basic_string_view<Char, Traits>` retain its character traits; a view has no allocator to
+propagate, so the result uses the corresponding `basic_string` default allocator.
+
+### Sources and focused terminals
+
+`unfold(initial, successor)` (also named `iterate_maybe`) creates a lazy source containing the initial value and repeatedly
+applies a successor returning `std::optional<T>` until it returns empty. `istream_lines(stream)` exposes a single-pass lazy
+line source. `istream_split(stream, delimiter)` reads other character-delimited streams, while
+`istream_lines_with_position(stream)` also yields each post-read stream position for parsers that need to seek backwards.
+
+`collect_to<Container>(f)` combines optional-producing mapping and construction of a chosen output container.
+`append_to(output)` appends a pipeline directly to an existing container; `move_to(output)` explicitly consumes its mutable
+source. The source and destination must not alias; direct self-aliasing is diagnosed, while aliasing through a view remains
+the caller's responsibility. `distinct_by_if(predicate, key)` only applies uniqueness tracking to selected elements.
+
+Lazy `sliding` over a random-access source produces indexable windows with `empty()`, `size()`, and `operator[]` without
+copying their elements. Windows retain an owned temporary source and otherwise observe their lvalue source. Other iterator
+categories use a buffered indexable window whose contents remain valid only until the window iterator advances.
+
 ## Supported operations
 
 ```c++
 Container<T> xs = {...};
 OutContainer<T> ys = xs ^ Op;
 ```
-
-
-

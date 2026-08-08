@@ -8,6 +8,7 @@
 #include "aspartame/optional.hpp"
 #include "aspartame/set.hpp"
 #include "aspartame/string.hpp"
+#include "aspartame/string_view.hpp"
 #include "aspartame/unordered_map.hpp"
 #include "aspartame/unordered_set.hpp"
 #include "aspartame/variant.hpp"

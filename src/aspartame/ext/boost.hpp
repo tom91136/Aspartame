@@ -61,6 +61,7 @@ template <class T> struct optional_traits<boost::optional<T>> {
   using value_type = T;
   template <class U> using rebind = boost::optional<U>;
   static bool engaged(const boost::optional<T> &o) noexcept { return static_cast<bool>(o); }
+  static T &get(boost::optional<T> &o) noexcept { return *o; }
   static const T &get(const boost::optional<T> &o) noexcept { return *o; }
 };
 

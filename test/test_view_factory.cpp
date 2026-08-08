@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "catch2/catch_test_macros.hpp"
 
 #include "test_base_includes.hpp"
@@ -48,6 +50,43 @@ TEST_CASE("view_repeat") {
   CHECK((repeat(7) | take(1) | to_vector()) == std::vector{7});
   CHECK((repeat(7) | take(4) | to_vector()) == std::vector{7, 7, 7, 7});
   CHECK((repeat(std::string{"x"}) | take(3) | to_vector()) == std::vector<std::string>{"x", "x", "x"});
+}
+
+TEST_CASE("view_unfold") {
+  const auto successor = [](int x) -> std::optional<int> {
+    if (x < 4) return x + 1;
+    return std::nullopt;
+  };
+  CHECK((unfold(1, successor) | to_vector()) == std::vector{1, 2, 3, 4});
+  CHECK((iterate_maybe(4, successor) | to_vector()) == std::vector{4});
+}
+
+TEST_CASE("view_istream_lines") {
+  std::istringstream input{"one\ntwo\nthree\n"};
+  CHECK((istream_lines(input) | drop(1) | take(1) | to_vector()) == std::vector<std::string>{"two"});
+}
+
+TEST_CASE("view_istream_split") {
+  std::istringstream input{std::string{"one\0two\0three", 13}};
+  CHECK((istream_split(input, '\0') | to_vector()) == std::vector<std::string>{"one", "two", "three"});
+}
+
+TEST_CASE("view_istream_lines_with_position") {
+  std::istringstream input{"one\ntwo\nthree\n"};
+  const auto rows = istream_lines_with_position(input) | to_vector();
+  REQUIRE(rows.size() == 3);
+  CHECK(rows[0].first == "one");
+  CHECK(rows[1].first == "two");
+  input.clear();
+  input.seekg(rows[0].second);
+  std::string next;
+  std::getline(input, next);
+  CHECK(next == "two");
+
+  std::istringstream unterminated{"one\ntwo"};
+  const auto unterminated_rows = istream_lines_with_position(unterminated) | to_vector();
+  REQUIRE(unterminated_rows.size() == 2);
+  CHECK(unterminated_rows.back().second == std::streampos{7});
 }
 
 TEST_CASE("view_reverse_lazy") {

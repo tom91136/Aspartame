@@ -64,6 +64,16 @@ template <typename C> using Shrink = std::conditional_t<IsFixedSize<C>, std::vec
 template <typename C> inline constexpr bool SetLike = sequence_traits<std::decay_t<C>>::set_like;
 } // namespace seq_impl
 
+namespace details {
+template <template <typename...> typename Out, typename T, bool = is_pair<T> && !is_unary_instantiable<Out, T>> struct collect_to_output;
+template <template <typename...> typename Out, typename T> struct collect_to_output<Out, T, false> {
+  using type = Out<T>;
+};
+template <template <typename...> typename Out, typename T> struct collect_to_output<Out, T, true> {
+  using type = Out<typename T::first_type, typename T::second_type>;
+};
+} // namespace details
+
 #define ASPARTAME_SEQ_TPL(...) typename C, __VA_ARGS__, std::enable_if_t<details::has_sequence_traits_v<C>, int> = 0
 #define ASPARTAME_SEQ_TPL_NOTYPE typename C, std::enable_if_t<details::has_sequence_traits_v<C>, int> = 0
 
@@ -92,6 +102,14 @@ template <ASPARTAME_SEQ_TPL(typename F)> [[nodiscard]] constexpr auto collect(co
   return details::container1::collect<C, seq_impl::Reb<C, U>, F>(in, std::forward<F>(f));
 }
 
+template <template <typename...> typename Out, typename C, typename F, std::enable_if_t<is_iterable<C>, int> = 0>
+[[nodiscard]] constexpr auto collect_to(const C &in, F &&f, tag = {}) {
+  using R = std::decay_t<decltype(details::ap(f, *std::begin(in)))>;
+  static_assert(is_optional<R>, "collect_to function must return std::optional<T>");
+  using Result = typename details::collect_to_output<Out, typename R::value_type>::type;
+  return details::container1::collect_to<C, Result, F>(in, std::forward<F>(f));
+}
+
 template <ASPARTAME_SEQ_TPL(typename P)> [[nodiscard]] constexpr auto filter(const C &in, P &&p, tag = {}) {
   return details::container1::filter<C, seq_impl::Shrink<C>, P>(in, std::forward<P>(p));
 }
@@ -112,6 +130,10 @@ template <ASPARTAME_SEQ_TPL(typename F)> [[nodiscard]] constexpr auto distinct_b
   return details::container1::distinct_by<C, seq_impl::Shrink<C>, F>(in, std::forward<F>(f));
 }
 
+template <ASPARTAME_SEQ_TPL(typename P, typename F)> [[nodiscard]] constexpr auto distinct_by_if(const C &in, P &&p, F &&f, tag = {}) {
+  return details::container1::distinct_by_if<C, seq_impl::Shrink<C>, P, F>(in, std::forward<P>(p), std::forward<F>(f));
+}
+
 template <ASPARTAME_SEQ_TPL_NOTYPE> [[nodiscard]] constexpr auto distinct(const C &in, tag = {}) {
   return details::container1::distinct<C, seq_impl::Shrink<C>, seq_impl::SetLike<C>>(in);
 }
@@ -128,6 +150,40 @@ template <ASPARTAME_SEQ_TPL(typename P)> [[nodiscard]] constexpr auto forall(con
 template <ASPARTAME_SEQ_TPL(typename P)> [[nodiscard]] constexpr auto find(const C &in, P &&p, tag = {}) {
   return details::container1::find<C, P>(in, std::forward<P>(p));
 }
+template <typename C, typename P, std::enable_if_t<is_iterable<C>, int> = 0> [[nodiscard]] constexpr auto find_ref(C &in, P &&p, tag = {}) {
+  using R = decltype(*std::begin(in));
+  static_assert(std::is_lvalue_reference_v<R>, "find_ref requires an iterator that yields lvalue references");
+  using T = std::remove_reference_t<R>;
+  static_assert(!std::is_const_v<T>, "find_ref requires a mutable source; use find_cref for const sources");
+  for (auto it = std::begin(in), end = std::end(in); it != end; ++it)
+    if (details::ap(p, *it)) return std::optional<std::reference_wrapper<T>>{std::ref(*it)};
+  return std::optional<std::reference_wrapper<T>>{};
+}
+template <typename C, typename P, std::enable_if_t<is_iterable<C>, int> = 0>
+[[nodiscard]] constexpr auto find_cref(const C &in, P &&p, tag = {}) {
+  using R = decltype(*std::begin(in));
+  static_assert(std::is_lvalue_reference_v<R>, "find_cref requires an iterator that yields lvalue references");
+  using T = std::remove_const_t<std::remove_reference_t<R>>;
+  for (auto it = std::begin(in), end = std::end(in); it != end; ++it)
+    if (details::ap(p, *it)) return std::optional<std::reference_wrapper<const T>>{std::cref(*it)};
+  return std::optional<std::reference_wrapper<const T>>{};
+}
+template <typename P> struct find_ref_op {
+  P predicate;
+  template <typename C> constexpr auto operator()(C &&in, tag) const { return find_ref(in, predicate, tag{}); }
+};
+template <typename P> struct find_cref_op {
+  P predicate;
+  template <typename C> constexpr auto operator()(C &&in, tag) const { return find_cref(in, predicate, tag{}); }
+};
+template <typename> inline constexpr bool is_reference_search_op = false;
+template <typename P> inline constexpr bool is_reference_search_op<find_ref_op<P>> = true;
+template <typename P> inline constexpr bool is_reference_search_op<find_cref_op<P>> = true;
+
+template <typename L, typename P, std::enable_if_t<!std::is_lvalue_reference_v<L &&>, int> = 0>
+void operator^(L &&, const find_ref_op<P> &) = delete;
+template <typename L, typename P, std::enable_if_t<!std::is_lvalue_reference_v<L &&>, int> = 0>
+void operator^(L &&, const find_cref_op<P> &) = delete;
 template <ASPARTAME_SEQ_TPL(typename T)> [[nodiscard]] constexpr auto contains(const C &in, const T &t, tag = {}) {
   return details::container1::contains<C, T>(in, t);
 }
@@ -178,6 +234,25 @@ template <ASPARTAME_SEQ_TPL(typename F)> [[nodiscard]] constexpr auto tap_each(c
 }
 template <ASPARTAME_SEQ_TPL(typename F)> constexpr void for_each(const C &in, F &&f, tag = {}) {
   details::container1::for_each<C, F>(in, std::forward<F>(f));
+}
+
+template <typename C, typename Out, std::enable_if_t<is_iterable<C>, int> = 0> constexpr void append_to(const C &in, Out &out, tag = {}) {
+  if constexpr (std::is_same_v<std::remove_cv_t<C>, std::remove_cv_t<Out>>)
+    if (std::addressof(in) == std::addressof(out)) details::raise<std::logic_error>("append_to source and destination must not alias");
+  if constexpr (details::has_reserve<Out> && details::has_size<C>) out.reserve(out.size() + in.size());
+  for (auto &&x : in)
+    details::push(out, x);
+}
+
+template <typename C, typename Out, std::enable_if_t<is_iterable<C>, int> = 0> constexpr void move_to(C &in, Out &out, tag = {}) {
+  using Reference = decltype(*std::begin(in));
+  static_assert(std::is_lvalue_reference_v<Reference> && !std::is_const_v<std::remove_reference_t<Reference>>,
+                "move_to requires a mutable source whose iterator yields mutable lvalue references");
+  if constexpr (std::is_same_v<std::remove_cv_t<C>, std::remove_cv_t<Out>>)
+    if (std::addressof(in) == std::addressof(out)) details::raise<std::logic_error>("move_to source and destination must not alias");
+  if constexpr (details::has_reserve<Out> && details::has_size<C>) out.reserve(out.size() + in.size());
+  for (auto &&x : in)
+    details::push(out, std::move(x));
 }
 
 template <ASPARTAME_SEQ_TPL(typename P)> [[nodiscard]] constexpr auto partition(const C &in, P &&p, tag = {}) {
@@ -736,6 +811,9 @@ template <typename F> [[nodiscard]] constexpr auto flat_map(F f) {
 template <typename F> [[nodiscard]] constexpr auto collect(F f) {
   return [f = std::move(f)](auto &&o, tag) { return collect(o, f, tag{}); };
 }
+template <template <typename...> typename Out, typename F> [[nodiscard]] constexpr auto collect_to(F f) {
+  return [f = std::move(f)](auto &&o, tag) { return collect_to<Out>(o, f, tag{}); };
+}
 template <typename F> [[nodiscard]] constexpr auto collect_first(F f) {
   return [f = std::move(f)](auto &&o, tag) { return collect_first(o, f, tag{}); };
 }
@@ -745,10 +823,30 @@ template <typename T> [[nodiscard]] constexpr auto append(T t) {
                    details::inplace::append(o, t);
                  }};
 }
+template <typename C, std::enable_if_t<!std::is_const_v<C>, int> = 0> [[nodiscard]] constexpr auto concat(C &c) {
+  return dual_op{[&c](auto &&o) { return concat(o, c, tag{}); },
+                 [&c](auto &o) -> std::enable_if_t<details::inplace::can_concat_inplace<std::decay_t<decltype(o)>>> {
+                   details::inplace::concat(o, c);
+                 }};
+}
 template <typename C> [[nodiscard]] constexpr auto concat(const C &c) {
   return dual_op{[&c](auto &&o) { return concat(o, c, tag{}); },
                  [&c](auto &o) -> std::enable_if_t<details::inplace::can_concat_inplace<std::decay_t<decltype(o)>>> {
                    details::inplace::concat(o, c);
+                 }};
+}
+template <typename C, std::enable_if_t<!std::is_lvalue_reference_v<C>, int> = 0> [[nodiscard]] constexpr auto concat(C &&c) {
+  using Container = std::decay_t<C>;
+  auto rhs = std::make_shared<Container>(std::forward<C>(c));
+  return dual_op{[rhs](auto &&o) {
+                   if constexpr (details::has_sequence_traits_v<std::decay_t<decltype(o)>> ||
+                                 details::has_optional_traits_v<std::decay_t<decltype(o)>> ||
+                                 enable_string_ops<std::decay_t<decltype(o)>>::value)
+                     return concat(o, *rhs, tag{});
+                   else return concat(o, rhs, tag{});
+                 },
+                 [rhs](auto &o) -> std::enable_if_t<details::inplace::can_concat_inplace<std::decay_t<decltype(o)>>> {
+                   details::inplace::concat(o, *rhs);
                  }};
 }
 template <typename F> [[nodiscard]] constexpr auto distinct_by(F f) {
@@ -758,6 +856,9 @@ template <typename F> [[nodiscard]] constexpr auto distinct_by(F f) {
                                                                               std::decay_t<decltype(details::ap(f, *std::begin(o)))>>> {
         details::inplace::distinct_by(o, f);
       }};
+}
+template <typename Predicate, typename F> [[nodiscard]] constexpr auto distinct_by_if(Predicate predicate, F f) {
+  return [predicate = std::move(predicate), f = std::move(f)](auto &&o, tag) { return distinct_by_if(o, predicate, f, tag{}); };
 }
 [[nodiscard]] inline constexpr auto distinct() {
   return dual_op{
@@ -778,6 +879,12 @@ template <typename P> [[nodiscard]] constexpr auto forall(P p) {
 }
 template <typename P> [[nodiscard]] constexpr auto find(P p) {
   return [p = std::move(p)](auto &&o, tag) { return find(o, p, tag{}); };
+}
+template <typename P> [[nodiscard]] constexpr auto find_ref(P p) {
+  return find_ref_op<P>{std::move(p)};
+}
+template <typename P> [[nodiscard]] constexpr auto find_cref(P p) {
+  return find_cref_op<P>{std::move(p)};
 }
 template <typename F> [[nodiscard]] constexpr auto reduce(F f) {
   return [f = std::move(f)](auto &&o, tag) { return reduce(o, f, tag{}); };
@@ -830,6 +937,19 @@ template <typename F> [[nodiscard]] constexpr auto tap_each(F f) {
 template <typename F> [[nodiscard]] constexpr auto for_each(F f) {
   return [f = std::move(f)](auto &&o, tag) { return for_each(o, f, tag{}); };
 }
+template <typename Out> struct append_to_op {
+  Out &out;
+  template <typename C> constexpr void operator()(C &&in, tag) const { append_to(in, out, tag{}); }
+};
+template <typename Out> struct move_to_op {
+  Out &out;
+  template <typename C> constexpr void operator()(C &&in, tag) const { move_to(in, out, tag{}); }
+};
+template <typename> inline constexpr bool is_direct_source_sink_op = false;
+template <typename Out> inline constexpr bool is_direct_source_sink_op<append_to_op<Out>> = true;
+template <typename Out> inline constexpr bool is_direct_source_sink_op<move_to_op<Out>> = true;
+template <typename Out> [[nodiscard]] constexpr auto append_to(Out &out) { return append_to_op<Out>{out}; }
+template <typename Out> [[nodiscard]] constexpr auto move_to(Out &out) { return move_to_op<Out>{out}; }
 template <typename P> [[nodiscard]] constexpr auto partition(P p) {
   return [p = std::move(p)](auto &&o, tag) { return partition(o, p, tag{}); };
 }
@@ -999,8 +1119,22 @@ template <typename Acc, typename F> [[nodiscard]] constexpr auto scan_right(Acc 
 template <typename N = size_t> [[nodiscard]] constexpr auto zip_with_index(N from = 0) {
   return [from](auto &&o, tag) { return zip_with_index(o, from, tag{}); };
 }
+template <typename Container, std::enable_if_t<!std::is_const_v<Container>, int> = 0> [[nodiscard]] constexpr auto zip(Container &other) {
+  return [&other](auto &&o, tag) { return zip(o, other, tag{}); };
+}
 template <typename Container> [[nodiscard]] constexpr auto zip(const Container &other) {
   return [&other](auto &&o, tag) { return zip(o, other, tag{}); };
+}
+template <typename Container, std::enable_if_t<!std::is_lvalue_reference_v<Container>, int> = 0>
+[[nodiscard]] constexpr auto zip(Container &&other) {
+  using C = std::decay_t<Container>;
+  auto rhs = std::make_shared<C>(std::forward<Container>(other));
+  return [rhs](auto &&o, tag) {
+    if constexpr (details::has_sequence_traits_v<std::decay_t<decltype(o)>> ||
+                  details::has_optional_traits_v<std::decay_t<decltype(o)>> || enable_string_ops<std::decay_t<decltype(o)>>::value)
+      return zip(o, *rhs, tag{});
+    else return zip(o, rhs, tag{});
+  };
 }
 [[nodiscard]] inline constexpr auto transpose() {
   return [](auto &&o, tag) { return transpose(o, tag{}); };
@@ -1008,8 +1142,21 @@ template <typename Container> [[nodiscard]] constexpr auto zip(const Container &
 [[nodiscard]] inline constexpr auto cartesian_product() {
   return [](auto &&o, tag) { return cartesian_product(o, tag{}); };
 }
+template <typename C, std::enable_if_t<!std::is_const_v<C>, int> = 0> [[nodiscard]] constexpr auto cross(C &c) {
+  return [&c](auto &&o, tag) { return cross(o, c, tag{}); };
+}
 template <typename C> [[nodiscard]] constexpr auto cross(const C &c) {
   return [&c](auto &&o, tag) { return cross(o, c, tag{}); };
+}
+template <typename C, std::enable_if_t<!std::is_lvalue_reference_v<C>, int> = 0> [[nodiscard]] constexpr auto cross(C &&c) {
+  using Container = std::decay_t<C>;
+  auto rhs = std::make_shared<Container>(std::forward<C>(c));
+  return [rhs](auto &&o, tag) {
+    if constexpr (details::has_sequence_traits_v<std::decay_t<decltype(o)>> || details::has_optional_traits_v<std::decay_t<decltype(o)>> ||
+                  enable_string_ops<std::decay_t<decltype(o)>>::value)
+      return cross(o, *rhs, tag{});
+    else return cross(o, rhs, tag{});
+  };
 }
 [[nodiscard]] inline constexpr auto combinations(size_t k) {
   return [k](auto &&o, tag) { return combinations(o, k, tag{}); };
@@ -1223,7 +1370,7 @@ template <typename F> [[nodiscard]] constexpr auto or_else(F f) {
 }
 
 #define ASPARTAME_STRING_OP_REQUIRES(name)                                                                                                 \
-  static_assert(enable_string_ops<std::decay_t<decltype(o)>>::value, #name " requires a std::basic_string receiver")
+  static_assert(enable_string_ops<std::decay_t<decltype(o)>>::value, #name " requires a supported string receiver")
 
 [[nodiscard]] inline constexpr auto trim_leading() {
   return [](auto &&o, tag) {
@@ -1270,7 +1417,9 @@ template <typename Needle, typename With> [[nodiscard]] constexpr auto replace_a
 [[nodiscard]] inline constexpr auto indent(int n) {
   return [n](auto &&o, tag) {
     ASPARTAME_STRING_OP_REQUIRES(indent);
-    return indent(o, n, std::decay_t<decltype(o)>{'\n'}, tag{});
+    using S = std::decay_t<decltype(o)>;
+    using C = typename S::value_type;
+    return indent(o, n, std::basic_string<C, typename S::traits_type>(1, static_cast<C>('\n')), tag{});
   };
 }
 template <typename NewLine> [[nodiscard]] constexpr auto indent(int n, NewLine newLine) {
@@ -1307,6 +1456,30 @@ template <typename Delim> [[nodiscard]] constexpr auto split(Delim d) {
   return [d = std::move(d)](auto &&o, tag) {
     ASPARTAME_STRING_OP_REQUIRES(split);
     return split(o, d, tag{});
+  };
+}
+template <typename Delim> [[nodiscard]] constexpr auto split_once(Delim d) {
+  return [d = std::move(d)](auto &&o, tag) {
+    ASPARTAME_STRING_OP_REQUIRES(split_once);
+    return split_once(o, d, tag{});
+  };
+}
+template <typename Delim> [[nodiscard]] constexpr auto rsplit_once(Delim d) {
+  return [d = std::move(d)](auto &&o, tag) {
+    ASPARTAME_STRING_OP_REQUIRES(rsplit_once);
+    return rsplit_once(o, d, tag{});
+  };
+}
+template <typename Pattern> [[nodiscard]] constexpr auto glob_matches(Pattern pattern) {
+  return [pattern = std::move(pattern)](auto &&o, tag) {
+    ASPARTAME_STRING_OP_REQUIRES(glob_matches);
+    return glob_matches(o, pattern, tag{});
+  };
+}
+template <typename Pattern> [[nodiscard]] constexpr auto glob_matches_ignore_case(Pattern pattern) {
+  return [pattern = std::move(pattern)](auto &&o, tag) {
+    ASPARTAME_STRING_OP_REQUIRES(glob_matches_ignore_case);
+    return glob_matches_ignore_case(o, pattern, tag{});
   };
 }
 [[nodiscard]] inline constexpr auto lines() {

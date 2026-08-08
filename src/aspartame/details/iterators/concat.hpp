@@ -6,8 +6,10 @@ namespace aspartame::details {
 
 template <typename Iter1, //
           typename Iter2, //
-          typename T = typename details::value_type_of_t<Iter1>>
-class concat_iterator : public fwd_iterator<concat_iterator<Iter1, Iter2, T>, T> {
+          typename T = typename details::value_type_of_t<Iter1>,
+          typename R1 = decltype(*std::declval<Iter1 &>()), typename R2 = decltype(*std::declval<Iter2 &>()),
+          typename Reference = decltype(true ? *std::declval<Iter1 &>() : *std::declval<Iter2 &>())>
+class concat_iterator : public fwd_iterator<concat_iterator<Iter1, Iter2, T, R1, R2, Reference>, T, std::forward_iterator_tag, Reference> {
   static_assert(std::is_same_v<T, typename details::value_type_of_t<Iter2>>, //
                 "Iterators must be of the same value type");
   Iter1 it1, end1;
@@ -27,7 +29,7 @@ public:
     } else ++it2;
     return *this;
   }
-  [[nodiscard]] constexpr const T &operator*() { return on_first ? *it1 : *it2; }
+  [[nodiscard]] constexpr Reference operator*() { return on_first ? *it1 : *it2; }
   [[nodiscard]] constexpr bool operator==(const concat_iterator &that) const { return (!this->has_next() == !that.has_next()); }
 };
 
