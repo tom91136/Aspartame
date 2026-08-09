@@ -102,7 +102,8 @@ template <ASPARTAME_SEQ_TPL(typename F)> [[nodiscard]] constexpr auto collect(co
   return details::container1::collect<C, seq_impl::Reb<C, U>, F>(in, std::forward<F>(f));
 }
 
-template <template <typename...> typename Out, typename C, typename F, std::enable_if_t<is_iterable<C>, int> = 0>
+template <template <typename...> typename Out, typename C, typename F,
+          std::enable_if_t<is_iterable<C> && !details::has_map_traits_v<std::decay_t<C>>, int> = 0>
 [[nodiscard]] constexpr auto collect_to(const C &in, F &&f, tag = {}) {
   using R = std::decay_t<decltype(details::ap(f, *std::begin(in)))>;
   static_assert(is_optional<R>, "collect_to function must return std::optional<T>");
@@ -609,6 +610,14 @@ template <ASPARTAME_MAP_TPL(typename F)> [[nodiscard]] constexpr auto collect(co
   using V2 = std::decay_t<typename P::second_type>;
   using Out = map_impl::Reb<C, K2, V2>;
   return details::container2::collect<C, Out, F>(in, std::forward<F>(f));
+}
+template <template <typename...> typename Out, ASPARTAME_MAP_TPL(typename F)>
+[[nodiscard]] constexpr auto collect_to(const C &in, F &&f, tag = {}) {
+  auto &&es = map_access<C>::entries(in);
+  using R = std::decay_t<decltype(details::ap(f, *std::begin(es)))>;
+  static_assert(is_optional<R>, "collect_to function must return std::optional<T>");
+  using Result = typename details::collect_to_output<Out, typename R::value_type>::type;
+  return details::container1::collect_to<map_impl::EntriesT<C>, Result, F>(es, std::forward<F>(f));
 }
 template <ASPARTAME_MAP_TPL(typename F)> [[nodiscard]] constexpr auto collect_first(const C &in, F &&f, tag = {}) {
   return details::container2::collect_first<C, F>(in, std::forward<F>(f));
