@@ -119,7 +119,6 @@ template <typename In, typename Container> //
     ++i;
     ++first;
   }
-  return -1;
 }
 
 template <typename In, typename Predicate> //

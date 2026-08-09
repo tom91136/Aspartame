@@ -70,6 +70,10 @@ TEST_CASE("zip_with_index_super_const_value_type", "[zip_with_index][regression]
   int a = 10, b = 20, c = 30;
   const int *const storage[] = {&a, &b, &c};
   SuperConstRange r{std::begin(storage), std::end(storage)};
+  auto it = r.begin();
+  const auto first = it++;
+  REQUIRE(**first == 10);
+  REQUIRE(**it == 20);
   auto pairs = r ^ zip_with_index<size_t>();
   REQUIRE(pairs.size() == 3);
   REQUIRE(*pairs[0].first == 10);
