@@ -63,6 +63,9 @@ if (ASPARTAME_ENABLE_TEST OR ASPARTAME_ENABLE_BENCHMARK)
     endif ()
     FetchContent_MakeAvailable(Catch2)
     if (TARGET Catch2)
+        # The tests exercise std::string_view directly. Build Catch2 in C++17 mode too so
+        # its out-of-line StringMaker<std::string_view> definitions are available.
+        target_compile_features(Catch2 PUBLIC cxx_std_17)
         get_target_property(_catch2_inc Catch2 INTERFACE_INCLUDE_DIRECTORIES)
         set_target_properties(Catch2 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_catch2_inc}")
     endif ()

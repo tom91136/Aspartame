@@ -1120,18 +1120,24 @@ template <typename N = size_t> [[nodiscard]] constexpr auto zip_with_index(N fro
   return [from](auto &&o, tag) { return zip_with_index(o, from, tag{}); };
 }
 template <typename Container, std::enable_if_t<!std::is_const_v<Container>, int> = 0> [[nodiscard]] constexpr auto zip(Container &other) {
-  return [&other](auto &&o, tag) { return zip(o, other, tag{}); };
+  return [&other](auto &&o, tag) {
+    if constexpr (details::has_sequence_traits_v<std::decay_t<decltype(o)>>) return aspartame::zip(o, other, tag{});
+    else return zip(o, other, tag{});
+  };
 }
 template <typename Container> [[nodiscard]] constexpr auto zip(const Container &other) {
-  return [&other](auto &&o, tag) { return zip(o, other, tag{}); };
+  return [&other](auto &&o, tag) {
+    if constexpr (details::has_sequence_traits_v<std::decay_t<decltype(o)>>) return aspartame::zip(o, other, tag{});
+    else return zip(o, other, tag{});
+  };
 }
 template <typename Container, std::enable_if_t<!std::is_lvalue_reference_v<Container>, int> = 0>
 [[nodiscard]] constexpr auto zip(Container &&other) {
   using C = std::decay_t<Container>;
   auto rhs = std::make_shared<C>(std::forward<Container>(other));
   return [rhs](auto &&o, tag) {
-    if constexpr (details::has_sequence_traits_v<std::decay_t<decltype(o)>> ||
-                  details::has_optional_traits_v<std::decay_t<decltype(o)>> || enable_string_ops<std::decay_t<decltype(o)>>::value)
+    if constexpr (details::has_sequence_traits_v<std::decay_t<decltype(o)>>) return aspartame::zip(o, *rhs, tag{});
+    else if constexpr (details::has_optional_traits_v<std::decay_t<decltype(o)>> || enable_string_ops<std::decay_t<decltype(o)>>::value)
       return zip(o, *rhs, tag{});
     else return zip(o, rhs, tag{});
   };
