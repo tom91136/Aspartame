@@ -55,6 +55,29 @@ struct SuperConstRange {
   SuperConstIter end() const { return SuperConstIter{last_}; }
   size_t size() const { return static_cast<size_t>(last_ - first_); }
 };
+
+struct VoidReferenceIter {
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = int *;
+  using difference_type = std::ptrdiff_t;
+  using pointer = void;
+  using reference = void;
+  int **p_ = nullptr;
+  VoidReferenceIter() = default;
+  explicit VoidReferenceIter(int **p) : p_(p) {}
+  value_type operator*() const { return *p_; }
+  VoidReferenceIter &operator++() {
+    ++p_;
+    return *this;
+  }
+  VoidReferenceIter operator++(int) {
+    auto c = *this;
+    ++p_;
+    return c;
+  }
+  [[maybe_unused]] friend bool operator==(VoidReferenceIter a, VoidReferenceIter b) { return a.p_ == b.p_; }
+  friend bool operator!=(VoidReferenceIter a, VoidReferenceIter b) { return a.p_ != b.p_; }
+};
 } // namespace
 
 namespace aspartame {
@@ -80,6 +103,14 @@ TEST_CASE("zip_with_index_super_const_value_type", "[zip_with_index][regression]
   REQUIRE(pairs[0].second == 0u);
   REQUIRE(*pairs[2].first == 30);
   REQUIRE(pairs[2].second == 2u);
+}
+
+TEST_CASE("view_to_vector_accepts_iterator_with_void_reference", "[view][to_vector][regression]") {
+  int a = 10, b = 20;
+  int *storage[] = {&a, &b};
+  view range(VoidReferenceIter{std::begin(storage)}, VoidReferenceIter{std::end(storage)});
+  auto values = range | to_vector();
+  REQUIRE(values == std::vector<int *>{&a, &b});
 }
 
 TEMPLATE_TEST_CASE("map_over_filter_address_via_non_const_auto_ref", "[map][filter][regression]", std::vector<int>, std::deque<int>,

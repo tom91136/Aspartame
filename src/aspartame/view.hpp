@@ -509,7 +509,12 @@ template <typename C, typename Storage, typename Function> //
 
 template <typename C, typename Storage> //
 [[nodiscard]] constexpr auto to_vector(const view<C, Storage> &in, tag = {}) {
-  return std::vector<typename view<C, Storage>::value_type>{in.begin(), in.end()};
+  std::vector<typename view<C, Storage>::value_type> out;
+  if constexpr (std::is_base_of_v<std::forward_iterator_tag, typename std::iterator_traits<C>::iterator_category>)
+    out.reserve(static_cast<size_t>(std::distance(in.begin(), in.end())));
+  for (auto it = in.begin(); it != in.end(); ++it)
+    out.emplace_back(*it);
+  return out;
 }
 
 template <template <typename...> typename Cs, typename C, typename Storage> //
